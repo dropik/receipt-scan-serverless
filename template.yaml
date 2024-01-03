@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless application for scanning and categorizing receipts
+
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+
+Resources:
+  RESTApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName:
+        Ref: Stage
+
+  FileUploader:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: file-uploader/
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /file
+            Method: post
+            RestApiId:
+              Ref: RESTApi
+
+Outputs:
+  API:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${RESTApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"

@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+sam build
+stackname=receipt-scan-$1
+shift
+sam deploy --confirm-changeset --stack-name $stackname $@ 
