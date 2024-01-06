@@ -5,24 +5,21 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 30
     MemorySize: 128
-
-Parameters:
-  Stage:
-    Type: String
-    Default: dev
-    AllowedValues:
-      - dev
-      - stage
-      - prod
+    Handler: bootstrap
+    Runtime: provided.al2
+    RuntimeManagementConfig:
+      UpdateRuntimeOn: Manual
+      RuntimeVersionArn: arn:aws:lambda:eu-central-1::runtime:c2f9d23694707c1161c0d3fbc0673f4ee14150265f4f3081161948aa71fad0a0
+    Architectures:
+      - arm64
 
 Resources:
   RESTApi:
     Type: AWS::Serverless::Api
     Properties:
-      StageName:
-        Ref: Stage
+      StageName: dev
 
   FileUploader:
     Type: AWS::Serverless::Function
@@ -30,10 +27,6 @@ Resources:
       BuildMethod: makefile
     Properties:
       CodeUri: file-uploader/
-      Handler: bootstrap
-      Runtime: provided.al2
-      Architectures:
-        - arm64
       Events:
         Api:
           Type: Api
@@ -43,7 +36,3 @@ Resources:
             RestApiId:
               Ref: RESTApi
 
-Outputs:
-  API:
-    Description: API Gateway endpoint URL
-    Value: !Sub "https://${RESTApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"

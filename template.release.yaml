@@ -1,0 +1,19 @@
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+
+Resources:
+  RESTApi:
+    Properties:
+      StageName:
+        Ref: Stage
+
+Outputs:
+  API:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${RESTApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"

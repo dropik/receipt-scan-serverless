@@ -1,4 +1,20 @@
 #!/bin/bash
-set -e 
-sam build
-sudo sam local start-api --host 0.0.0.0
+set -e
+export CONFIG=Debug
+while getopts "d:" flag; do
+  case $flag in
+    "d")
+      funcs+=("$OPTARG")
+      ;;
+  esac
+done
+for func in "${funcs[@]}"; do
+  export DEBUG_FUNCS=${func}:$DEBUG_FUNCS
+done
+yq '. *= load("template.debug.yaml")' template.base.yaml > template.yaml
+sam build --build-in-source
+sudo sam local start-api \
+  --host 0.0.0.0 \
+  --invoke-image custom-lambda-arm64 --skip-pull-image \
+  --parameter-overrides TimeoutOverride=1000000
+
