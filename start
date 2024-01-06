@@ -15,6 +15,4 @@ yq '. *= load("template.debug.yaml")' template.base.yaml > template.yaml
 sam build --build-in-source
 sudo sam local start-api \
   --host 0.0.0.0 \
-  --invoke-image custom-lambda-arm64 --skip-pull-image \
-  --parameter-overrides TimeoutOverride=1000000
-
+  --invoke-image custom-lambda-arm64 --skip-pull-image
