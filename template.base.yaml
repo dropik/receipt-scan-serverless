@@ -21,6 +21,10 @@ Resources:
     Properties:
       StageName: dev
 
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain 
+
   FileUploader:
     Type: AWS::Serverless::Function
     Metadata:

@@ -1,3 +1,11 @@
 Globals:
   Function:
     Timeout: 100000
+
+Resources:
+  FileUploader:
+    Properties:
+      Environment:
+        Variables:
+          IMAGES_BUCKET: receipt-scan-dev-images-bucket
+

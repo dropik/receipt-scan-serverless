@@ -13,6 +13,26 @@ Resources:
       StageName:
         Ref: Stage
 
+  ImagesBucket:
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-images-bucket"
+
+  FileUploader:
+    Properties:
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucket
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Sid: S3Access
+              Effect: Allow
+              Action:
+                - "s3:PutObject"
+              Resource:
+                - !Sub "arn:aws:s3:::${ImagesBucket}"
+                - !Sub "arn:aws:s3:::${ImagesBucket}/*"
+
 Outputs:
   API:
     Description: API Gateway endpoint URL

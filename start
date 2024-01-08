@@ -13,6 +13,7 @@ for func in "${funcs[@]}"; do
 done
 yq '. *= load("template.debug.yaml")' template.base.yaml > template.yaml
 sam build --build-in-source
+find .aws-sam/build -mindepth 1 -maxdepth 1 -type d -exec cp ~/.aws/credentials {}/ \;
 sudo sam local start-api \
   --host 0.0.0.0 \
   --invoke-image custom-lambda-arm64 --skip-pull-image
