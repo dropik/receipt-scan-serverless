@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+export CONFIG=Debug
+sam build

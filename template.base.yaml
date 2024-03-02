@@ -40,3 +40,10 @@ Resources:
             RestApiId:
               Ref: RESTApi
 
+  ReceiptRecognitionService:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: receipt-recognition-service/
+

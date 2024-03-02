@@ -1,0 +1,16 @@
+#pragma once
+
+#define STR(s) #s
+#define XSTR(s) STR(s)
+
+#define VERSION XSTR(@file-uploader_VERSION@)
+#define VERSION_MAJOR @file-uploader_VERSION_MAJOR@
+#define VERSION_MINOR @file-uploader_VERSION_MINOR@
+#define VERSION_PATCH @file-uploader_VERSION_PATCH@
+
+#ifdef DEBUG
+#define AWS_REGION "eu-central-1"
+#endif
+
+#define IMAGES_BUCKET "IMAGES_BUCKET"
+
