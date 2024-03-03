@@ -19,6 +19,7 @@ Resources:
 
   FileUploader:
     Properties:
+      FunctionName: !Sub "receipt-scan-file-uploader-${Stage}"
       Environment:
         Variables:
           IMAGES_BUCKET: !Ref ImagesBucket
@@ -32,6 +33,21 @@ Resources:
               Resource:
                 - !Sub "arn:aws:s3:::${ImagesBucket}"
                 - !Sub "arn:aws:s3:::${ImagesBucket}/*"
+
+  ReceiptRecognitionService:
+    Properties:
+      FunctionName: !Sub "receipt-scan-recognition-service-${Stage}"
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Sid: SystemsManager
+              Effect: Allow
+              Action:
+                - "ssm:GetParameter"
+                - "ssm:GetParameters"
+                - "ssm:GetParameterByPath"
+              Resource:
+                - "*"
 
 Outputs:
   API:
