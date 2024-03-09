@@ -17,7 +17,12 @@
 #include <aws/ssm/SSMServiceClientModel.h>
 #include <aws/ssm/model/GetParameterRequest.h>
 
-#include <pqxx/pqxx>
+#include "conncpp/Connection.hpp"
+#include "conncpp/DriverManager.hpp"
+#include "conncpp/Exception.hpp"
+#include "conncpp/ResultSet.hpp"
+#include "conncpp/SQLString.hpp"
+#include "conncpp/Statement.hpp"
 
 #include "config.h"
 
@@ -29,7 +34,7 @@ using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
 
 template<typename ... Args>
-std::string str_format(const std::string& format, Args ... args) {
+static std::string str_format(const std::string& format, Args ... args) {
   int s = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1;
   if (s <= 0) {
     throw std::runtime_error("Error occured during string formatting!");
@@ -40,22 +45,41 @@ std::string str_format(const std::string& format, Args ... args) {
   return std::string(buf.get(), buf.get() + size - 1);
 }
 
-static invocation_response lambda_handler(invocation_request const& request) {
-  AWS_LOGSTREAM_INFO(TAG, "Version " << VERSION);
-
-  pqxx::connection c(connection_string.c_str());
-  pqxx::work w(c);
-
-  AWS_LOGSTREAM_INFO(TAG, "Successfully connected to datbase!");
-  AWS_LOGSTREAM_INFO(TAG, "Reading from database!");
-
-  pqxx::result rows = w.exec("select count(1) from bookings;");
-  for (int i = 0; i < rows.size(); i++) {
-    auto [bookings] = rows[i].as<int>();
-    AWS_LOGSTREAM_INFO(TAG, str_format("Found bookings: %d", bookings));
-  }
-
+static void log_info(std::string message) {
+  AWS_LOGSTREAM_INFO(TAG, message);
   AWS_LOGSTREAM_FLUSH();
+}
+
+static void log_error(std::string message) {
+  AWS_LOGSTREAM_ERROR(TAG, message);
+  AWS_LOGSTREAM_FLUSH();
+}
+
+static invocation_response lambda_handler(invocation_request const& request) {
+  log_info(str_format("Version %s", VERSION));
+
+  try {
+    log_info("Establishing connection with the database...");
+    
+    sql::SQLString url(connection_string);
+    std::unique_ptr<sql::Connection> conn(sql::DriverManager::getConnection(url));
+    if (conn == nullptr) {
+      log_error("Unable to establish connection with database!");
+      return invocation_response::failure("{\"statusCode\": 500}", "application/json");
+    }
+
+    log_info("Successfully connected to datbase!");
+    log_info("Reading from database!");
+
+    std::unique_ptr<sql::Statement> stmnt(conn->createStatement());
+    sql::ResultSet* res = stmnt->executeQuery("select count(1) from users u");
+    res->next();
+    log_info(str_format("Found users: %d", res->getInt(1)));
+    
+    conn->close();
+  } catch (sql::SQLException& e) {
+    log_error(str_format("Error occured while doing operation on database: %s", e.what()));
+  }
 
   return invocation_response::success("{\"statusCode\": 200}", "application/json");
 }
@@ -81,11 +105,11 @@ int main() {
       connection_string = getenv("DB_CONNECTION_STRING");
  #else
       std::string functionName = getenv("AWS_LAMBDA_FUNCTION_NAME");
-      AWS_LOGSTREAM_INFO(TAG, str_format("Executing function %s", functionName.c_str()));
+      log_info(str_format("Executing function %s", functionName.c_str()));
 
       int envStartPos = functionName.find_last_of('-');
       std::string stage = functionName.substr(envStartPos + 1, functionName.size() - envStartPos - 1);
-      AWS_LOGSTREAM_INFO(TAG, str_format("Running on stage %s", stage.c_str()));
+      log_info(str_format("Running on stage %s", stage.c_str()));
 
       std::string ssmPrefix = str_format("/receipt-scan/%s", stage.c_str());
       Aws::Client::ClientConfiguration config;

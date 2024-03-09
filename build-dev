@@ -1,4 +1,5 @@
 #!/bin/bash
 set -e
 export CONFIG=Debug
-sam build
+yq '. *= load("template.debug.yaml")' template.base.yaml > template.yaml
+sam build --build-in-source

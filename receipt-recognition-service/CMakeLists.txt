@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(receipt-recognition-service VERSION 1.0.0 LANGUAGES CXX)
 set(DEBUG_PORT_BASE 7001)
-option(mysql-concpp_DIR "${CMAKE_SYSROOT}/usr/local/bin/mysql/connector-c++-8.3.0")
 
 configure_file(include/config.h.in
   "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h")
@@ -12,21 +11,20 @@ configure_file(include/config.h.in
 find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3 ssm)
-find_package(mysql-concpp REQUIRED)
 
 add_executable(${PROJECT_NAME} "src/main.cpp")
+
 target_include_directories(${PROJECT_NAME} PUBLIC
-  "include")
+  "include"
+  "${CMAKE_SYSROOT}/usr/local/include/mariadb")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
   AWS::aws-lambda-runtime
   ${AWSSDK_LINK_LIBRARIES}
-  mysql::concpp-static
-  "${CMAKE_SYSROOT}/usr/local/lib/libprotobuf.a"
-  "${CMAKE_SYSROOT}/usr/local/lib/libpqxx.a"
-  "${CMAKE_SYSROOT}/usr/local/pgsql/lib/libpq.a"
-  "${CMAKE_SYSROOT}/usr/local/pgsql/lib/libpgcommon.a"
-  "${CMAKE_SYSROOT}/usr/local/pgsql/lib/libpgport.a")
+  "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
+  "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
+  ssl
+  gssapi_krb5)
 
 set_target_properties(${PROJECT_NAME}
   PROPERTIES
@@ -43,7 +41,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     "set -e\n"
     "export AWS_ACCESS_KEY_ID=$(cat /root/.aws/credentials | grep aws_access_key_id | sed 's/aws_access_key_id = //g')\n"
     "export AWS_SECRET_ACCESS_KEY=$(cat /root/.aws/credentials | grep aws_secret_access_key | sed 's/aws_secret_access_key = //g')\n"
-    "export DB_CONNECTION_STRING=\"user=postgres password=postgres host=192.168.8.127 port=5432 dbname=travelware target_session_attrs=read-write\"\n")
+    "export DB_CONNECTION_STRING=\"jdbc:mariadb://192.168.178.27:3306/receipt-scan?user=receipt-scan&password=42mZTPN15f97\"\n")
 
   # Check if we want to debug this function
   string(REPLACE ":" ";" DEBUG_FUNCS_LIST "${DEBUG_FUNCS}")
