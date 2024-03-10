@@ -21,6 +21,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME} PUBLIC
   AWS::aws-lambda-runtime
   ${AWSSDK_LINK_LIBRARIES}
+  aws-lambda-cpp-common
   "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
   "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
   ssl

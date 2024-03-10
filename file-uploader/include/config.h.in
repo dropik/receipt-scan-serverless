@@ -1,7 +1,6 @@
 #pragma once
 
-#define STR(s) #s
-#define XSTR(s) STR(s)
+#include <aws-lambda-cpp/common/macros.h>
 
 #define VERSION XSTR(@file-uploader_VERSION@)
 #define VERSION_MAJOR @file-uploader_VERSION_MAJOR@

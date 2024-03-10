@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include <aws/lambda-runtime/runtime.h>
 
 #include <aws/core/Aws.h>
@@ -7,8 +5,6 @@
 #include <aws/core/http/HttpTypes.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include <aws/core/utils/logging/LogLevel.h>
-#include <aws/core/utils/logging/LogMacros.h>
 #include <aws/core/utils/memory/stl/AWSString.h>
 #include <aws/core/utils/memory/stl/AWSVector.h>
 
@@ -24,61 +20,41 @@
 #include "conncpp/SQLString.hpp"
 #include "conncpp/Statement.hpp"
 
+#include <aws-lambda-cpp/common/logger.hpp>
+
 #include "config.h"
 
-char const TAG[] = "receipt-recognition-service";
 std::string connection_string;
 
 using namespace aws::lambda_runtime;
 using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
+using namespace aws_lambda_cpp::common;
 
-template<typename ... Args>
-static std::string str_format(const std::string& format, Args ... args) {
-  int s = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1;
-  if (s <= 0) {
-    throw std::runtime_error("Error occured during string formatting!");
-  }
-  size_t size = static_cast<size_t>(s);
-  std::unique_ptr<char[]> buf(new char[size]);
-  std::snprintf(buf.get(), size, format.c_str(), args ...);
-  return std::string(buf.get(), buf.get() + size - 1);
-}
-
-static void log_info(std::string message) {
-  AWS_LOGSTREAM_INFO(TAG, message);
-  AWS_LOGSTREAM_FLUSH();
-}
-
-static void log_error(std::string message) {
-  AWS_LOGSTREAM_ERROR(TAG, message);
-  AWS_LOGSTREAM_FLUSH();
-}
-
-static invocation_response lambda_handler(invocation_request const& request) {
-  log_info(str_format("Version %s", VERSION));
+invocation_response lambda_handler(const logger& logger, invocation_request const& request) {
+  logger.info("Version %s", VERSION);
 
   try {
-    log_info("Establishing connection with the database...");
+    logger.info("Establishing connection with the database...");
     
     sql::SQLString url(connection_string);
     std::unique_ptr<sql::Connection> conn(sql::DriverManager::getConnection(url));
     if (conn == nullptr) {
-      log_error("Unable to establish connection with database!");
+      logger.error("Unable to establish connection with database!");
       return invocation_response::failure("{\"statusCode\": 500}", "application/json");
     }
 
-    log_info("Successfully connected to datbase!");
-    log_info("Reading from database!");
+    logger.info("Successfully connected to datbase!");
+    logger.info("Reading from database!");
 
     std::unique_ptr<sql::Statement> stmnt(conn->createStatement());
     sql::ResultSet* res = stmnt->executeQuery("select count(1) from users u");
     res->next();
-    log_info(str_format("Found users: %d", res->getInt(1)));
+    logger.info("Found users: %d", res->getInt(1));
     
     conn->close();
   } catch (sql::SQLException& e) {
-    log_error(str_format("Error occured while doing operation on database: %s", e.what()));
+    logger.error("Error occured while doing operation on database: %s", e.what());
   }
 
   return invocation_response::success("{\"statusCode\": 200}", "application/json");
@@ -101,15 +77,17 @@ int main() {
 
   InitAPI(options);
   {
+    logger logger("receipt-recognition-service");
+
 #ifdef DEBUG
       connection_string = getenv("DB_CONNECTION_STRING");
  #else
       std::string functionName = getenv("AWS_LAMBDA_FUNCTION_NAME");
-      log_info(str_format("Executing function %s", functionName.c_str()));
+      logger.info("Executing function %s", functionName.c_str());
 
       int envStartPos = functionName.find_last_of('-');
       std::string stage = functionName.substr(envStartPos + 1, functionName.size() - envStartPos - 1);
-      log_info(str_format("Running on stage %s", stage.c_str()));
+      logger.info("Running on stage %s", stage.c_str());
 
       std::string ssmPrefix = str_format("/receipt-scan/%s", stage.c_str());
       Aws::Client::ClientConfiguration config;
@@ -127,7 +105,9 @@ int main() {
       connection_string = outcome.GetResult().GetParameter().GetValue();
 #endif
 
-    run_handler(lambda_handler);
+      run_handler([&](const invocation_request& req) {
+        return lambda_handler(logger, req);
+      });
   }
   ShutdownAPI(options);
 

@@ -1,4 +1,4 @@
-#include <aws/core/utils/memory/stl/AWSAllocator.h>
+#include <memory>
 #include <stdlib.h>
 
 #include <aws/lambda-runtime/runtime.h>
@@ -8,16 +8,12 @@
 #include <aws/core/http/HttpTypes.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include <aws/core/utils/logging/LogLevel.h>
-#include <aws/core/utils/logging/LogMacros.h>
-#include <aws/core/utils/memory/stl/AWSString.h>
-#include <aws/core/utils/memory/stl/AWSVector.h>
 
 #include <aws/s3/S3Client.h>
 
-#include "config.h"
+#include <aws-lambda-cpp/common/logger.hpp>
 
-char const TAG[] = "file-uploader";
+#include "config.h"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -25,9 +21,11 @@ using namespace Aws::S3;
 using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
 
-static invocation_response lambda_handler(invocation_request const& request) {
-  AWS_LOGSTREAM_INFO(TAG, "Version " << VERSION);
+static invocation_response lambda_handler(
+  const aws_lambda_cpp::common::logger& logger,
+  const invocation_request& request) {
 
+  logger.info("Version %s", VERSION);
   JsonValue gatewayProxyEvent(request.payload);
   assert(gatewayProxyEvent.WasParseSuccessful());
   assert(gatewayProxyEvent.View().ValueExists("body"));
@@ -57,9 +55,6 @@ static invocation_response lambda_handler(invocation_request const& request) {
     .WithString("body", body.View().WriteCompact())
     .WithInteger("statusCode", 200);
   
-  // to make sure logs are written
-  AWS_LOGSTREAM_FLUSH();
-
   return invocation_response::success(resp.View().WriteCompact(), "application/json");
 }
 
@@ -78,7 +73,11 @@ int main() {
 
   InitAPI(options);
   {
-    run_handler(lambda_handler);
+    aws_lambda_cpp::common::logger logger("file-uploader");
+    std::function<invocation_response(const invocation_request&)> handler = [&](const invocation_request& req) {
+      return lambda_handler(logger, req);
+    };
+    run_handler(handler);
   }
   ShutdownAPI(options);
 

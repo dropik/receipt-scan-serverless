@@ -1,7 +1,6 @@
 #pragma once
 
-#define STR(s) #s
-#define XSTR(s) STR(s)
+#include <aws-lambda-cpp/common/macros.h>
 
 #define VERSION XSTR(@receipt-recognition-service_VERSION@)
 #define VERSION_MAJOR @receipt-recognition-service_VERSION_MAJOR@

@@ -13,9 +13,15 @@ find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3)
 
 add_executable(${PROJECT_NAME} "src/main.cpp")
+
 target_include_directories(${PROJECT_NAME} PUBLIC
   "include")
-target_link_libraries(${PROJECT_NAME} PUBLIC AWS::aws-lambda-runtime ${AWSSDK_LINK_LIBRARIES})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  AWS::aws-lambda-runtime
+  ${AWSSDK_LINK_LIBRARIES}
+  aws-lambda-cpp-common)
+
 set_target_properties(${PROJECT_NAME}
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/bin")
