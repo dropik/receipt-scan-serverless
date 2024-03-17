@@ -10,7 +10,7 @@ configure_file(include/config.h.in
 
 find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3 ssm)
+find_package(AWSSDK COMPONENTS core s3 ssm textract)
 
 add_executable(${PROJECT_NAME} "src/main.cpp")
 
