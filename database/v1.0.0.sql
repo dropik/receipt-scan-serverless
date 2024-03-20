@@ -44,7 +44,7 @@ create table receipts (
   constraint ch_store_name_not_empty check(store_name is null or length(store_name) > 0)
 );
 
-create table receipt_item (
+create table receipt_items (
   id char(36) not null primary key,
   receipt_id char(36) not null,
   description text not null,
