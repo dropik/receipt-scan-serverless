@@ -1,4 +1,0 @@
-[submodule "file-uploader"]
-	path = file-uploader
-	url = https://github.com/dropik/receipt-scan-file-uploader.git
-	branch = develop

@@ -1,3 +1,5 @@
+#include <aws-lambda-cpp/common/json.hpp>
+#include <aws-lambda-cpp/common/macros.h>
 #include <aws/core/utils/memory/stl/AWSAllocator.h>
 #include <aws/lambda-runtime/runtime.h>
 
@@ -23,6 +25,8 @@
 #include "conncpp/Statement.hpp"
 
 #include <aws-lambda-cpp/common/logger.hpp>
+#include <aws-lambda-cpp/common/string_utils.hpp>
+#include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
 #include <memory>
 
 #include "config.h"
@@ -45,6 +49,12 @@ class receipt_recognition_service {
 
     invocation_response handle_request(invocation_request const& request) {
       _logger->info("Version %s", VERSION);
+
+      aws_lambda_cpp::models::lambda_payloads::s3_request s3_request =
+        aws_lambda_cpp::json::deserialize<aws_lambda_cpp::models::lambda_payloads::s3_request>(request.payload);
+
+      std::string payload_json = aws_lambda_cpp::json::serialize(s3_request);
+      _logger->info("Obtained s3 request: %s", payload_json.c_str());
 
       try {
         _logger->info("Establishing connection with the database...");
@@ -101,11 +111,11 @@ int main() {
       connection_string = getenv("DB_CONNECTION_STRING");
  #else
       std::string functionName = getenv("AWS_LAMBDA_FUNCTION_NAME");
-      logger.info("Executing function %s", functionName.c_str());
+      l->info("Executing function %s", functionName.c_str());
 
       int envStartPos = functionName.find_last_of('-');
       std::string stage = functionName.substr(envStartPos + 1, functionName.size() - envStartPos - 1);
-      logger.info("Running on stage %s", stage.c_str());
+      l->info("Running on stage %s", stage.c_str());
 
       std::string ssmPrefix = str_format("/receipt-scan/%s", stage.c_str());
       Aws::SSM::SSMClient ssmClient(config);
