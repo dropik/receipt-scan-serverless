@@ -36,7 +36,10 @@ static invocation_response lambda_handler(
   std::string gpr_json = serialize(gpr);
   logger.info("Received AWS Gateway Proxy event: %s", gpr_json.c_str());
 
-  JsonValue requestBody(gpr.body);
+  std::string body_s = gpr.get_body();
+  logger.info("The request payload is: %s", body_s.c_str());
+
+  JsonValue requestBody(body_s);
   assert(requestBody.WasParseSuccessful());
   assert(requestBody.View().ValueExists("name"));
   std::string filename = requestBody.View().GetString("name");
