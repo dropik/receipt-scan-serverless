@@ -1,3 +1,4 @@
+#include <aws-lambda-cpp/common/nullable.hpp>
 #include <memory>
 #include <stdlib.h>
 
@@ -12,6 +13,8 @@
 #include <aws/s3/S3Client.h>
 
 #include <aws-lambda-cpp/common/logger.hpp>
+#include <aws-lambda-cpp/common/json.hpp>
+#include <aws-lambda-cpp/models/lambda_payloads/gateway_proxy.hpp>
 
 #include "config.h"
 
@@ -20,17 +23,20 @@ using namespace aws::lambda_runtime;
 using namespace Aws::S3;
 using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
+using namespace aws_lambda_cpp::json;
+using namespace aws_lambda_cpp::models::lambda_payloads;
 
 static invocation_response lambda_handler(
   const aws_lambda_cpp::common::logger& logger,
   const invocation_request& request) {
 
   logger.info("Version %s", VERSION);
-  JsonValue gatewayProxyEvent(request.payload);
-  assert(gatewayProxyEvent.WasParseSuccessful());
-  assert(gatewayProxyEvent.View().ValueExists("body"));
 
-  JsonValue requestBody(gatewayProxyEvent.View().GetString("body"));
+  gateway_proxy_request gpr = deserialize<gateway_proxy_request>(request.payload);
+  std::string gpr_json = serialize(gpr);
+  logger.info("Received AWS Gateway Proxy event: %s", gpr_json.c_str());
+
+  JsonValue requestBody(gpr.body);
   assert(requestBody.WasParseSuccessful());
   assert(requestBody.View().ValueExists("name"));
   std::string filename = requestBody.View().GetString("name");
