@@ -1,4 +1,3 @@
-#include <aws-lambda-cpp/common/nullable.hpp>
 #include <memory>
 #include <stdlib.h>
 
@@ -26,23 +25,24 @@ using namespace Aws::Utils::Json;
 using namespace aws_lambda_cpp::json;
 using namespace aws_lambda_cpp::models::lambda_payloads;
 
+class upload_file_params {
+  public:
+    std::string name;
+
+    JSON_BEGIN_SERIALIZER(upload_file_params)
+      JSON_PROPERTY("name", name)
+    JSON_END_SERIALIZER()
+};
+
 static invocation_response lambda_handler(
   const aws_lambda_cpp::common::logger& logger,
   const invocation_request& request) {
 
   logger.info("Version %s", VERSION);
 
-  gateway_proxy_request gpr = deserialize<gateway_proxy_request>(request.payload);
-  std::string gpr_json = serialize(gpr);
-  logger.info("Received AWS Gateway Proxy event: %s", gpr_json.c_str());
+  gateway_proxy_request<upload_file_params> gpr = deserialize<gateway_proxy_request<upload_file_params>>(request.payload);
 
-  std::string body_s = gpr.get_body();
-  logger.info("The request payload is: %s", body_s.c_str());
-
-  JsonValue requestBody(body_s);
-  assert(requestBody.WasParseSuccessful());
-  assert(requestBody.View().ValueExists("name"));
-  std::string filename = requestBody.View().GetString("name");
+  upload_file_params params = gpr.get_payload();
 
   Aws::Client::ClientConfiguration config;
 #ifdef DEBUG
@@ -53,7 +53,7 @@ static invocation_response lambda_handler(
   std::string bucketName(getenv(IMAGES_BUCKET));
   std::string presignedUrl = s3Client.GeneratePresignedUrlWithSSES3(
     bucketName,
-    filename,
+    params.name,
     Aws::Http::HttpMethod::HTTP_PUT);
 
   JsonValue body;
