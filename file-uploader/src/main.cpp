@@ -13,6 +13,7 @@
 
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/common/json.hpp>
+#include <aws-lambda-cpp/http/responses.hpp>
 #include <aws-lambda-cpp/models/lambda_payloads/gateway_proxy.hpp>
 
 #include "config.h"
@@ -31,6 +32,15 @@ class upload_file_params {
 
     JSON_BEGIN_SERIALIZER(upload_file_params)
       JSON_PROPERTY("name", name)
+    JSON_END_SERIALIZER()
+};
+
+class upload_file_response {
+  public:
+    std::string url;
+
+    JSON_BEGIN_SERIALIZER(upload_file_response)
+      JSON_PROPERTY("url", url)
     JSON_END_SERIALIZER()
 };
 
@@ -56,15 +66,10 @@ static invocation_response lambda_handler(
     params.name,
     Aws::Http::HttpMethod::HTTP_PUT);
 
-  JsonValue body;
-  body.WithString("url", presignedUrl);
+  upload_file_response response;
+  response.url = presignedUrl;
 
-  JsonValue resp;
-  resp
-    .WithString("body", body.View().WriteCompact())
-    .WithInteger("statusCode", 200);
-  
-  return invocation_response::success(resp.View().WriteCompact(), "application/json");
+  return aws_lambda_cpp::http::ok(response);
 }
 
 std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
