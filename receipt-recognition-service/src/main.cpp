@@ -1,6 +1,5 @@
-#include <aws-lambda-cpp/common/json.hpp>
-#include <aws-lambda-cpp/common/macros.h>
-#include <aws/core/utils/memory/stl/AWSAllocator.h>
+#include <memory>
+
 #include <aws/lambda-runtime/runtime.h>
 
 #include <aws/core/Aws.h>
@@ -8,9 +7,9 @@
 #include <aws/core/http/HttpTypes.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
+#include <aws/core/utils/memory/stl/AWSAllocator.h>
 #include <aws/core/utils/memory/stl/AWSString.h>
 #include <aws/core/utils/memory/stl/AWSVector.h>
-
 #include <aws/s3/S3Client.h>
 #include <aws/ssm/SSMClient.h>
 #include <aws/ssm/SSMServiceClientModel.h>
@@ -27,7 +26,6 @@
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
 #include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
-#include <memory>
 
 #include "config.h"
 
@@ -36,6 +34,7 @@ std::string connection_string;
 using namespace aws::lambda_runtime;
 using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
+using namespace aws_lambda_cpp;
 using namespace aws_lambda_cpp::common;
 
 class receipt_recognition_service {
@@ -50,36 +49,43 @@ class receipt_recognition_service {
     invocation_response handle_request(invocation_request const& request) {
       _logger->info("Version %s", VERSION);
 
-      aws_lambda_cpp::models::lambda_payloads::s3_request s3_request =
-        aws_lambda_cpp::json::deserialize<aws_lambda_cpp::models::lambda_payloads::s3_request>(request.payload);
+      models::lambda_payloads::s3_request s3_request =
+        json::deserialize<models::lambda_payloads::s3_request>(request.payload);
 
-      std::string payload_json = aws_lambda_cpp::json::serialize(s3_request);
-      _logger->info("Obtained s3 request: %s", payload_json.c_str());
-
-      try {
-        _logger->info("Establishing connection with the database...");
-    
-        sql::SQLString url(connection_string);
-        std::unique_ptr<sql::Connection> conn(sql::DriverManager::getConnection(url));
-        if (conn == nullptr) {
-          _logger->error("Unable to establish connection with database!");
-          return invocation_response::failure("{\"statusCode\": 500}", "application/json");
+      for (int i = 0; i < s3_request.records.size(); i++) {
+        auto record = s3_request.records[i];
+        if (record.is_delete()) {
+          _logger->info("Skipping deleted file %s", record.s3.object.key.c_str());
+          continue;
         }
 
-        _logger->info("Successfully connected to datbase!");
-        _logger->info("Reading from database!");
 
-        std::unique_ptr<sql::Statement> stmnt(conn->createStatement());
-        sql::ResultSet* res = stmnt->executeQuery("select count(1) from users u");
-        res->next();
-        _logger->info("Found users: %d", res->getInt(1));
-    
-        conn->close();
-      } catch (sql::SQLException& e) {
-        _logger->error("Error occured while doing operation on database: %s", e.what());
       }
 
-      return invocation_response::success("{\"statusCode\": 200}", "application/json");
+      //try {
+      //  _logger->info("Establishing connection with the database...");
+      //
+      //  sql::SQLString url(connection_string);
+      //  std::unique_ptr<sql::Connection> conn(sql::DriverManager::getConnection(url));
+      //  if (conn == nullptr) {
+      //    _logger->error("Unable to establish connection with database!");
+      //    return invocation_response::failure("{\"statusCode\": 500}", "application/json");
+      //  }
+      //
+      //  _logger->info("Successfully connected to datbase!");
+      //  _logger->info("Reading from database!");
+      //
+      //  std::unique_ptr<sql::Statement> stmnt(conn->createStatement());
+      //  sql::ResultSet* res = stmnt->executeQuery("select count(1) from users u");
+      //  res->next();
+      //  _logger->info("Found users: %d", res->getInt(1));
+      //
+      //  conn->close();
+      //} catch (sql::SQLException& e) {
+      //  _logger->error("Error occured while doing operation on database: %s", e.what());
+      //}
+
+      return invocation_response::success("All files processed!", "application/json");
     }
 
   private:
