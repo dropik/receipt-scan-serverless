@@ -32,7 +32,6 @@ create table receipts (
   `date` date,
   total_amount decimal(10, 2) not null default 0,
   store_name text not null,
-  status enum('processing', 'processed'),
   
   index ix_user_id (user_id),
   
@@ -49,20 +48,14 @@ create table receipt_items (
   receipt_id char(36) not null,
   description text not null,
   amount decimal(10, 2) not null default 0,
-  category_id char(36),
+  category text,
   
   index ix_receipt_id (receipt_id),
-  index ix_category_id (category_id),
   
   constraint fk_receipt_item foreign key (receipt_id)
     references receipts(id)
     on delete cascade
-    on update restrict,
-    
-  constraint fk_receipt_item_category foreign key (category_id)
-    references categories(id)
-    on delete restrict
-    on update restrict    
+    on update restrict  
 );
 
 DELIMITER //
