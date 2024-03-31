@@ -1,12 +1,20 @@
 #include "receipt-recognition-service.hpp"
 
+#include <cstdlib>
+#include <ctime>
+#include <iomanip>
+#include <limits>
 #include <regex>
+#include <sstream>
+#include <string>
 
 #include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
 #include <aws/textract/model/Document.h>
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
+
+#include <boost/date_time/gregorian/gregorian.hpp>
 
 #include <conncpp/PreparedStatement.hpp>
 #include <conncpp/Exception.hpp>
@@ -21,9 +29,66 @@ using namespace aws_lambda_cpp;
 receipt_recognition_service::receipt_recognition_service(
   const std::shared_ptr<const TextractClient>& textract_client,
   const std::shared_ptr<const logger>& logger,
-        const std::shared_ptr<sql::Connection>& db_connection)
-      : m_textract_client(textract_client), m_logger(logger), m_db_connection(db_connection)
-    {  }
+  const std::shared_ptr<sql::Connection>& db_connection)
+: m_textract_client(textract_client), m_logger(logger), m_db_connection(db_connection) {  }
+
+std::vector<std::string> date_formats= { 
+  "%Y-%m-%d",
+  "%y-%m-%d",
+  "%d/%m/%Y",
+  "%d/%m/%y",
+  "%d.%m.%Y",
+  "%d.%m.%y",
+  "%d-%m-%Y",
+  "%d-%m-%y"
+};
+
+bool receipt_recognition_service::try_parse_date(std::string& result, const std::string& text) {
+  m_logger->info("Starting to parse date string %s", text.c_str());
+
+  bool parsed = false;
+  std::time_t now = std::time(nullptr);
+  double best_diff = std::numeric_limits<double>::max();
+
+  for (int i = 0; i < date_formats.size(); i++) {
+    std::string format = date_formats[i];
+    m_logger->info("Trying format %s", format.c_str());
+
+    std::tm datetime;
+    std::istringstream ss(text);
+    ss >> std::get_time(&datetime, format.c_str());
+    if (ss.fail()) {
+      m_logger->info("Parse failed");
+      continue;
+    }
+    
+    std::ostringstream check_ss;
+    std::tm check_tm(datetime);
+    check_ss << std::put_time(&check_tm, format.c_str());
+    std::string check = check_ss.str();
+    m_logger->info("Cross checking result is %s", check.c_str());
+    if (check != text) {
+      m_logger->info("Cross check failed");
+      continue;
+    }
+
+    // We assume that the correct format would produce a date
+    // most close to the current date.
+    std::time_t t = std::mktime(&datetime);
+    double diff = std::abs(std::difftime(now, t));
+    if (diff < best_diff) {
+      std::tm tm = *std::localtime(&t);
+      m_logger->info("Accepting the parse year: %d, month: %d, day: %d", tm.tm_year, tm.tm_mon, tm.tm_mday);
+      best_diff = diff;
+      std::ostringstream result_ss;
+      result_ss << std::put_time(&tm, "%Y-%m-%d");
+      result = result_ss.str();
+      parsed = true;
+    }
+  }
+
+  return parsed;
+}
 
 invocation_response receipt_recognition_service::handle_request(
     invocation_request const& request) {
@@ -92,6 +157,7 @@ invocation_response receipt_recognition_service::handle_request(
           auto summary_field = summary_fields[k];
           std::string field_type = summary_field.GetType().GetText();
           double confidence = summary_field.GetType().GetConfidence();
+
           if ((field_type == "NAME" || field_type == "VENDOR_NAME")
               && best_store_name_confidence < confidence) {
             store_name = summary_field.GetValueDetection().GetText();
@@ -106,15 +172,28 @@ invocation_response receipt_recognition_service::handle_request(
             best_store_name_confidence = confidence;
           }
 
+          if (field_type == "INVOICE_RECEIPT_DATE" && best_date_confidence < confidence) {
+            if (try_parse_date(date, summary_field.GetValueDetection().GetText())) {
+              best_date_confidence = confidence;
+            } else {
+              m_logger->info("Unable to parse found receipt date");
+              date = "";
+            }
+          }
+
           // todo: parse other fields
         }
 
         // todo: parse items
-          
+        
+        if (best_date_confidence == 0) {
+          m_logger->info("No date found on the receipt.");
+        }
+        
         try {
           stmnt->setString(1, receipt_id);
           stmnt->setString(2, user_id);
-          stmnt->setDateTime(3, "2024-03-30");
+          stmnt->setDateTime(3, date);
           stmnt->setDouble(4, 0);
           stmnt->setString(5, store_name);
           stmnt->executeUpdate();
