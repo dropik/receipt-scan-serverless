@@ -32,43 +32,61 @@ receipt_recognition_service::receipt_recognition_service(
   const std::shared_ptr<sql::Connection>& db_connection)
 : m_textract_client(textract_client), m_logger(logger), m_db_connection(db_connection) {  }
 
-std::vector<std::string> date_formats= { 
+std::vector<std::string> date_formats= {
+  // YMD
   "%Y-%m-%d",
   "%y-%m-%d",
+  "%Y/%m/%d",
+  "%y/%m/%d",
+  "%Y.%m.%d",
+  "%y.%m.%d",
+  "%Y %m %d",
+  "%y %m %d",
+
+  // DMY
+  "%d-%m-%Y",
+  "%d-%m-%y",
   "%d/%m/%Y",
   "%d/%m/%y",
   "%d.%m.%Y",
   "%d.%m.%y",
-  "%d-%m-%Y",
-  "%d-%m-%y"
+  "%d %m %Y",
+  "%d %m %y",
+
+  //MDY
+  "%m-%d-%Y",
+  "%m-%d-%y",
+  "%m/%d/%Y",
+  "%m/%d/%y",
+  "%m.%d.%Y",
+  "%m.%d.%y",
+  "%m %d %Y",
+  "%m %d %y"
 };
 
 bool receipt_recognition_service::try_parse_date(std::string& result, const std::string& text) {
-  m_logger->info("Starting to parse date string %s", text.c_str());
-
   bool parsed = false;
   std::time_t now = std::time(nullptr);
   double best_diff = std::numeric_limits<double>::max();
 
   for (int i = 0; i < date_formats.size(); i++) {
     std::string format = date_formats[i];
-    m_logger->info("Trying format %s", format.c_str());
-
-    std::tm datetime;
+    std::tm datetime = {};
     std::istringstream ss(text);
     ss >> std::get_time(&datetime, format.c_str());
     if (ss.fail()) {
-      m_logger->info("Parse failed");
       continue;
+    }
+    // sanityzing any short dates parsed incorrectly
+    if (datetime.tm_year < 69) {
+      datetime.tm_year += 100;
     }
     
     std::ostringstream check_ss;
     std::tm check_tm(datetime);
     check_ss << std::put_time(&check_tm, format.c_str());
     std::string check = check_ss.str();
-    m_logger->info("Cross checking result is %s", check.c_str());
     if (check != text) {
-      m_logger->info("Cross check failed");
       continue;
     }
 
@@ -77,11 +95,9 @@ bool receipt_recognition_service::try_parse_date(std::string& result, const std:
     std::time_t t = std::mktime(&datetime);
     double diff = std::abs(std::difftime(now, t));
     if (diff < best_diff) {
-      std::tm tm = *std::localtime(&t);
-      m_logger->info("Accepting the parse year: %d, month: %d, day: %d", tm.tm_year, tm.tm_mon, tm.tm_mday);
       best_diff = diff;
       std::ostringstream result_ss;
-      result_ss << std::put_time(&tm, "%Y-%m-%d");
+      result_ss << std::put_time(&datetime, "%Y-%m-%d");
       result = result_ss.str();
       parsed = true;
     }

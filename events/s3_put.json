@@ -27,7 +27,7 @@
           "arn": "arn:aws:s3:::receipt-scan-dev-images-bucket"
         },
         "object": {
-          "key": "users/20a79fcd-1783-475b-9095-35afb0d34b7f/receipts/3d336cbd-e26d-4919-b175-a1cfb53e9990",
+          "key": "users/20a79fcd-1783-475b-9095-35afb0d34b7f/receipts/2ce8417e-c0be-4077-8043-ff3fba02a44d",
           "size": 163840,
           "eTag": "87802c6862b8807248277adc8710b120",
           "sequencer": "0A1B2C3D4E5F678901"
