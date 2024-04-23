@@ -1,8 +1,3 @@
-cmake_minimum_required(VERSION 3.5)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-project(receipt-recognition-service VERSION 1.0.0 LANGUAGES CXX)
 set(DEBUG_PORT_BASE 7001)
 
 configure_file(include/config.h.in

@@ -1,8 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-project(file-uploader VERSION 1.0.0 LANGUAGES CXX)
+set(FUNCTION_NAME "file-uploader")
 set(DEBUG_PORT_BASE 7000)
 
 configure_file(include/config.h.in
@@ -12,17 +8,17 @@ find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3)
 
-add_executable(${PROJECT_NAME} "src/main.cpp")
+add_executable(${FUNCTION_NAME} "src/main.cpp")
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${FUNCTION_NAME} PUBLIC
   "include")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC
+target_link_libraries(${FUNCTION_NAME} PUBLIC
   AWS::aws-lambda-runtime
   ${AWSSDK_LINK_LIBRARIES}
   aws-lambda-cpp-common)
 
-set_target_properties(${PROJECT_NAME}
+set_target_properties(${FUNCTION_NAME}
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/bin")
 
