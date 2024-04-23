@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <exception>
 #include <iomanip>
 #include <limits>
 #include <regex>
@@ -13,8 +14,6 @@
 
 #include <aws/textract/model/Document.h>
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
-
-#include <boost/date_time/gregorian/gregorian.hpp>
 
 #include <conncpp/PreparedStatement.hpp>
 #include <conncpp/Exception.hpp>
@@ -106,6 +105,55 @@ bool receipt_recognition_service::try_parse_date(std::string& result, const std:
   return parsed;
 }
 
+std::map<std::string, std::string> currency_to_locale_map = {
+  { "USD", "en_US.UTF-8" },
+  { "EUR", "fr_FR" }
+};
+
+bool receipt_recognition_service::try_parse_total(long double& result, const std::string& text, const std::string& currency) {
+  m_logger->info("Starting to parse total string %s. Provided currency: %s.", text.c_str(), currency.c_str());
+
+  if (text.length() == 0) {
+    m_logger->info("Invalid total string.");
+    result = 0;
+    return false;
+  }
+
+  std::string locale_str;
+  if (currency.length() == 0
+      || currency_to_locale_map.find(currency) == currency_to_locale_map.end()) {
+    //try {
+      locale_str = currency_to_locale_map["EUR"];
+      //std::string::size_type sz = 0;
+      //long double total = std::stold(text, &sz);
+      //result = total;
+      //m_logger->info("Successfully parsed total value %f.", result);
+      //return true;
+    //} catch (std::exception& e) {
+    //  m_logger->info("Unable to parse total value: %s.", e.what());
+    //  result = 0;
+    //  return false;
+    //}
+  } else {
+    locale_str = currency_to_locale_map[currency];
+    
+  }
+  std::istringstream ss(text.c_str());
+  //std::locale intl(locale_str.c_str());
+  //ss.imbue(intl);
+  //m_logger->info("Imbued locale %s", intl.name().c_str());
+  long double total;
+  ss >> std::get_money(total, true);
+  if (ss.fail()) {
+    m_logger->info("Failed parsing total value: %s", ss.str().c_str());
+    result = 0;
+    return false;
+  }
+  result = total / 100;
+  m_logger->info("Successfully parsed total value %f.", result);
+  return true;   
+}
+
 invocation_response receipt_recognition_service::handle_request(
     invocation_request const& request) {
   m_logger->info("Version %s", VERSION);
@@ -166,7 +214,7 @@ invocation_response receipt_recognition_service::handle_request(
         double best_store_name_confidence = 0;
         std::string date;
         double best_date_confidence = 0;
-        double total = 0;
+        long double total = 0;
         double best_total_confidence = 0;
 
         for (int k = 0; k < summary_fields.size(); k++) {
@@ -197,7 +245,16 @@ invocation_response receipt_recognition_service::handle_request(
             }
           }
 
-          // todo: parse other fields
+          if ((field_type == "AMOUNT_PAID" || field_type == "TOTAL")
+              && best_total_confidence < confidence) {
+            std::string currency = summary_field.GetCurrency().GetCode();
+            if (try_parse_total(total, summary_field.GetValueDetection().GetText(), currency)) {
+              best_total_confidence = confidence;
+            } else {
+              m_logger->info("Unable to parse found total");
+              total = 0;
+            }
+          }
         }
 
         // todo: parse items
