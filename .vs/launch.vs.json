@@ -4,8 +4,15 @@
   "configurations": [
     {
       "type": "cppdbg",
-      "name": "gdbserver",
-      "project": "CMakeLists.txt"
+      "name": "launch-api",
+      "project": "CMakeLists.txt",
+      "projectTarget": "file-uploader",
+      "cwd": "${workspaceRoot}",
+      "program": "out\\build\\Linux-GCC-Debug\\file-uploader",
+      "externalConsole": true,
+      "remotePrelaunchCommand": "./start",
+      "launchCompleteCommand": "None",
+      "miDebuggerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\gdb\\gdb-multiarch\\gdb-multiarch.exe"
     }
   ]
 }

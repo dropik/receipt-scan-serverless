@@ -20,14 +20,14 @@ target_link_libraries(${FUNCTION_NAME} PUBLIC
 
 set_target_properties(${FUNCTION_NAME}
   PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/bin")
+  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/bin")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(${FUNCTION_NAME} PRIVATE DEBUG)
 
   # If building for local development we need a bootstrap that loads AWS credentials
   # to environment
-  set(BOOTSTRAP_PATH "${PROJECT_SOURCE_DIR}/out/build/linux-debug/${FUNCTION_NAME}/bootstrap")
+  set(BOOTSTRAP_PATH "${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/bootstrap")
   file(WRITE "${BOOTSTRAP_PATH}"
     "#!/bin/bash\n"
     "set -e\n"
