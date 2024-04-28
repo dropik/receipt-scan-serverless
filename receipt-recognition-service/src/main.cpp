@@ -19,6 +19,7 @@
 #include "conncpp/Exception.hpp"
 #include "conncpp/SQLString.hpp"
 
+#include <aws-lambda-cpp/common/runtime.hpp>
 #include <aws-lambda-cpp/common/macros.h>
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
@@ -43,13 +44,19 @@ std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
   };
 }
 
-int main() {
+int main(int argc, char* argv[]) {
   using namespace Aws;
 
   SDKOptions options;
   options.loggingOptions.logLevel = Utils::Logging::LogLevel::Info;
   options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
   std::shared_ptr<sql::Connection> db_connection;
+
+#ifdef DEBUG
+  aws_lambda_cpp::runtime::set_debug(argc, argv);
+  aws_lambda_cpp::runtime::load_inline_payload();
+#endif // DEBUG
+
 
   InitAPI(options);
   {
@@ -96,9 +103,16 @@ int main() {
         std::shared_ptr<TextractClient> textractClient = Aws::MakeShared<TextractClient>("textract_client", config);
 
         receipt_recognition_service handler(textractClient, l, db_connection);
-        run_handler([&](const invocation_request& req) {
-          return handler.handle_request(req);
-        });
+        auto handler_f = [&](const invocation_request& req) {
+		  return handler.handle_request(req);
+		};
+
+#ifdef DEBUG
+        aws_lambda_cpp::runtime::run_debug(handler_f);
+#else
+        run_handler(handler_f);
+#endif // DEBUG
+
       } catch (sql::SQLException& e) {
         l->error("Error occured while establishing connection to the database: %s", e.what());
       }

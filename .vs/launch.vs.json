@@ -4,15 +4,59 @@
   "configurations": [
     {
       "type": "cppdbg",
-      "name": "launch-api",
+      "name": "file-uploader",
       "project": "CMakeLists.txt",
       "projectTarget": "file-uploader",
-      "cwd": "${workspaceRoot}",
       "program": "out\\build\\Linux-GCC-Debug\\file-uploader",
+      "MIMode": "gdb",
       "externalConsole": true,
-      "remotePrelaunchCommand": "./start",
+      "remoteMachineName": "${defaultRemoteMachineName}",
+      "pipeTransport": {
+        "disable": true
+      },
       "launchCompleteCommand": "None",
-      "miDebuggerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\gdb\\gdb-multiarch\\gdb-multiarch.exe"
+      "miDebuggerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\gdb\\gdb-multiarch\\gdb-multiarch.exe",
+      "miDebuggerServerAddress": "127.0.0.1:1234",
+      "setupCommands": [
+        {
+          "text": "set architecture aarch64"
+        },
+        {
+          "text": "set sysroot /usr/sysroots/amazonlinux2-arm64"
+        },
+        {
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "type": "cppdbg",
+      "name": "receipt-recognition-service",
+      "project": "CMakeLists.txt",
+      "projectTarget": "receipt-recognition-service",
+      "program": "out\\build\\Linux-GCC-Debug\\receipt-recognition-service",
+      "MIMode": "gdb",
+      "externalConsole": true,
+      "remoteMachineName": "${defaultRemoteMachineName}",
+      "pipeTransport": {
+        "disable": true
+      },
+      "launchCompleteCommand": "None",
+      "miDebuggerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\gdb\\gdb-multiarch\\gdb-multiarch.exe",
+      "miDebuggerServerAddress": "127.0.0.1:1234",
+      "setupCommands": [
+        {
+          "text": "set architecture aarch64"
+        },
+        {
+          "text": "set sysroot /usr/sysroots/amazonlinux2-arm64"
+        },
+        {
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }

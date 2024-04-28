@@ -11,8 +11,9 @@
 
 #include <aws/s3/S3Client.h>
 
-#include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/common/json.hpp>
+#include <aws-lambda-cpp/common/logger.hpp>
+#include <aws-lambda-cpp/common/runtime.hpp>
 #include <aws-lambda-cpp/http/responses.hpp>
 #include <aws-lambda-cpp/models/lambda_payloads/gateway_proxy.hpp>
 
@@ -80,10 +81,15 @@ std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
   };
 }
 
-int main() {
+int main(int argc, char** argv) {
   SDKOptions options;
   options.loggingOptions.logLevel = Utils::Logging::LogLevel::Info;
   options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
+
+#ifdef DEBUG
+  aws_lambda_cpp::runtime::set_debug(argc, argv);
+  aws_lambda_cpp::runtime::load_inline_payload();
+#endif // DEBUG
 
   InitAPI(options);
   {
@@ -91,7 +97,12 @@ int main() {
     std::function<invocation_response(const invocation_request&)> handler = [&](const invocation_request& req) {
       return lambda_handler(logger, req);
     };
+
+#ifdef DEBUG
+    aws_lambda_cpp::runtime::run_debug(handler);
+#else
     run_handler(handler);
+#endif // DEBUG
   }
   ShutdownAPI(options);
 
