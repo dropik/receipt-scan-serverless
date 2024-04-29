@@ -1,3 +1,8 @@
 #!/bin/bash
 env=$(cat $1/debug.env | paste -sd "," -)
-qemu-aarch64 -g 1234 -L /usr/sysroots/amazonlinux2-arm64/ -E $env build/$1/bin/$1 --debug < $1/debug.json
+if [ -z "${env}" ]; then
+	envArg=""
+else
+	envArg="-E $env"
+fi
+qemu-aarch64 -g 1234 -L /usr/sysroots/amazonlinux2-arm64/ $envArg build/$1/bin/$1 --debug < $1/debug.json

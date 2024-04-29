@@ -38,7 +38,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     "set -e\n"
     "export AWS_ACCESS_KEY_ID=$(cat /root/.aws/credentials | grep aws_access_key_id | sed 's/aws_access_key_id = //g')\n"
     "export AWS_SECRET_ACCESS_KEY=$(cat /root/.aws/credentials | grep aws_secret_access_key | sed 's/aws_secret_access_key = //g')\n"
-    "export DB_CONNECTION_STRING=\"jdbc:mariadb://192.168.8.134:3306/receipt-scan?user=receipt-scan&password=QydqG5Ge2u61\"\n"
+    "export DB_CONNECTION_STRING=\"jdbc:mariadb://192.168.8.136:3306/receipt-scan?user=receipt-scan&password=QydqG5Ge2u61\"\n"
     "bin/${FUNCTION_NAME}")
 
   add_custom_target(${BOOTSTRAP} ALL

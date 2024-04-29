@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef DEBUG
       connection_string = getenv("DB_CONNECTION_STRING");
- #else
+#else
       std::string functionName = getenv("AWS_LAMBDA_FUNCTION_NAME");
       l->info("Executing function %s", functionName.c_str());
 
