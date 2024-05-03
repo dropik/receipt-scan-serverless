@@ -9,3 +9,9 @@ Resources:
         Variables:
           IMAGES_BUCKET: receipt-scan-dev-images-bucket
 
+  ReceiptRecognitionService:
+    Properties:
+      Environment:
+        Variables:
+          DB_CONNECTION_STRING:
+

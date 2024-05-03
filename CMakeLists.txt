@@ -9,4 +9,3 @@ configure_file(include/config.h.in
 
 add_subdirectory(file-uploader)
 add_subdirectory(receipt-recognition-service)
-

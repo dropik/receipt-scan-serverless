@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef DEBUG
   aws_lambda_cpp::runtime::set_debug(argc, argv);
-  aws_lambda_cpp::runtime::load_inline_payload();
+  aws_lambda_cpp::runtime::load_payload(argc, argv);
 #endif // DEBUG
 
 

@@ -1,5 +1,5 @@
 set(FUNCTION_NAME "file-uploader")
-set(BOOTSTRAP "${FUNCTION_NAME}-bootstrap")
+set(LAMBDA_ID "FileUploader")
 
 find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
@@ -20,6 +20,7 @@ set_target_properties(${FUNCTION_NAME}
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/bin")
 
+set(BOOTSTRAP "${FUNCTION_NAME}-bootstrap")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(${FUNCTION_NAME} PRIVATE DEBUG)
 
@@ -42,3 +43,7 @@ else()
     COMMAND ln -s "bin/${FUNCTION_NAME}" bootstrap)
 endif()
 
+set(MAKEFILE_PATH "${PROJECT_SOURCE_DIR}/out/${FUNCTION_NAME}/Makefile")
+file(WRITE "${MAKEFILE_PATH}"
+  "build-${LAMBDA_ID}:\n"
+  "\tcp -r ${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/* $(ARTIFACTS_DIR)")

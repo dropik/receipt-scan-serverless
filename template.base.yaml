@@ -30,7 +30,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
-      CodeUri: file-uploader/
+      CodeUri: out/file-uploader/
       Events:
         Api:
           Type: Api
@@ -45,5 +45,5 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
-      CodeUri: receipt-recognition-service/
+      CodeUri: out/receipt-recognition-service/
 
