@@ -9,6 +9,8 @@
 #include <sstream>
 #include <string>
 
+#include <boost/locale.hpp>
+
 #include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
@@ -63,7 +65,7 @@ std::vector<std::string> date_formats= {
   "%m %d %y"
 };
 
-bool receipt_recognition_service::try_parse_date(std::string& result, const std::string& text) {
+bool receipt_recognition_service::try_parse_date(std::string& result, const std::string& input) {
   bool parsed = false;
   std::time_t now = std::time(nullptr);
   double best_diff = std::numeric_limits<double>::max();
@@ -71,7 +73,7 @@ bool receipt_recognition_service::try_parse_date(std::string& result, const std:
   for (int i = 0; i < date_formats.size(); i++) {
     std::string format = date_formats[i];
     std::tm datetime = {};
-    std::istringstream ss(text);
+    std::istringstream ss(input);
     ss >> std::get_time(&datetime, format.c_str());
     if (ss.fail()) {
       continue;
@@ -85,7 +87,7 @@ bool receipt_recognition_service::try_parse_date(std::string& result, const std:
     std::tm check_tm(datetime);
     check_ss << std::put_time(&check_tm, format.c_str());
     std::string check = check_ss.str();
-    if (check != text) {
+    if (check != input) {
       continue;
     }
 
@@ -105,52 +107,44 @@ bool receipt_recognition_service::try_parse_date(std::string& result, const std:
   return parsed;
 }
 
-std::map<std::string, std::string> currency_to_locale_map = {
-  { "USD", "en_US.UTF-8" },
-  { "EUR", "fr_FR" }
-};
+bool receipt_recognition_service::try_parse_total(long double& result, const std::string& input) {
+  // Since deducing a locale might not be reliable, because
+  // the currency might not be present in the text or decimal
+  // separator might be different, we will try to remove all
+  // non-numeric characters and parse the number as a long double
+  // and then divide it by 100 to get the correct value.
+  
+  std::string text(input);
+  replace_all(text, ",", "");
+  replace_all(text, ".", "");
 
-bool receipt_recognition_service::try_parse_total(long double& result, const std::string& text, const std::string& currency) {
-  m_logger->info("Starting to parse total string %s. Provided currency: %s.", text.c_str(), currency.c_str());
-
-  if (text.length() == 0) {
-    m_logger->info("Invalid total string.");
+  std::string::size_type start = 0;
+  for (; start < text.length(); start++) {
+    if (std::isdigit(text[start])) {
+      break;
+    }
+  }
+  std::string::size_type end = start;
+  for (; end < text.length(); end++) {
+    if (!std::isdigit(text[end])) {
+      break;
+    }
+  }
+  std::string numeric = text.substr(start, end - start);
+  
+  if (numeric.length() == 0) {
     result = 0;
     return false;
   }
 
-  std::string locale_str;
-  if (currency.length() == 0
-      || currency_to_locale_map.find(currency) == currency_to_locale_map.end()) {
-    //try {
-      locale_str = currency_to_locale_map["EUR"];
-      //std::string::size_type sz = 0;
-      //long double total = std::stold(text, &sz);
-      //result = total;
-      //m_logger->info("Successfully parsed total value %f.", result);
-      //return true;
-    //} catch (std::exception& e) {
-    //  m_logger->info("Unable to parse total value: %s.", e.what());
-    //  result = 0;
-    //  return false;
-    //}
-  } else {
-    locale_str = currency_to_locale_map[currency];
-    
-  }
-  std::istringstream ss(text.c_str());
-  //std::locale intl(locale_str.c_str());
-  //ss.imbue(intl);
-  //m_logger->info("Imbued locale %s", intl.name().c_str());
+  std::istringstream ss(numeric.c_str());
   long double total;
-  ss >> std::get_money(total, true);
+  ss >> boost::locale::as::currency >> total;
   if (ss.fail()) {
-    m_logger->info("Failed parsing total value: %s", ss.str().c_str());
     result = 0;
     return false;
   }
-  result = total / 100;
-  m_logger->info("Successfully parsed total value %f.", result);
+  result = total / 100.0;
   return true;   
 }
 
@@ -237,8 +231,10 @@ invocation_response receipt_recognition_service::handle_request(
           }
 
           if (field_type == "INVOICE_RECEIPT_DATE" && best_date_confidence < confidence) {
-            if (try_parse_date(date, summary_field.GetValueDetection().GetText())) {
+            std::string found_date;
+            if (try_parse_date(found_date, summary_field.GetValueDetection().GetText())) {
               best_date_confidence = confidence;
+              date = found_date;
             } else {
               m_logger->info("Unable to parse found receipt date");
               date = "";
@@ -247,9 +243,10 @@ invocation_response receipt_recognition_service::handle_request(
 
           if ((field_type == "AMOUNT_PAID" || field_type == "TOTAL")
               && best_total_confidence < confidence) {
-            std::string currency = summary_field.GetCurrency().GetCode();
-            if (try_parse_total(total, summary_field.GetValueDetection().GetText(), currency)) {
+            long double found_total = 0;
+            if (try_parse_total(found_total, summary_field.GetValueDetection().GetText())) {
               best_total_confidence = confidence;
+              total = found_total;
             } else {
               m_logger->info("Unable to parse found total");
               total = 0;
@@ -267,7 +264,7 @@ invocation_response receipt_recognition_service::handle_request(
           stmnt->setString(1, receipt_id);
           stmnt->setString(2, user_id);
           stmnt->setDateTime(3, date);
-          stmnt->setDouble(4, 0);
+          stmnt->setDouble(4, total);
           stmnt->setString(5, store_name);
           stmnt->executeUpdate();
         } catch (sql::SQLException& e) {

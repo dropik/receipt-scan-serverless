@@ -20,7 +20,7 @@ class receipt_recognition_service {
     std::shared_ptr<const Aws::Textract::TextractClient> m_textract_client;
     std::shared_ptr<const aws_lambda_cpp::common::logger> m_logger;
     std::shared_ptr<sql::Connection> m_db_connection;
-    bool try_parse_date(std::string& result, const std::string& text);
-    bool try_parse_total(long double& result, const std::string& text, const std::string& currency);
+    bool try_parse_date(std::string& result, const std::string& input);
+    bool try_parse_total(long double& result, const std::string& input);
 };
 

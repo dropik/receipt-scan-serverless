@@ -6,4 +6,5 @@ if [ -z "${env}" ]; then
 else
 	envArg="-E $env"
 fi
-qemu-aarch64 -g 1234 -L /usr/sysroots/amazonlinux2-arm64/ $envArg build/$1/bin/$1 --debug -p $1/debug.json
+echo "Waiting for gdb to attach..."
+qemu-aarch64 -g 1234 -L /usr/sysroots/amazonlinux2-arm64/ $envArg build/$1/bin/$1 --debug -p events/$1.json
