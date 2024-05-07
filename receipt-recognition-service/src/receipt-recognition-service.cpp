@@ -11,14 +11,14 @@
 
 #include <boost/locale.hpp>
 
-#include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
+#include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
 
-#include <aws/textract/model/Document.h>
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
+#include <aws/textract/model/Document.h>
 
-#include <conncpp/PreparedStatement.hpp>
 #include <conncpp/Exception.hpp>
+#include <conncpp/PreparedStatement.hpp>
 
 #include "config.h"
 
@@ -65,25 +65,45 @@ std::vector<std::string> date_formats= {
   "%m %d %y"
 };
 
-#define RECEIPT_NAME "NAME"
-#define RECEIPT_VENDOR_NAME "VENDOR_NAME"
-#define RECEIPT_DATE "INVOICE_RECEIPT_DATE"
-#define RECEIPT_AMOUNT "AMOUNT_PAID"
-#define RECEIPT_TOTAL "TOTAL"
+constexpr auto RECEIPT_NAME = "NAME";
+constexpr auto RECEIPT_VENDOR_NAME = "VENDOR_NAME";
+constexpr auto RECEIPT_DATE = "INVOICE_RECEIPT_DATE";
+constexpr auto RECEIPT_AMOUNT = "AMOUNT_PAID";
+constexpr auto RECEIPT_TOTAL = "TOTAL";
+constexpr auto ITEM_DESC = "ITEM";
+constexpr auto ITEM_QUANTITY = "QUANTITY";
+constexpr auto ITEM_PRICE = "PRICE";
+constexpr auto ITEM_UNIT_PRICE = "UNIT_PRICE";
+
+static std::string parse_name(const std::string& text) {
+  std::string result(text);
+  replace_all(result, "\n", " ");
+  replace_all(result, "\r", " ");
+  replace_all(result, "\\", " ");
+  replace_all(result, "/", " ");
+  replace_all(result, "<", " ");
+  replace_all(result, ">", " ");
+  std::regex space_regex("\\s{2,}", std::regex_constants::extended);
+  result = std::regex_replace(result, space_regex, " ");
+  return result;
+}
 
 invocation_response receipt_recognition_service::handle_request(
     invocation_request const& request) {
   m_logger->info("Version %s", VERSION);
      
   try {
-    std::shared_ptr<sql::PreparedStatement> stmnt(m_db_connection->prepareStatement(
+    std::shared_ptr<sql::PreparedStatement> mkrec_stmnt(m_db_connection->prepareStatement(
       "insert into receipts (id, user_id, date, total_amount, store_name) values (?, ?, ?, ?, ?)"));
+
+    std::shared_ptr<sql::PreparedStatement> mkitem_stmnt(m_db_connection->prepareStatement(
+	  "insert into receipt_items (id, receipt_id, description, amount, category) values (uuid_v4(), ?, ?, ?, null)"));
 
     models::lambda_payloads::s3_request s3_request =
       json::deserialize<models::lambda_payloads::s3_request>(request.payload);
 
     for (int i = 0; i < s3_request.records.size(); i++) {
-      auto record = s3_request.records[i];
+      auto& record = s3_request.records[i];
       std::string key = record.s3.object.key;
 
       if (!record.is_put()) {
@@ -120,12 +140,14 @@ invocation_response receipt_recognition_service::handle_request(
         continue;
       }
 
-      auto expense_result = outcome.GetResult();
+      auto& expense_result = outcome.GetResult();
         
-      std::vector<Model::ExpenseDocument> expense_documents = expense_result.GetExpenseDocuments();
+      auto& expense_documents = expense_result.GetExpenseDocuments();
       for (int j = 0; j < expense_documents.size(); j++) {
-        Model::ExpenseDocument doc = expense_documents[j];
-        std::vector<Model::ExpenseField> summary_fields = doc.GetSummaryFields();
+        auto& doc = expense_documents[j];
+
+        // Extracting summary fields from the document
+        auto& summary_fields = doc.GetSummaryFields();
           
         std::string store_name;
         double best_store_name_confidence = 0;
@@ -135,26 +157,15 @@ invocation_response receipt_recognition_service::handle_request(
         double best_total_confidence = 0;
 
         for (int k = 0; k < summary_fields.size(); k++) {
-          auto summary_field = summary_fields[k];
+          auto& summary_field = summary_fields[k];
           std::string field_type = summary_field.GetType().GetText();
           double confidence = summary_field.GetType().GetConfidence();
           std::string value = summary_field.GetValueDetection().GetText();
 
-          if ((field_type == RECEIPT_NAME || field_type == RECEIPT_VENDOR_NAME)
-              && best_store_name_confidence < confidence) {
-            store_name = value;
-            replace_all(store_name, "\n", " ");
-            replace_all(store_name, "\r", " ");
-            replace_all(store_name, "\\", " ");
-            replace_all(store_name, "/", " ");
-            replace_all(store_name, "<", " ");
-            replace_all(store_name, ">", " ");
-            std::regex space_regex("\\s{2,}", std::regex_constants::extended);
-            store_name = std::regex_replace(store_name, space_regex, " ");
+          if ((field_type == RECEIPT_NAME || field_type == RECEIPT_VENDOR_NAME) && best_store_name_confidence < confidence) {
+            store_name = parse_name(value);
             best_store_name_confidence = confidence;
-          }
-
-          if (field_type == RECEIPT_DATE && best_date_confidence < confidence) {
+          } else if (field_type == RECEIPT_DATE && best_date_confidence < confidence) {
             std::string found_date;
             if (try_parse_date(found_date, value)) {
               best_date_confidence = confidence;
@@ -163,10 +174,7 @@ invocation_response receipt_recognition_service::handle_request(
               m_logger->info("Unable to parse found receipt date string %s.", value.c_str());
               date = "";
             }
-          }
-
-          if ((field_type == RECEIPT_AMOUNT || field_type == RECEIPT_TOTAL)
-              && best_total_confidence < confidence) {
+          } else if ((field_type == RECEIPT_AMOUNT || field_type == RECEIPT_TOTAL) && best_total_confidence < confidence) {
             long double found_total = 0;
             if (try_parse_total(found_total, value)) {
               best_total_confidence = confidence;
@@ -178,21 +186,105 @@ invocation_response receipt_recognition_service::handle_request(
           }
         }
 
-        // todo: parse items
-        
+        if (best_store_name_confidence == 0) {
+          m_logger->info("No store name found on the receipt.");
+        }
         if (best_date_confidence == 0) {
           m_logger->info("No date found on the receipt.");
         }
+        if (best_total_confidence == 0) {
+		  m_logger->info("No total found on the receipt.");
+		}
         
         try {
-          stmnt->setString(1, receipt_id);
-          stmnt->setString(2, user_id);
-          stmnt->setDateTime(3, date);
-          stmnt->setDouble(4, total);
-          stmnt->setString(5, store_name);
-          stmnt->executeUpdate();
+          mkrec_stmnt->setString(1, receipt_id);
+          mkrec_stmnt->setString(2, user_id);
+          mkrec_stmnt->setDateTime(3, date);
+          mkrec_stmnt->setDouble(4, total);
+          mkrec_stmnt->setString(5, store_name);
+          mkrec_stmnt->executeUpdate();
         } catch (sql::SQLException& e) {
           m_logger->error("Error occured while storing receipt in database: %s", e.what());
+          continue;
+        }
+
+        // Extracting items from the document
+        auto& item_groups = doc.GetLineItemGroups();
+        for (int k = 0; k < item_groups.size(); k++) {
+		  auto& group = item_groups[k];
+		  auto& items = group.GetLineItems();
+          for (int l = 0; l < items.size(); l++) {
+			auto& item = items[l];
+            auto& fields = item.GetLineItemExpenseFields();
+            std::string description;
+            double best_description_confidence = 0;
+            long double amount = 0;
+            double best_amount_confidence = 0;
+            int quantity = 1;
+            double best_quantity_confidence = 0;
+            long double unit_price = 0;
+            double best_unit_price_confidence = 0;
+
+            for (int m = 0; m < fields.size(); m++) {
+			  auto& field = fields[m];
+			  std::string field_type = field.GetType().GetText();
+			  double confidence = field.GetType().GetConfidence();
+			  std::string value = field.GetValueDetection().GetText();
+
+              if (field_type == ITEM_DESC && best_description_confidence < confidence) {
+				description = parse_name(value);
+				best_description_confidence = confidence;
+			  } else if (field_type == ITEM_PRICE && best_amount_confidence < confidence) {
+				long double found_amount = 0;
+                if (try_parse_total(found_amount, value)) {
+				  best_amount_confidence = confidence;
+				  amount = found_amount;
+                } else {
+				  m_logger->info("Unable to parse found amount string %s.", value.c_str());
+				  amount = 0;
+				}
+			  } else if (field_type == ITEM_QUANTITY && best_quantity_confidence < confidence) {
+				int found_quantity = std::stoi(value);
+                if (found_quantity > 0) {
+				  best_quantity_confidence = confidence;
+				  quantity = found_quantity;
+                } else {
+				  m_logger->info("Unable to parse found quantity string %s.", value.c_str());
+				  quantity = 1;
+                }
+			  } else if (field_type == ITEM_UNIT_PRICE && best_unit_price_confidence < confidence) {
+				long double found_unit_price = 0;
+                if (try_parse_total(found_unit_price, value)) {
+				  best_unit_price_confidence = confidence;
+				  unit_price = found_unit_price;
+                } else {
+				  m_logger->info("Unable to parse found unit price string %s.", value.c_str());
+				  unit_price = 0;
+				}
+			  }
+			}
+
+            if (best_description_confidence == 0) {
+              m_logger->info("No description found for item %d.", l);
+            }
+            if (best_amount_confidence == 0 && (best_quantity_confidence == 0 || best_unit_price_confidence == 0)) {
+			  m_logger->info("No amount found for item %s.", description.c_str());
+			}
+
+            if (amount == 0) {
+			  amount = quantity * unit_price;
+			}
+
+            try {
+			  mkitem_stmnt->setString(1, receipt_id);
+			  mkitem_stmnt->setString(2, description);
+			  mkitem_stmnt->setDouble(3, amount);
+			  //mkitem_stmnt->setString(4, "");
+			  mkitem_stmnt->executeUpdate();
+            } catch (sql::SQLException& e) {
+			  m_logger->error("Error occured while storing receipt item in database: %s", e.what());
+			}
+          }
         }
       }
     }
