@@ -138,10 +138,11 @@ invocation_response receipt_recognition_service::handle_request(
           auto summary_field = summary_fields[k];
           std::string field_type = summary_field.GetType().GetText();
           double confidence = summary_field.GetType().GetConfidence();
+          std::string value = summary_field.GetValueDetection().GetText();
 
           if ((field_type == RECEIPT_NAME || field_type == RECEIPT_VENDOR_NAME)
               && best_store_name_confidence < confidence) {
-            store_name = summary_field.GetValueDetection().GetText();
+            store_name = value;
             replace_all(store_name, "\n", " ");
             replace_all(store_name, "\r", " ");
             replace_all(store_name, "\\", " ");
@@ -155,11 +156,11 @@ invocation_response receipt_recognition_service::handle_request(
 
           if (field_type == RECEIPT_DATE && best_date_confidence < confidence) {
             std::string found_date;
-            if (try_parse_date(found_date, summary_field.GetValueDetection().GetText())) {
+            if (try_parse_date(found_date, value)) {
               best_date_confidence = confidence;
               date = found_date;
             } else {
-              m_logger->info("Unable to parse found receipt date");
+              m_logger->info("Unable to parse found receipt date string %s.", value.c_str());
               date = "";
             }
           }
@@ -167,11 +168,11 @@ invocation_response receipt_recognition_service::handle_request(
           if ((field_type == RECEIPT_AMOUNT || field_type == RECEIPT_TOTAL)
               && best_total_confidence < confidence) {
             long double found_total = 0;
-            if (try_parse_total(found_total, summary_field.GetValueDetection().GetText())) {
+            if (try_parse_total(found_total, value)) {
               best_total_confidence = confidence;
               total = found_total;
             } else {
-              m_logger->info("Unable to parse found total");
+              m_logger->info("Unable to parse found total string %s.", value.c_str());
               total = 0;
             }
           }
@@ -272,6 +273,7 @@ bool receipt_recognition_service::try_parse_total(long double& result, const std
   std::string numeric = text.substr(start, end - start);
 
   if (numeric.length() == 0) {
+    m_logger->info("No numeric characters found in the total field.");
     result = 0;
     return false;
   }
@@ -280,6 +282,7 @@ bool receipt_recognition_service::try_parse_total(long double& result, const std
   long double total;
   ss >> boost::locale::as::currency >> total;
   if (ss.fail()) {
+    m_logger->info("Unable to parse total as currency.");
     result = 0;
     return false;
   }
