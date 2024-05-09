@@ -97,7 +97,7 @@ invocation_response receipt_recognition_service::handle_request(
       "insert into receipts (id, user_id, date, total_amount, store_name) values (?, ?, ?, ?, ?)"));
 
     std::shared_ptr<sql::PreparedStatement> mkitem_stmnt(m_db_connection->prepareStatement(
-	  "insert into receipt_items (id, receipt_id, description, amount, category) values (uuid_v4(), ?, ?, ?, null)"));
+	  "insert into receipt_items (id, receipt_id, description, amount, category, sort_order) values (uuid_v4(), ?, ?, ?, null, ?)"));
 
     models::lambda_payloads::s3_request s3_request =
       json::deserialize<models::lambda_payloads::s3_request>(request.payload);
@@ -210,6 +210,7 @@ invocation_response receipt_recognition_service::handle_request(
 
         // Extracting items from the document
         auto& item_groups = doc.GetLineItemGroups();
+        int sort_order = 0;
         for (int k = 0; k < item_groups.size(); k++) {
 		  auto& group = item_groups[k];
 		  auto& items = group.GetLineItems();
@@ -280,10 +281,13 @@ invocation_response receipt_recognition_service::handle_request(
 			  mkitem_stmnt->setString(2, description);
 			  mkitem_stmnt->setDouble(3, amount);
 			  //mkitem_stmnt->setString(4, "");
+              mkitem_stmnt->setInt(4, sort_order);
 			  mkitem_stmnt->executeUpdate();
             } catch (sql::SQLException& e) {
 			  m_logger->error("Error occured while storing receipt item in database: %s", e.what());
 			}
+
+            sort_order++;
           }
         }
       }

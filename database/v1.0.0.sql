@@ -1,3 +1,5 @@
+# Init database
+
 create table users (
   id char(36) not null primary key
 );
@@ -86,4 +88,11 @@ END
 //
 
 DELIMITER ;
+
+# 2024-05-09: add sort order to receipt_items
+alter table receipt_items 
+add column sort_order int not null;
+
+alter table receipt_items 
+add unique index ix_receipt_id_sort_order (sort_order);
 
