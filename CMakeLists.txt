@@ -8,4 +8,4 @@ configure_file(include/config.h.in
   "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h")
 
 add_subdirectory(api)
-add_subdirectory(receipt-recognition-service)
+add_subdirectory(scanner)

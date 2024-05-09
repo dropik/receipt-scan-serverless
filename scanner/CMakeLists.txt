@@ -1,5 +1,5 @@
-set(FUNCTION_NAME "receipt-recognition-service")
-set(LAMBDA_ID "ReceiptRecognitionService")
+set(FUNCTION_NAME "scanner")
+set(LAMBDA_ID "LScanner")
 
 find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
@@ -12,7 +12,7 @@ find_package(Boost COMPONENTS locale)
 
 add_executable(${FUNCTION_NAME}
   "src/main.cpp"
-  "src/receipt-recognition-service.cpp")
+  "src/scanner.cpp")
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
   "${PROJECT_SOURCE_DIR}/include"

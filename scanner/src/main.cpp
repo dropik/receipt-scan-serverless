@@ -25,7 +25,7 @@
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
 #include "config.h"
-#include "receipt-recognition-service.hpp"
+#include "scanner.hpp"
 
 std::string connection_string;
 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
   InitAPI(options);
   {
-    std::shared_ptr<logger> l = std::make_shared<logger>("receipt-recognition-service");
+    std::shared_ptr<logger> l = std::make_shared<logger>("Scanner");
     Aws::Client::ClientConfiguration config;
     config.region = AWS_REGION;
 
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
       
         std::shared_ptr<TextractClient> textractClient = Aws::MakeShared<TextractClient>("textract_client", config);
 
-        receipt_recognition_service handler(textractClient, l, db_connection);
+        scanner handler(textractClient, l, db_connection);
         auto handler_f = [&](const invocation_request& req) {
 		  return handler.handle_request(req);
 		};

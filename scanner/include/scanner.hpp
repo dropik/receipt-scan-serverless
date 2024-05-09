@@ -6,9 +6,9 @@
 #include <aws/textract/TextractClient.h>
 #include <memory>
 
-class receipt_recognition_service {
+class scanner {
   public:
-    receipt_recognition_service(
+    scanner(
       const std::shared_ptr<const Aws::Textract::TextractClient> & textract_client,
       const std::shared_ptr<const aws_lambda_cpp::common::logger>& logger,
       const std::shared_ptr<sql::Connection>& db_connection);

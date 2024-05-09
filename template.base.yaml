@@ -40,10 +40,10 @@ Resources:
             RestApiId:
               Ref: RESTApi
 
-  ReceiptRecognitionService:
+  LScanner:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: makefile
     Properties:
-      CodeUri: out/receipt-recognition-service/
+      CodeUri: out/scanner/
 

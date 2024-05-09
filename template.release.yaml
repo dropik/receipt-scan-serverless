@@ -34,9 +34,9 @@ Resources:
                 - !Sub "arn:aws:s3:::${ImagesBucket}"
                 - !Sub "arn:aws:s3:::${ImagesBucket}/*"
 
-  ReceiptRecognitionService:
+  LScanner:
     Properties:
-      FunctionName: !Sub "receipt-scan-recognition-service-${Stage}"
+      FunctionName: !Sub "receipt-scan-scanner-${Stage}"
       Policies:
         - Version: 2012-10-17
           Statement:

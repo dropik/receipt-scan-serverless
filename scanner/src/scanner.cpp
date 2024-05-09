@@ -1,4 +1,4 @@
-#include "receipt-recognition-service.hpp"
+#include "scanner.hpp"
 
 #include <cstdlib>
 #include <ctime>
@@ -27,7 +27,7 @@ using namespace aws_lambda_cpp::common;
 using namespace aws::lambda_runtime;
 using namespace aws_lambda_cpp;
 
-receipt_recognition_service::receipt_recognition_service(
+scanner::scanner(
   const std::shared_ptr<const TextractClient>& textract_client,
   const std::shared_ptr<const logger>& logger,
   const std::shared_ptr<sql::Connection>& db_connection)
@@ -88,7 +88,7 @@ static std::string parse_name(const std::string& text) {
   return result;
 }
 
-invocation_response receipt_recognition_service::handle_request(
+invocation_response scanner::handle_request(
     invocation_request const& request) {
   m_logger->info("Version %s", VERSION);
      
@@ -97,7 +97,7 @@ invocation_response receipt_recognition_service::handle_request(
       "insert into receipts (id, user_id, date, total_amount, store_name) values (?, ?, ?, ?, ?)"));
 
     std::shared_ptr<sql::PreparedStatement> mkitem_stmnt(m_db_connection->prepareStatement(
-	  "insert into receipt_items (id, receipt_id, description, amount, category, sort_order) values (uuid_v4(), ?, ?, ?, null, ?)"));
+      "insert into receipt_items (id, receipt_id, description, amount, category, sort_order) values (uuid_v4(), ?, ?, ?, null, ?)"));
 
     models::lambda_payloads::s3_request s3_request =
       json::deserialize<models::lambda_payloads::s3_request>(request.payload);
@@ -193,8 +193,8 @@ invocation_response receipt_recognition_service::handle_request(
           m_logger->info("No date found on the receipt.");
         }
         if (best_total_confidence == 0) {
-		  m_logger->info("No total found on the receipt.");
-		}
+          m_logger->info("No total found on the receipt.");
+        }
         
         try {
           mkrec_stmnt->setString(1, receipt_id);
@@ -212,10 +212,10 @@ invocation_response receipt_recognition_service::handle_request(
         auto& item_groups = doc.GetLineItemGroups();
         int sort_order = 0;
         for (int k = 0; k < item_groups.size(); k++) {
-		  auto& group = item_groups[k];
-		  auto& items = group.GetLineItems();
+          auto& group = item_groups[k];
+          auto& items = group.GetLineItems();
           for (int l = 0; l < items.size(); l++) {
-			auto& item = items[l];
+            auto& item = items[l];
             auto& fields = item.GetLineItemExpenseFields();
             std::string description;
             double best_description_confidence = 0;
@@ -227,65 +227,65 @@ invocation_response receipt_recognition_service::handle_request(
             double best_unit_price_confidence = 0;
 
             for (int m = 0; m < fields.size(); m++) {
-			  auto& field = fields[m];
-			  std::string field_type = field.GetType().GetText();
-			  double confidence = field.GetType().GetConfidence();
-			  std::string value = field.GetValueDetection().GetText();
+              auto& field = fields[m];
+              std::string field_type = field.GetType().GetText();
+              double confidence = field.GetType().GetConfidence();
+              std::string value = field.GetValueDetection().GetText();
 
               if (field_type == ITEM_DESC && best_description_confidence < confidence) {
-				description = parse_name(value);
-				best_description_confidence = confidence;
-			  } else if (field_type == ITEM_PRICE && best_amount_confidence < confidence) {
-				long double found_amount = 0;
+                description = parse_name(value);
+                best_description_confidence = confidence;
+              } else if (field_type == ITEM_PRICE && best_amount_confidence < confidence) {
+                long double found_amount = 0;
                 if (try_parse_total(found_amount, value)) {
-				  best_amount_confidence = confidence;
-				  amount = found_amount;
+                  best_amount_confidence = confidence;
+                  amount = found_amount;
                 } else {
-				  m_logger->info("Unable to parse found amount string %s.", value.c_str());
-				  amount = 0;
-				}
-			  } else if (field_type == ITEM_QUANTITY && best_quantity_confidence < confidence) {
-				int found_quantity = std::stoi(value);
-                if (found_quantity > 0) {
-				  best_quantity_confidence = confidence;
-				  quantity = found_quantity;
-                } else {
-				  m_logger->info("Unable to parse found quantity string %s.", value.c_str());
-				  quantity = 1;
+                  m_logger->info("Unable to parse found amount string %s.", value.c_str());
+                  amount = 0;
                 }
-			  } else if (field_type == ITEM_UNIT_PRICE && best_unit_price_confidence < confidence) {
-				long double found_unit_price = 0;
-                if (try_parse_total(found_unit_price, value)) {
-				  best_unit_price_confidence = confidence;
-				  unit_price = found_unit_price;
+              } else if (field_type == ITEM_QUANTITY && best_quantity_confidence < confidence) {
+                int found_quantity = std::stoi(value);
+                if (found_quantity > 0) {
+                  best_quantity_confidence = confidence;
+                  quantity = found_quantity;
                 } else {
-				  m_logger->info("Unable to parse found unit price string %s.", value.c_str());
-				  unit_price = 0;
-				}
-			  }
-			}
+                  m_logger->info("Unable to parse found quantity string %s.", value.c_str());
+                  quantity = 1;
+                }
+              } else if (field_type == ITEM_UNIT_PRICE && best_unit_price_confidence < confidence) {
+                long double found_unit_price = 0;
+                if (try_parse_total(found_unit_price, value)) {
+                  best_unit_price_confidence = confidence;
+                  unit_price = found_unit_price;
+                } else {
+                  m_logger->info("Unable to parse found unit price string %s.", value.c_str());
+                  unit_price = 0;
+                }
+              }
+            }
 
             if (best_description_confidence == 0) {
               m_logger->info("No description found for item %d.", l);
             }
             if (best_amount_confidence == 0 && (best_quantity_confidence == 0 || best_unit_price_confidence == 0)) {
-			  m_logger->info("No amount found for item %s.", description.c_str());
-			}
+              m_logger->info("No amount found for item %s.", description.c_str());
+            }
 
             if (amount == 0) {
-			  amount = quantity * unit_price;
-			}
+              amount = quantity * unit_price;
+            }
 
             try {
-			  mkitem_stmnt->setString(1, receipt_id);
-			  mkitem_stmnt->setString(2, description);
-			  mkitem_stmnt->setDouble(3, amount);
-			  //mkitem_stmnt->setString(4, "");
+              mkitem_stmnt->setString(1, receipt_id);
+              mkitem_stmnt->setString(2, description);
+              mkitem_stmnt->setDouble(3, amount);
+              //mkitem_stmnt->setString(4, "");
               mkitem_stmnt->setInt(4, sort_order);
-			  mkitem_stmnt->executeUpdate();
+              mkitem_stmnt->executeUpdate();
             } catch (sql::SQLException& e) {
-			  m_logger->error("Error occured while storing receipt item in database: %s", e.what());
-			}
+              m_logger->error("Error occured while storing receipt item in database: %s", e.what());
+            }
 
             sort_order++;
           }
@@ -301,7 +301,7 @@ invocation_response receipt_recognition_service::handle_request(
   }
 }
 
-bool receipt_recognition_service::try_parse_date(std::string& result, const std::string& input) {
+bool scanner::try_parse_date(std::string& result, const std::string& input) {
   bool parsed = false;
   std::time_t now = std::time(nullptr);
   double best_diff = std::numeric_limits<double>::max();
@@ -343,7 +343,7 @@ bool receipt_recognition_service::try_parse_date(std::string& result, const std:
   return parsed;
 }
 
-bool receipt_recognition_service::try_parse_total(long double& result, const std::string& input) {
+bool scanner::try_parse_total(long double& result, const std::string& input) {
   // Since deducing a locale might not be reliable, because
   // the currency might not be present in the text or decimal
   // separator might be different, we will try to remove all

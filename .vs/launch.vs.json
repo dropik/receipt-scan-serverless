@@ -32,10 +32,10 @@
     },
     {
       "type": "cppdbg",
-      "name": "receipt-recognition-service",
+      "name": "scanner",
       "project": "CMakeLists.txt",
-      "projectTarget": "receipt-recognition-service",
-      "program": "out\\build\\Linux-GCC-Debug\\receipt-recognition-service",
+      "projectTarget": "scanner",
+      "program": "out\\build\\Linux-GCC-Debug\\scanner",
       "MIMode": "gdb",
       "externalConsole": true,
       "remoteMachineName": "${defaultRemoteMachineName}",

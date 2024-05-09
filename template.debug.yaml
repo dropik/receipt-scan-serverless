@@ -9,7 +9,7 @@ Resources:
         Variables:
           IMAGES_BUCKET: receipt-scan-dev-images-bucket
 
-  ReceiptRecognitionService:
+  LScanner:
     Properties:
       Environment:
         Variables:
