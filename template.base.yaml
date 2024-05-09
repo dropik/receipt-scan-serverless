@@ -25,12 +25,12 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain 
 
-  FileUploader:
+  LApi:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: makefile
     Properties:
-      CodeUri: out/file-uploader/
+      CodeUri: out/api/
       Events:
         Api:
           Type: Api

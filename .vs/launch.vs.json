@@ -4,10 +4,10 @@
   "configurations": [
     {
       "type": "cppdbg",
-      "name": "file-uploader",
+      "name": "api",
       "project": "CMakeLists.txt",
-      "projectTarget": "file-uploader",
-      "program": "out\\build\\Linux-GCC-Debug\\file-uploader",
+      "projectTarget": "api",
+      "program": "out\\build\\Linux-GCC-Debug\\api",
       "MIMode": "gdb",
       "externalConsole": true,
       "remoteMachineName": "${defaultRemoteMachineName}",

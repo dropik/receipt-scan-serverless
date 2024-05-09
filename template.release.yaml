@@ -17,9 +17,9 @@ Resources:
     Properties:
       BucketName: !Sub "${AWS::StackName}-images-bucket"
 
-  FileUploader:
+  LApi:
     Properties:
-      FunctionName: !Sub "receipt-scan-file-uploader-${Stage}"
+      FunctionName: !Sub "receipt-scan-api-${Stage}"
       Environment:
         Variables:
           IMAGES_BUCKET: !Ref ImagesBucket

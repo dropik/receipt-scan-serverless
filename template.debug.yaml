@@ -3,7 +3,7 @@ Globals:
     Timeout: 100000
 
 Resources:
-  FileUploader:
+  LApi:
     Properties:
       Environment:
         Variables:

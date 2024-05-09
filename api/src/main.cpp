@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 
   InitAPI(options);
   {
-    aws_lambda_cpp::common::logger logger("file-uploader");
+    aws_lambda_cpp::common::logger logger("Api");
     std::function<invocation_response(const invocation_request&)> handler = [&](const invocation_request& req) {
       return lambda_handler(logger, req);
     };

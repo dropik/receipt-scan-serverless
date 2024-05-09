@@ -7,5 +7,5 @@ project(receipt-scan-serverless VERSION 1.0.0 LANGUAGES CXX)
 configure_file(include/config.h.in
   "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h")
 
-add_subdirectory(file-uploader)
+add_subdirectory(api)
 add_subdirectory(receipt-recognition-service)

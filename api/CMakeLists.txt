@@ -1,5 +1,5 @@
-set(FUNCTION_NAME "file-uploader")
-set(LAMBDA_ID "FileUploader")
+set(FUNCTION_NAME "api")
+set(LAMBDA_ID "LApi")
 
 find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
