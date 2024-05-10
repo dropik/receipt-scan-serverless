@@ -11,13 +11,14 @@
 
 #include <aws/s3/S3Client.h>
 
-#include <aws-lambda-cpp/common/json.hpp>
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/common/runtime.hpp>
 #include <aws-lambda-cpp/http/responses.hpp>
 #include <aws-lambda-cpp/models/lambda_payloads/gateway_proxy.hpp>
 
 #include "config.h"
+#include "models/upload_file_params.hpp"
+#include "models/upload_file_response.hpp"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -26,24 +27,7 @@ using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
 using namespace aws_lambda_cpp::json;
 using namespace aws_lambda_cpp::models::lambda_payloads;
-
-class upload_file_params {
-  public:
-    std::string name;
-
-    JSON_BEGIN_SERIALIZER(upload_file_params)
-      JSON_PROPERTY("name", name)
-    JSON_END_SERIALIZER()
-};
-
-class upload_file_response {
-  public:
-    std::string url;
-
-    JSON_BEGIN_SERIALIZER(upload_file_response)
-      JSON_PROPERTY("url", url)
-    JSON_END_SERIALIZER()
-};
+using namespace api::models;
 
 static invocation_response lambda_handler(
   const aws_lambda_cpp::common::logger& logger,
@@ -73,7 +57,7 @@ static invocation_response lambda_handler(
   return aws_lambda_cpp::http::ok(response);
 }
 
-std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
+static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
   return [] {
     return Aws::MakeShared<ConsoleLogSystem>(
       "console_logger",
