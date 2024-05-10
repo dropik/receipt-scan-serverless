@@ -28,6 +28,8 @@ set(BOOTSTRAP "${FUNCTION_NAME}-bootstrap")
 add_custom_target(${BOOTSTRAP} ALL
   COMMAND ln -sf "bin/${FUNCTION_NAME}" "${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/bootstrap")
 
+add_dependencies(${BOOTSTRAP} ${FUNCTION_NAME})
+
 set(MAKEFILE_PATH "${PROJECT_SOURCE_DIR}/out/${FUNCTION_NAME}/Makefile")
 file(WRITE "${MAKEFILE_PATH}"
   "build-${LAMBDA_ID}:\n"
