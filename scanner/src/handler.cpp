@@ -1,4 +1,4 @@
-#include "scanner.hpp"
+#include "handler.hpp"
 
 #include <cstdlib>
 #include <ctime>
@@ -21,17 +21,20 @@
 #include <conncpp/PreparedStatement.hpp>
 
 #include "config.h"
+#include "repository/repository.hpp"
 
 using namespace Aws::Textract;
 using namespace aws_lambda_cpp::common;
 using namespace aws::lambda_runtime;
 using namespace aws_lambda_cpp;
+using namespace scanner;
 
-scanner::scanner(
+handler::handler(
   const std::shared_ptr<const TextractClient>& textract_client,
   const std::shared_ptr<const logger>& logger,
-  const std::shared_ptr<sql::Connection>& db_connection)
-: m_textract_client(textract_client), m_logger(logger), m_db_connection(db_connection) {  }
+  const std::shared_ptr<sql::Connection>& db_connection,
+  const std::shared_ptr<repository::repository>& repository)
+: m_textract_client(textract_client), m_logger(logger), m_db_connection(db_connection), m_repository(repository) {  }
 
 std::vector<std::string> date_formats= {
   // YMD
@@ -88,19 +91,18 @@ static std::string parse_name(const std::string& text) {
   return result;
 }
 
-invocation_response scanner::handle_request(
-    invocation_request const& request) {
+invocation_response handler::handle_request(invocation_request const& request) {
   m_logger->info("Version %s", VERSION);
-     
+
   try {
-    std::shared_ptr<sql::PreparedStatement> mkrec_stmnt(m_db_connection->prepareStatement(
-      "insert into receipts (id, user_id, date, total_amount, store_name) values (?, ?, ?, ?, ?)"));
+    std::shared_ptr<sql::PreparedStatement> mkitem_stmnt(
+        m_db_connection->prepareStatement(
+            "insert into receipt_items (id, receipt_id, description, amount, "
+            "category, sort_order) values (uuid_v4(), ?, ?, ?, null, ?)"));
 
-    std::shared_ptr<sql::PreparedStatement> mkitem_stmnt(m_db_connection->prepareStatement(
-      "insert into receipt_items (id, receipt_id, description, amount, category, sort_order) values (uuid_v4(), ?, ?, ?, null, ?)"));
-
-    models::lambda_payloads::s3_request s3_request =
-      json::deserialize<models::lambda_payloads::s3_request>(request.payload);
+    aws_lambda_cpp::models::lambda_payloads::s3_request s3_request =
+        json::deserialize<aws_lambda_cpp::models::lambda_payloads::s3_request>(
+            request.payload);
 
     for (int i = 0; i < s3_request.records.size(); i++) {
       auto& record = s3_request.records[i];
@@ -110,10 +112,13 @@ invocation_response scanner::handle_request(
         m_logger->info("Skipping not put request.");
         continue;
       }
-        
-      std::regex file_regex("users/" GUID_REGEX "/receipts/" GUID_REGEX, std::regex_constants::extended);
+
+      std::regex file_regex("users/" GUID_REGEX "/receipts/" GUID_REGEX,
+                            std::regex_constants::extended);
       if (!std::regex_match(key, file_regex)) {
-        m_logger->error("The key %s does not conform receipt file path structure.", key.c_str());
+        m_logger->error(
+            "The key %s does not conform receipt file path structure.",
+            key.c_str());
         continue;
       }
 
@@ -123,12 +128,11 @@ invocation_response scanner::handle_request(
       key_parted.erase(0, users_delimeter + 10);
       std::string receipt_id = key_parted;
 
-      m_logger->info("Processing receipt %s of user %s", receipt_id.c_str(), user_id.c_str());
+      m_logger->info("Processing receipt %s of user %s", receipt_id.c_str(),
+                     user_id.c_str());
 
       Model::S3Object s3_object;
-      s3_object
-        .WithBucket(record.s3.bucket.name)
-        .WithName(key);
+      s3_object.WithBucket(record.s3.bucket.name).WithName(key);
       Model::Document s3_document;
       s3_document.WithS3Object(s3_object);
       Model::AnalyzeExpenseRequest expense_request;
@@ -136,24 +140,26 @@ invocation_response scanner::handle_request(
 
       auto outcome = m_textract_client->AnalyzeExpense(expense_request);
       if (!outcome.IsSuccess()) {
-        m_logger->error("Error occured while analyzing expense: %s", outcome.GetError().GetMessage().c_str());
+        m_logger->error("Error occured while analyzing expense: %s",
+                        outcome.GetError().GetMessage().c_str());
         continue;
       }
 
       auto& expense_result = outcome.GetResult();
-        
+
       auto& expense_documents = expense_result.GetExpenseDocuments();
       for (int j = 0; j < expense_documents.size(); j++) {
         auto& doc = expense_documents[j];
 
         // Extracting summary fields from the document
         auto& summary_fields = doc.GetSummaryFields();
-          
-        std::string store_name;
+
+        models::receipt receipt;
+        receipt.id = receipt_id;
+        receipt.user_id = user_id;
+
         double best_store_name_confidence = 0;
-        std::string date;
         double best_date_confidence = 0;
-        long double total = 0;
         double best_total_confidence = 0;
 
         for (int k = 0; k < summary_fields.size(); k++) {
@@ -162,26 +168,33 @@ invocation_response scanner::handle_request(
           double confidence = summary_field.GetType().GetConfidence();
           std::string value = summary_field.GetValueDetection().GetText();
 
-          if ((field_type == RECEIPT_NAME || field_type == RECEIPT_VENDOR_NAME) && best_store_name_confidence < confidence) {
-            store_name = parse_name(value);
+          if ((field_type == RECEIPT_NAME ||
+               field_type == RECEIPT_VENDOR_NAME) &&
+              best_store_name_confidence < confidence) {
+            receipt.store_name = parse_name(value);
             best_store_name_confidence = confidence;
-          } else if (field_type == RECEIPT_DATE && best_date_confidence < confidence) {
+          } else if (field_type == RECEIPT_DATE &&
+                     best_date_confidence < confidence) {
             std::string found_date;
             if (try_parse_date(found_date, value)) {
               best_date_confidence = confidence;
-              date = found_date;
+              receipt.date = found_date;
             } else {
-              m_logger->info("Unable to parse found receipt date string %s.", value.c_str());
-              date = "";
+              m_logger->info("Unable to parse found receipt date string %s.",
+                             value.c_str());
+              receipt.date = "";
             }
-          } else if ((field_type == RECEIPT_AMOUNT || field_type == RECEIPT_TOTAL) && best_total_confidence < confidence) {
+          } else if ((field_type == RECEIPT_AMOUNT ||
+                      field_type == RECEIPT_TOTAL) &&
+                     best_total_confidence < confidence) {
             long double found_total = 0;
             if (try_parse_total(found_total, value)) {
               best_total_confidence = confidence;
-              total = found_total;
+              receipt.total_amount = found_total;
             } else {
-              m_logger->info("Unable to parse found total string %s.", value.c_str());
-              total = 0;
+              m_logger->info("Unable to parse found total string %s.",
+                             value.c_str());
+              receipt.total_amount = 0;
             }
           }
         }
@@ -195,16 +208,12 @@ invocation_response scanner::handle_request(
         if (best_total_confidence == 0) {
           m_logger->info("No total found on the receipt.");
         }
-        
+
         try {
-          mkrec_stmnt->setString(1, receipt_id);
-          mkrec_stmnt->setString(2, user_id);
-          mkrec_stmnt->setDateTime(3, date);
-          mkrec_stmnt->setDouble(4, total);
-          mkrec_stmnt->setString(5, store_name);
-          mkrec_stmnt->executeUpdate();
+          m_repository->create(receipt);
         } catch (sql::SQLException& e) {
-          m_logger->error("Error occured while storing receipt in database: %s", e.what());
+          m_logger->error("Error occured while storing receipt in database: %s",
+                          e.what());
           continue;
         }
 
@@ -232,34 +241,41 @@ invocation_response scanner::handle_request(
               double confidence = field.GetType().GetConfidence();
               std::string value = field.GetValueDetection().GetText();
 
-              if (field_type == ITEM_DESC && best_description_confidence < confidence) {
+              if (field_type == ITEM_DESC &&
+                  best_description_confidence < confidence) {
                 description = parse_name(value);
                 best_description_confidence = confidence;
-              } else if (field_type == ITEM_PRICE && best_amount_confidence < confidence) {
+              } else if (field_type == ITEM_PRICE &&
+                         best_amount_confidence < confidence) {
                 long double found_amount = 0;
                 if (try_parse_total(found_amount, value)) {
                   best_amount_confidence = confidence;
                   amount = found_amount;
                 } else {
-                  m_logger->info("Unable to parse found amount string %s.", value.c_str());
+                  m_logger->info("Unable to parse found amount string %s.",
+                                 value.c_str());
                   amount = 0;
                 }
-              } else if (field_type == ITEM_QUANTITY && best_quantity_confidence < confidence) {
+              } else if (field_type == ITEM_QUANTITY &&
+                         best_quantity_confidence < confidence) {
                 int found_quantity = std::stoi(value);
                 if (found_quantity > 0) {
                   best_quantity_confidence = confidence;
                   quantity = found_quantity;
                 } else {
-                  m_logger->info("Unable to parse found quantity string %s.", value.c_str());
+                  m_logger->info("Unable to parse found quantity string %s.",
+                                 value.c_str());
                   quantity = 1;
                 }
-              } else if (field_type == ITEM_UNIT_PRICE && best_unit_price_confidence < confidence) {
+              } else if (field_type == ITEM_UNIT_PRICE &&
+                         best_unit_price_confidence < confidence) {
                 long double found_unit_price = 0;
                 if (try_parse_total(found_unit_price, value)) {
                   best_unit_price_confidence = confidence;
                   unit_price = found_unit_price;
                 } else {
-                  m_logger->info("Unable to parse found unit price string %s.", value.c_str());
+                  m_logger->info("Unable to parse found unit price string %s.",
+                                 value.c_str());
                   unit_price = 0;
                 }
               }
@@ -268,8 +284,11 @@ invocation_response scanner::handle_request(
             if (best_description_confidence == 0) {
               m_logger->info("No description found for item %d.", l);
             }
-            if (best_amount_confidence == 0 && (best_quantity_confidence == 0 || best_unit_price_confidence == 0)) {
-              m_logger->info("No amount found for item %s.", description.c_str());
+            if (best_amount_confidence == 0 &&
+                (best_quantity_confidence == 0 ||
+                 best_unit_price_confidence == 0)) {
+              m_logger->info("No amount found for item %s.",
+                             description.c_str());
             }
 
             if (amount == 0) {
@@ -280,11 +299,13 @@ invocation_response scanner::handle_request(
               mkitem_stmnt->setString(1, receipt_id);
               mkitem_stmnt->setString(2, description);
               mkitem_stmnt->setDouble(3, amount);
-              //mkitem_stmnt->setString(4, "");
+              // mkitem_stmnt->setString(4, "");
               mkitem_stmnt->setInt(4, sort_order);
               mkitem_stmnt->executeUpdate();
             } catch (sql::SQLException& e) {
-              m_logger->error("Error occured while storing receipt item in database: %s", e.what());
+              m_logger->error(
+                  "Error occured while storing receipt item in database: %s",
+                  e.what());
             }
 
             sort_order++;
@@ -293,15 +314,18 @@ invocation_response scanner::handle_request(
       }
     }
 
-    return invocation_response::success("All files processed!", "application/json");
+    return invocation_response::success("All files processed!",
+                                        "application/json");
 
   } catch (sql::SQLException& e) {
-    m_logger->error("Error occured while preparing insert receipt statement: %s", e.what());
-    return invocation_response::failure("Internal error occured.", "application/json");
+    m_logger->error(
+        "Error occured while preparing insert receipt statement: %s", e.what());
+    return invocation_response::failure("Internal error occured.",
+                                        "application/json");
   }
 }
 
-bool scanner::try_parse_date(std::string& result, const std::string& input) {
+bool handler::try_parse_date(std::string& result, const std::string& input) {
   bool parsed = false;
   std::time_t now = std::time(nullptr);
   double best_diff = std::numeric_limits<double>::max();
@@ -343,7 +367,7 @@ bool scanner::try_parse_date(std::string& result, const std::string& input) {
   return parsed;
 }
 
-bool scanner::try_parse_total(long double& result, const std::string& input) {
+bool handler::try_parse_total(long double& result, const std::string& input) {
   // Since deducing a locale might not be reliable, because
   // the currency might not be present in the text or decimal
   // separator might be different, we will try to remove all
