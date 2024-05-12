@@ -9,9 +9,9 @@
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 #include <aws/core/utils/memory/stl/AWSAllocator.h>
 #include <aws/s3/S3Client.h>
+#include <aws/ssm/model/GetParameterRequest.h>
 #include <aws/ssm/SSMClient.h>
 #include <aws/ssm/SSMServiceClientModel.h>
-#include <aws/ssm/model/GetParameterRequest.h>
 #include <aws/textract/TextractClient.h>
 
 #include "conncpp/Connection.hpp"
@@ -19,9 +19,9 @@
 #include "conncpp/Exception.hpp"
 #include "conncpp/SQLString.hpp"
 
-#include <aws-lambda-cpp/common/runtime.hpp>
-#include <aws-lambda-cpp/common/macros.h>
 #include <aws-lambda-cpp/common/logger.hpp>
+#include <aws-lambda-cpp/common/macros.h>
+#include <aws-lambda-cpp/common/runtime.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
 #include "config.h"

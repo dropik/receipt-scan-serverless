@@ -26,13 +26,13 @@ class repository {
   template <typename T>
   void create(const T& entity) {
     auto& configuration = get_configuration<T>();
+    m_logger->info("Inserting in %s...", configuration.get_table_name().c_str());
     try {
       auto& stmt = configuration.get_insert_statement(entity, m_connection);
       if (!stmt) {
         m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      m_logger->info("Executing prepared statement...");
       stmt->executeUpdate();
     } catch (std::exception& e) {
       m_logger->error("Error occured while creating entity in the database: %s",
@@ -44,13 +44,13 @@ class repository {
   template <typename T>
   std::shared_ptr<T> get(const std::string& id) {
     auto& configuration = get_configuration<T>();
+    m_logger->info("Getting entity from %s...", configuration.get_table_name().c_str());
     try {
       auto& stmt = configuration.get_select_statement(id, m_connection);
       if (!stmt) {
         m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      m_logger->info("Executing prepared statement...");
       auto result = stmt->executeQuery();
       if (result->next()) {
         return std::move(configuration.get_entity(result));
@@ -66,13 +66,13 @@ class repository {
   template <typename T>
   void update(const T& entity) {
     auto& configuration = get_configuration<T>();
+    m_logger->info("Updating in %s...", configuration.get_table_name().c_str());
     try {
       auto& stmt = configuration.get_update_statement(entity, m_connection);
       if (!stmt) {
         m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      m_logger->info("Executing prepared statement...");
       stmt->executeUpdate();
     } catch (std::exception& e) {
       m_logger->error("Error occured while updating entity in the database: %s",
@@ -84,13 +84,13 @@ class repository {
   template <typename T>
   void drop(const std::string& id) {
     auto& configuration = get_configuration<T>();
+    m_logger->info("Deleting from %s...", configuration.get_table_name().c_str());
     try {
       auto& stmt = configuration.get_delete_statement(id, m_connection);
       if (!stmt) {
         m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      m_logger->info("Executing prepared statement...");
       stmt->executeUpdate();
     } catch (std::exception& e) {
       m_logger->error("Error occured while deleting entity in the database: %s",

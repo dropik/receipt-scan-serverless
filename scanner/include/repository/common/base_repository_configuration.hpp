@@ -81,7 +81,6 @@ class base_repository_configuration {
         query += ", ?";
       }
       query += ")";
-      std::cout << "Insert query: " << query << std::endl;
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -120,7 +119,6 @@ class base_repository_configuration {
       }
       query += " from " + m_table->get_name() + " where " +
                m_id->get_column_name() + " = ?";
-      std::cout << "Select query: " << query << std::endl;
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -163,7 +161,6 @@ class base_repository_configuration {
         }
       }
       query += " where " + m_id->get_column_name() + " = ?";
-      std::cout << "Update query: " << query << std::endl;
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -197,7 +194,6 @@ class base_repository_configuration {
 
       std::string query = "delete from " + m_table->get_name() + " where " +
                           m_id->get_column_name() + " = ?";
-      std::cout << "Delete query: " << query << std::endl;
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -209,6 +205,13 @@ class base_repository_configuration {
     m_delete_statement->setString(1, id);
 
     return m_delete_statement;
+  }
+
+  const std::string& get_table_name() const {
+    if (!m_table) {
+      throw std::runtime_error("Table is not configured!");
+    }
+    return m_table->get_name();
   }
 
  protected:
