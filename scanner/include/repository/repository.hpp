@@ -13,6 +13,7 @@
 
 #include "repository_configuration.hpp"
 #include "receipt_configuration.hpp"
+#include "receipt_item_configuration.hpp"
 
 namespace scanner {
 namespace repository {

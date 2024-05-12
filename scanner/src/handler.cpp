@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include "repository/repository.hpp"
+#include "models/receipt_item.hpp"
 
 using namespace Aws::Textract;
 using namespace aws_lambda_cpp::common;
@@ -95,11 +96,6 @@ invocation_response handler::handle_request(invocation_request const& request) {
   m_logger->info("Version %s", VERSION);
 
   try {
-    std::shared_ptr<sql::PreparedStatement> mkitem_stmnt(
-        m_db_connection->prepareStatement(
-            "insert into receipt_items (id, receipt_id, description, amount, "
-            "category, sort_order) values (uuid_v4(), ?, ?, ?, null, ?)"));
-
     aws_lambda_cpp::models::lambda_payloads::s3_request s3_request =
         json::deserialize<aws_lambda_cpp::models::lambda_payloads::s3_request>(
             request.payload);
@@ -226,13 +222,20 @@ invocation_response handler::handle_request(invocation_request const& request) {
           for (int l = 0; l < items.size(); l++) {
             auto& item = items[l];
             auto& fields = item.GetLineItemExpenseFields();
-            std::string description;
-            double best_description_confidence = 0;
-            long double amount = 0;
-            double best_amount_confidence = 0;
+
             int quantity = 1;
-            double best_quantity_confidence = 0;
             long double unit_price = 0;
+
+            models::receipt_item receipt_item;
+            receipt_item.id = Aws::Utils::UUID::RandomUUID();
+            std::transform(receipt_item.id.begin(), receipt_item.id.end(),
+                           receipt_item.id.begin(), ::tolower);
+            receipt_item.receipt_id = receipt_id;
+            receipt_item.sort_order = sort_order;
+
+            double best_description_confidence = 0;
+            double best_amount_confidence = 0;
+            double best_quantity_confidence = 0;
             double best_unit_price_confidence = 0;
 
             for (int m = 0; m < fields.size(); m++) {
@@ -243,18 +246,18 @@ invocation_response handler::handle_request(invocation_request const& request) {
 
               if (field_type == ITEM_DESC &&
                   best_description_confidence < confidence) {
-                description = parse_name(value);
+                receipt_item.description = parse_name(value);
                 best_description_confidence = confidence;
               } else if (field_type == ITEM_PRICE &&
                          best_amount_confidence < confidence) {
                 long double found_amount = 0;
                 if (try_parse_total(found_amount, value)) {
                   best_amount_confidence = confidence;
-                  amount = found_amount;
+                  receipt_item.amount = found_amount;
                 } else {
                   m_logger->info("Unable to parse found amount string %s.",
                                  value.c_str());
-                  amount = 0;
+                  receipt_item.amount = 0;
                 }
               } else if (field_type == ITEM_QUANTITY &&
                          best_quantity_confidence < confidence) {
@@ -288,20 +291,15 @@ invocation_response handler::handle_request(invocation_request const& request) {
                 (best_quantity_confidence == 0 ||
                  best_unit_price_confidence == 0)) {
               m_logger->info("No amount found for item %s.",
-                             description.c_str());
+                             receipt_item.description.c_str());
             }
 
-            if (amount == 0) {
-              amount = quantity * unit_price;
+            if (receipt_item.amount == 0) {
+              receipt_item.amount = quantity * unit_price;
             }
 
             try {
-              mkitem_stmnt->setString(1, receipt_id);
-              mkitem_stmnt->setString(2, description);
-              mkitem_stmnt->setDouble(3, amount);
-              // mkitem_stmnt->setString(4, "");
-              mkitem_stmnt->setInt(4, sort_order);
-              mkitem_stmnt->executeUpdate();
+              m_repository->create(receipt_item);
             } catch (sql::SQLException& e) {
               m_logger->error(
                   "Error occured while storing receipt item in database: %s",
