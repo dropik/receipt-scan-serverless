@@ -13,7 +13,7 @@ find_package(Boost COMPONENTS locale)
 add_executable(${FUNCTION_NAME}
   "src/main.cpp"
   "src/handler.cpp"
-  "src/repository/repository.cpp")
+  "src/repository/repository.cpp" "src/utils.cpp")
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
   "${PROJECT_SOURCE_DIR}/include"

@@ -22,7 +22,7 @@
 
 #include "config.h"
 #include "repository/repository.hpp"
-#include "models/receipt_item.hpp"
+#include "utils.hpp"
 
 using namespace Aws::Textract;
 using namespace aws_lambda_cpp::common;
@@ -227,9 +227,7 @@ invocation_response handler::handle_request(invocation_request const& request) {
             long double unit_price = 0;
 
             models::receipt_item receipt_item;
-            receipt_item.id = Aws::Utils::UUID::RandomUUID();
-            std::transform(receipt_item.id.begin(), receipt_item.id.end(),
-                           receipt_item.id.begin(), ::tolower);
+            receipt_item.id = utils::gen_uuid();
             receipt_item.receipt_id = receipt_id;
             receipt_item.sort_order = sort_order;
 
