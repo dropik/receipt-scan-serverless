@@ -65,14 +65,16 @@ class base_repository_configuration {
     return *m_table;
   }
 
-  id_configuration<T>& has_id(const typename id_configuration<T>::id_selector_t& id_selector) {
+  id_configuration<T>& has_id(
+      const typename id_configuration<T>::id_selector_t& id_selector) {
     m_id = std::make_shared<id_configuration<T>>(id_selector);
     return *m_id;
   }
 
   template <typename TProperty>
   base_property_configuration<T>& has_property(
-      const typename property_configuration<T, TProperty>::property_selector_t& property_selector) {
+      const typename property_configuration<T, TProperty>::property_selector_t&
+          property_selector) {
     std::shared_ptr<property_configuration<T, TProperty>> property =
         std::make_shared<property_configuration<T, TProperty>>(
             property_selector);
