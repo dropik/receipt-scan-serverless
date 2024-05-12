@@ -58,6 +58,24 @@ class repository {
     }
   }
 
+  template <typename T>
+  void drop(const std::string& id) {
+    auto& configuration = get_configuration<T>();
+    try {
+      auto& stmt = configuration.get_delete_statement(id, m_connection);
+      if (!stmt) {
+        m_logger->error("Unable to create prepared statement!");
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      m_logger->info("Executing prepared statement...");
+      stmt->executeUpdate();
+    } catch (std::exception& e) {
+      m_logger->error("Error occured while deleting entity in the database: %s",
+                      e.what());
+      throw;
+    }
+  }
+
  private:
   template <typename T>
   repository_configuration<T>& get_configuration() {

@@ -111,10 +111,36 @@ class base_repository_configuration {
                                            m_update_statement);
       property_index++;
     }
-    m_id->configure_statement(property_index + 1, entity,
+    m_id->configure_statement(property_index, entity,
                               m_update_statement);
 
     return m_update_statement;
+  }
+
+  const std::shared_ptr<sql::PreparedStatement>& get_delete_statement(
+      const std::string& id, const std::shared_ptr<sql::Connection>& connection) {
+    if (!m_delete_statement) {
+      if (!m_table) {
+        throw std::runtime_error("Table is not configured!");
+      }
+      if (!m_id) {
+        throw std::runtime_error("Id is not configured!");
+      }
+
+      std::string query = "delete from " + m_table->get_name() + " where " +
+                          m_id->get_column_name() + " = ?";
+      std::cout << "Delete query: " << query << std::endl;
+      std::shared_ptr<sql::PreparedStatement> stmt(
+          connection->prepareStatement(query));
+      if (!stmt) {
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      m_delete_statement = std::move(stmt);
+    }
+
+    m_delete_statement->setString(1, id);
+
+    return m_delete_statement;
   }
 
  protected:
@@ -145,6 +171,7 @@ class base_repository_configuration {
  private:
   std::shared_ptr<sql::PreparedStatement> m_insert_statement;
   std::shared_ptr<sql::PreparedStatement> m_update_statement;
+  std::shared_ptr<sql::PreparedStatement> m_delete_statement;
   std::shared_ptr<table_configuration> m_table;
   std::shared_ptr<id_configuration<T>> m_id;
   std::vector<std::shared_ptr<base_property_configuration<T>>> m_properties;
