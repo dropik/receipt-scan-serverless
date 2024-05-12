@@ -14,18 +14,44 @@
 #include "table_configuration.hpp"
 
 #define HAS_TABLE(table_name) has_table(table_name)
+
 #define HAS_ID(id_field) \
-  has_id([](const entity_t& entity) -> const std::string& { return entity.id_field; })
-#define WITH_COLUMN(column_name) .with_column_name(column_name)
+  has_id(                                                \
+      [](const entity_t& entity) -> const std::string& { \
+        return entity.id_field;                          \
+      },                                                 \
+      [](entity_t& entity, const std::string& id) {      \
+        entity.id_field = id;                            \
+      })
+
 #define HAS_STRING(field) \
-  has_property<std::string>([](const entity_t& entity) -> const std::string& { return entity.field; })
-#define HAS_INT(field) has_property<int>([](const entity_t& entity) -> int { return entity.field; })
+  has_property<std::string>(                             \
+      [](const entity_t& entity) -> const std::string& { \
+        return entity.field;                             \
+      },                                                 \
+      [](entity_t& entity, const std::string& s) { entity.field = s; })
+
+#define HAS_INT(field) \
+  has_property<int>(   \
+      [](const entity_t& entity) -> int { return entity.field; }, \
+      [](entity_t& entity, int i) { entity.field = i; })
+
 #define HAS_DOUBLE(field) \
-  has_property<double>([](const entity_t& entity) -> double { return entity.field; })
+  has_property<double>(   \
+      [](const entity_t& entity) -> double { return entity.field; }, \
+      [](entity_t& entity, double d) { entity.field = d; })
+
 #define HAS_BOOL(field) \
-  has_property<bool>([](const entity_t& entity) -> bool { return entity.field; })
+  has_property<bool>(   \
+      [](const entity_t& entity) -> bool { return entity.field; }, \
+      [](entity_t& entity, bool b) { entity.field = b; })
+
 #define HAS_DECIMAL(field) \
-  has_property<long double>([](const entity_t& entity) -> long double { return entity.field; })
+  has_property<long double>( \
+      [](const entity_t& entity) -> long double { return entity.field; }, \
+      [](entity_t& entity, long double d) { entity.field = d; })
+
+#define WITH_COLUMN(column_name) .with_column_name(column_name)
 
 namespace scanner {
 namespace repository {
@@ -74,6 +100,48 @@ class base_repository_configuration {
     }
 
     return m_insert_statement;
+  }
+
+  const std::shared_ptr<sql::PreparedStatement>& get_select_statement(
+      const std::string& id,
+      const std::shared_ptr<sql::Connection>& connection) {
+    if (!m_select_statement) {
+      if (!m_table) {
+        throw std::runtime_error("Table is not configured!");
+      }
+      if (!m_id) {
+        throw std::runtime_error("Id is not configured!");
+      }
+
+      std::string query = "select " + m_id->get_column_name();
+      for (const auto& property : m_properties) {
+        if (!property) continue;
+        query += ", " + property->get_column_name();
+      }
+      query += " from " + m_table->get_name() + " where " +
+               m_id->get_column_name() + " = ?";
+      std::cout << "Select query: " << query << std::endl;
+      std::shared_ptr<sql::PreparedStatement> stmt(
+          connection->prepareStatement(query));
+      if (!stmt) {
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      m_select_statement = std::move(stmt);
+    }
+
+    m_select_statement->setString(1, id);
+
+    return m_select_statement;
+  }
+
+  std::shared_ptr<T> get_entity(sql::ResultSet* result) {
+    auto entity = std::make_shared<T>();
+    m_id->set_id(*entity, result);
+    for (size_t i = 0; i < m_properties.size(); i++) {
+      if (!m_properties[i]) continue;
+      m_properties[i]->set_entity_property(*entity, result);
+    }
+    return entity;
   }
 
   const std::shared_ptr<sql::PreparedStatement>& get_update_statement(
@@ -152,24 +220,28 @@ class base_repository_configuration {
   }
 
   id_configuration<T>& has_id(
-      const typename id_configuration<T>::id_selector_t& id_selector) {
-    m_id = std::make_shared<id_configuration<T>>(id_selector);
+      const typename id_configuration<T>::id_selector_t& id_selector,
+      const typename id_configuration<T>::id_setter_t& id_setter) {
+    m_id = std::make_shared<id_configuration<T>>(id_selector, id_setter);
     return *m_id;
   }
 
   template <typename TProperty>
   base_property_configuration<T>& has_property(
       const typename property_configuration<T, TProperty>::property_selector_t&
-          property_selector) {
+          property_selector,
+      const typename property_configuration<T, TProperty>::property_setter_t&
+          property_setter) {
     std::shared_ptr<property_configuration<T, TProperty>> property =
         std::make_shared<property_configuration<T, TProperty>>(
-            property_selector);
+            property_selector, property_setter);
     m_properties.push_back(std::move(property));
     return *m_properties.back();
   }
 
  private:
   std::shared_ptr<sql::PreparedStatement> m_insert_statement;
+  std::shared_ptr<sql::PreparedStatement> m_select_statement;
   std::shared_ptr<sql::PreparedStatement> m_update_statement;
   std::shared_ptr<sql::PreparedStatement> m_delete_statement;
   std::shared_ptr<table_configuration> m_table;

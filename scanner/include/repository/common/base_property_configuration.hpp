@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <conncpp/ResultSet.hpp>
+
 namespace scanner {
 namespace repository {
 namespace common {
@@ -15,6 +17,8 @@ class base_property_configuration {
   virtual void configure_statement(
       int p_number, const T& t,
       std::shared_ptr<sql::PreparedStatement>& stmt) = 0;
+
+  virtual void set_entity_property(T& t, sql::ResultSet* res) = 0;
 
   const std::string& get_column_name() const { return m_column_name; }
 

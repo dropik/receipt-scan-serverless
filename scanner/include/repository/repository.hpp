@@ -41,6 +41,28 @@ class repository {
   }
 
   template <typename T>
+  std::shared_ptr<T> get(const std::string& id) {
+    auto& configuration = get_configuration<T>();
+    try {
+      auto& stmt = configuration.get_select_statement(id, m_connection);
+      if (!stmt) {
+        m_logger->error("Unable to create prepared statement!");
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      m_logger->info("Executing prepared statement...");
+      auto result = stmt->executeQuery();
+      if (result->next()) {
+        return std::move(configuration.get_entity(result));
+      }
+      throw std::runtime_error("Entity not found!");
+    } catch (std::exception& e) {
+      m_logger->error(
+          "Error occured while getting entity from the database: %s", e.what());
+      throw;
+    }
+  }
+
+  template <typename T>
   void update(const T& entity) {
     auto& configuration = get_configuration<T>();
     try {

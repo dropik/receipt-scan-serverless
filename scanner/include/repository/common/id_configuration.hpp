@@ -9,13 +9,15 @@ namespace scanner {
 namespace repository {
 namespace common {
 
-template<typename T>
+template <typename T>
 class id_configuration {
  public:
   typedef const std::string& (*id_selector_t)(const T&);
-  
-  id_configuration(const id_selector_t& id_selector)
-      : m_id_selector(id_selector) {}
+  typedef void (*id_setter_t)(T&, const std::string&);
+
+  id_configuration(const id_selector_t& id_selector,
+                   const id_setter_t& id_setter)
+      : m_id_selector(id_selector), m_id_setter(id_setter) {}
 
   id_configuration& with_column_name(const std::string& column_name) {
     m_column_name = column_name;
@@ -29,8 +31,13 @@ class id_configuration {
     stmt->setString(p_number, m_id_selector(t));
   }
 
+  void set_id(T& t, sql::ResultSet* res) {
+    m_id_setter(t, res->getString(m_column_name).c_str());
+  }
+
  private:
   id_selector_t m_id_selector;
+  id_setter_t m_id_setter;
   std::string m_column_name;
 };
 
