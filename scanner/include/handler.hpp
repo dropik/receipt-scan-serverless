@@ -41,7 +41,7 @@ class handler {
   void try_parse_items(const line_item_groups_t& line_item_groups,
                        const std::string& receipt_id);
   void try_parse_item(const Aws::Textract::Model::LineItemFields& item,
-                      const std::string& receipt_id, int sort_order);
+                      models::receipt_item& receipt_item);
   bool try_parse_date(std::string& result, const std::string& input) const;
   bool try_parse_total(long double& result, const std::string& input) const;
 };

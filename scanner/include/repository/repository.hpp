@@ -11,7 +11,9 @@
 
 #include <aws-lambda-cpp/common/logger.hpp>
 
+#include "common/selector.hpp"
 #include "repository_configuration.hpp"
+
 #include "receipt_configuration.hpp"
 #include "receipt_item_configuration.hpp"
 
@@ -30,7 +32,6 @@ class repository {
     try {
       auto& stmt = configuration.get_insert_statement(entity, m_connection);
       if (!stmt) {
-        m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
       stmt->executeUpdate();
@@ -48,7 +49,6 @@ class repository {
     try {
       auto& stmt = configuration.get_select_statement(id, m_connection);
       if (!stmt) {
-        m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
       auto result = stmt->executeQuery();
@@ -70,7 +70,6 @@ class repository {
     try {
       auto& stmt = configuration.get_update_statement(entity, m_connection);
       if (!stmt) {
-        m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
       stmt->executeUpdate();
@@ -88,13 +87,31 @@ class repository {
     try {
       auto& stmt = configuration.get_delete_statement(id, m_connection);
       if (!stmt) {
-        m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
       }
       stmt->executeUpdate();
     } catch (std::exception& e) {
       m_logger->error("Error occured while deleting entity in the database: %s",
                       e.what());
+      throw;
+    }
+  }
+
+  template <typename T>
+  common::selector<T> select(const std::string& query) {
+    auto& configuration = get_configuration<T>();
+    m_logger->info("Executing query: %s", query.c_str());
+    try {
+      std::shared_ptr<sql::PreparedStatement> stmt(m_connection->prepareStatement(query));
+      stmt->closeOnCompletion();
+      if (!stmt) {
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      return common::selector<T>(stmt, configuration);
+    } catch (std::exception& e) {
+      m_logger->error(
+          "Error occured while preparing query: %s",
+          e.what());
       throw;
     }
   }

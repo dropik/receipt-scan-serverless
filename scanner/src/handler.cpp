@@ -231,7 +231,22 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
   }
 
   try {
-    m_repository->create(receipt);
+    auto existing_receipt =
+        m_repository
+            ->select<models::receipt>(
+                "select * from receipts r "
+                "where r.request_id = ? and r.doc_number = ?")
+            .with_param(receipt.request_id)
+            .with_param(receipt.doc_number)
+            .first_or_default();
+
+    if (!existing_receipt) {
+      m_repository->create(receipt);
+    } else {
+      receipt.id = existing_receipt->id;
+      m_repository->update(receipt);
+    }
+
   } catch (sql::SQLException& e) {
     m_logger->error("Error occured while storing receipt in database: %s",
                     e.what());
@@ -247,23 +262,23 @@ void handler::try_parse_items(const line_item_groups_t& line_item_groups,
   for (auto& group : line_item_groups) {
     auto& items = group.GetLineItems();
     for (auto& item : items) {
-      try_parse_item(item, receipt_id, sort_order);
+      models::receipt_item receipt_item;
+      receipt_item.id = utils::gen_uuid();
+      receipt_item.receipt_id = receipt_id;
+      receipt_item.sort_order = sort_order;
+
+      try_parse_item(item, receipt_item);
       sort_order++;
     }
   }
 }
 
 void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
-                             const std::string& receipt_id, int sort_order) {
+                             models::receipt_item& receipt_item) {
   auto& fields = item.GetLineItemExpenseFields();
 
   int quantity = 1;
   long double unit_price = 0;
-
-  models::receipt_item receipt_item;
-  receipt_item.id = utils::gen_uuid();
-  receipt_item.receipt_id = receipt_id;
-  receipt_item.sort_order = sort_order;
 
   double best_description_confidence = 0;
   double best_amount_confidence = 0;
@@ -315,7 +330,8 @@ void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
   }
 
   if (best_description_confidence == 0) {
-    m_logger->info("No description found for item %d.", sort_order);
+    m_logger->info("No description found for item %d.",
+                   receipt_item.sort_order);
   }
   if (best_amount_confidence == 0 &&
       (best_quantity_confidence == 0 || best_unit_price_confidence == 0)) {
@@ -328,7 +344,22 @@ void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
   }
 
   try {
-    m_repository->create(receipt_item);
+    auto existing_item =
+        m_repository
+            ->select<models::receipt_item>(
+                "select * from receipt_items ri "
+                "where ri.receipt_id = ? and ri.sort_order = ?")
+            .with_param(receipt_item.receipt_id)
+            .with_param(receipt_item.sort_order)
+            .first_or_default();
+
+    if (!existing_item) {
+      m_repository->create(receipt_item);
+    } else {
+      receipt_item.id = existing_item->id;
+      m_repository->update(receipt_item);
+    }
+
   } catch (sql::SQLException& e) {
     m_logger->error("Error occured while storing receipt item in database: %s",
                     e.what());
