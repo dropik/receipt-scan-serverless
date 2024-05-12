@@ -135,9 +135,9 @@ void handler::process_s3_object(s3_record& record) {
   int users_delimeter = key_parted.find("/");
   std::string user_id = key_parted.substr(0, users_delimeter);
   key_parted.erase(0, users_delimeter + 10);
-  std::string receipt_id = key_parted;
+  std::string request_id = key_parted;
 
-  m_logger->info("Processing receipt %s of user %s", receipt_id.c_str(),
+  m_logger->info("Processing request %s of user %s", request_id.c_str(),
                  user_id.c_str());
 
   Model::S3Object s3_object;
@@ -158,29 +158,30 @@ void handler::process_s3_object(s3_record& record) {
 
   auto& expense_documents = expense_result.GetExpenseDocuments();
   for (auto& doc : expense_documents) {
-    try_parse_document(doc, receipt_id, user_id);
+    try_parse_document(doc, user_id, request_id);
   }
 }
 
 void handler::try_parse_document(
     const Aws::Textract::Model::ExpenseDocument& document,
-    const std::string& receipt_id, const std::string& user_id) {
+    const std::string& user_id, const std::string& request_id) {
+  models::receipt receipt;
+  receipt.id = utils::gen_uuid();
+  receipt.user_id = user_id;
+  receipt.request_id = request_id;
+  receipt.doc_number = document.GetExpenseIndex();
+
   auto& summary_fields = document.GetSummaryFields();
-  if (!try_parse_summary_fields(summary_fields, receipt_id, user_id)) {
+  if (!try_parse_summary_fields(summary_fields, receipt)) {
     return;
   }
 
   auto& item_groups = document.GetLineItemGroups();
-  try_parse_items(item_groups, receipt_id);
+  try_parse_items(item_groups, receipt.id);
 }
 
 bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
-                                       const std::string& receipt_id,
-                                       const std::string& user_id) {
-  models::receipt receipt;
-  receipt.id = receipt_id;
-  receipt.user_id = user_id;
-
+                                       models::receipt& receipt) {
   double best_store_name_confidence = 0;
   double best_date_confidence = 0;
   double best_total_confidence = 0;

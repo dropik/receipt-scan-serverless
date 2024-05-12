@@ -94,5 +94,64 @@ alter table receipt_items
 add column sort_order int not null;
 
 alter table receipt_items 
-add unique index ix_receipt_id_sort_order (sort_order);
+add unique index ix_receipt_id_sort_order (receipt_id, sort_order);
+
+# 2024-05-12: add request_id and doc_number to receipts
+alter table receipts 
+add column request_id char(36) not null
+after user_id;
+
+alter table receipts 
+add column doc_number int not null
+after request_id;
+
+alter table receipts 
+add constraint doc_number_positive check(doc_number >= 0);
+
+alter table receipts 
+add unique index ix_request_id_doc_number (request_id, doc_number);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -33,12 +33,11 @@ class handler {
   void process_s3_object(aws_lambda_cpp::models::lambda_payloads::s3_record& record);
 
   void try_parse_document(const Aws::Textract::Model::ExpenseDocument& document,
-                          const std::string& receipt_id,
-                          const std::string& user_id);
+                          const std::string& user_id,
+                          const std::string& request_id);
 
   bool try_parse_summary_fields(const expense_fields_t& summary_fields,
-                                const std::string& receipt_id,
-                                const std::string& user_id);
+                                models::receipt& receipt);
   void try_parse_items(const line_item_groups_t& line_item_groups,
                        const std::string& receipt_id);
   void try_parse_item(const Aws::Textract::Model::LineItemFields& item,

@@ -12,7 +12,9 @@ class repository_configuration<models::receipt_item>
  public:
   repository_configuration() {
     HAS_TABLE("receipt_items");
+
     HAS_ID(id) WITH_COLUMN("id");
+
     HAS_STRING(receipt_id) WITH_COLUMN("receipt_id");
     HAS_STRING(description) WITH_COLUMN("description");
     HAS_DECIMAL(amount) WITH_COLUMN("amount");
