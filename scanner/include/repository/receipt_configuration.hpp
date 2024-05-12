@@ -13,27 +13,12 @@ class repository_configuration<models::receipt>
     : public common::base_repository_configuration<models::receipt> {
  public:
   repository_configuration() {
-    has_table("receipts");
-
-    has_id([](const models::receipt& r) -> const std::string& {
-      return r.id;
-    }).with_column_name("id");
-
-    has_property<std::string>([](const models::receipt& r) -> const std::string& {
-      return r.user_id;
-    }).with_column_name("user_id");
-
-    has_property<std::string>([](const models::receipt& r) -> const std::string& {
-      return r.date;
-    }).with_column_name("date");
-
-    has_property<long double>([](const models::receipt& r) -> long double {
-      return r.total_amount;
-    }).with_column_name("total_amount");
-
-    has_property<std::string>([](const models::receipt& r) -> const std::string& {
-      return r.store_name;
-    }).with_column_name("store_name");
+    HAS_TABLE("receipts");
+    HAS_ID(id) WITH_COLUMN("id");
+    HAS_STRING(user_id) WITH_COLUMN("user_id");
+    HAS_STRING(date) WITH_COLUMN("date");
+    HAS_DECIMAL(total_amount) WITH_COLUMN("total_amount");
+    HAS_STRING(store_name) WITH_COLUMN("store_name");
   }
 };
 

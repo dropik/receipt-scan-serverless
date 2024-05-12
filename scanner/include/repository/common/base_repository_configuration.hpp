@@ -13,6 +13,20 @@
 #include "property_configuration.hpp"
 #include "table_configuration.hpp"
 
+#define HAS_TABLE(table_name) has_table(table_name)
+#define HAS_ID(id_field) \
+  has_id([](const entity_t& entity) -> const std::string& { return entity.id_field; })
+#define WITH_COLUMN(column_name) .with_column_name(column_name)
+#define HAS_STRING(field) \
+  has_property<std::string>([](const entity_t& entity) -> const std::string& { return entity.field; })
+#define HAS_INT(field) has_property<int>([](const entity_t& entity) -> int { return entity.field; })
+#define HAS_DOUBLE(field) \
+  has_property<double>([](const entity_t& entity) -> double { return entity.field; })
+#define HAS_BOOL(field) \
+  has_property<bool>([](const entity_t& entity) -> bool { return entity.field; })
+#define HAS_DECIMAL(field) \
+  has_property<long double>([](const entity_t& entity) -> long double { return entity.field; })
+
 namespace scanner {
 namespace repository {
 namespace common {
@@ -60,6 +74,8 @@ class base_repository_configuration {
   }
 
  protected:
+  typedef T entity_t;
+  
   table_configuration& has_table(const std::string& table_name) {
     m_table = std::make_shared<table_configuration>(table_name);
     return *m_table;
