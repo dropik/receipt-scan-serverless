@@ -6,7 +6,7 @@ using namespace scanner::repository;
 
 repository::repository(
     const std::string& connection_string,
-    const std::shared_ptr<aws_lambda_cpp::common::logger>& logger)
+    std::shared_ptr<aws_lambda_cpp::common::logger> logger)
     : m_logger(logger) {
   try {
     m_logger->info("Establishing connection with the database...");

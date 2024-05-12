@@ -30,12 +30,12 @@ using namespace aws::lambda_runtime;
 using namespace aws_lambda_cpp;
 using namespace scanner;
 
-handler::handler(
-  const std::shared_ptr<const TextractClient>& textract_client,
-  const std::shared_ptr<const logger>& logger,
-  const std::shared_ptr<sql::Connection>& db_connection,
-  const std::shared_ptr<repository::repository>& repository)
-: m_textract_client(textract_client), m_logger(logger), m_db_connection(db_connection), m_repository(repository) {  }
+handler::handler(std::shared_ptr<repository::repository> repository,
+                 std::shared_ptr<const TextractClient> textract_client,
+                 std::shared_ptr<const logger> logger)
+    : m_repository(repository),
+      m_textract_client(textract_client),
+      m_logger(logger) {}
 
 std::vector<std::string> date_formats= {
   // YMD

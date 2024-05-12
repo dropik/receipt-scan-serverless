@@ -21,7 +21,7 @@ namespace repository {
 class repository {
  public:
   repository(const std::string& connection_string,
-             const std::shared_ptr<aws_lambda_cpp::common::logger>& logger);
+             std::shared_ptr<aws_lambda_cpp::common::logger> logger);
 
   template <typename T>
   void create(const T& entity) {

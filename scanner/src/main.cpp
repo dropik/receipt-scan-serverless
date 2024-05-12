@@ -103,15 +103,16 @@ int main(int argc, char* argv[]) {
         return -1;
       }
       db_connection = std::move(conn);
+      
+      std::shared_ptr<repository::repository> repo =
+          std::make_shared<repository::repository>(connection_string, l);
 
       std::shared_ptr<TextractClient> textractClient =
           Aws::MakeShared<TextractClient>("textract_client", config);
 
-      std::shared_ptr<repository::repository> repo = std::make_shared<repository::repository>(connection_string, l);
-
-      handler handler(textractClient, l, db_connection, repo);
+      auto handler = std::make_unique<scanner::handler>(repo, textractClient, l);
       auto handler_f = [&](const invocation_request& req) {
-        return handler.handle_request(req);
+        return handler->handle_request(req);
       };
 
 #ifdef DEBUG
