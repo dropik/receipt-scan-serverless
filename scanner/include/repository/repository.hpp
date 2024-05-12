@@ -24,9 +24,9 @@ class repository {
 
   template <typename T>
   void create(const T& entity) {
-    static repository_configuration<T> configuration;
+    auto& configuration = get_configuration<T>();
     try {
-      auto stmt = configuration.get_insert_statement(entity, m_connection);
+      auto& stmt = configuration.get_insert_statement(entity, m_connection);
       if (!stmt) {
         m_logger->error("Unable to create prepared statement!");
         throw std::runtime_error("Unable to create prepared statement!");
@@ -40,7 +40,31 @@ class repository {
     }
   }
 
+  template <typename T>
+  void update(const T& entity) {
+    auto& configuration = get_configuration<T>();
+    try {
+      auto& stmt = configuration.get_update_statement(entity, m_connection);
+      if (!stmt) {
+        m_logger->error("Unable to create prepared statement!");
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      m_logger->info("Executing prepared statement...");
+      stmt->executeUpdate();
+    } catch (std::exception& e) {
+      m_logger->error("Error occured while updating entity in the database: %s",
+                      e.what());
+      throw;
+    }
+  }
+
  private:
+  template <typename T>
+  repository_configuration<T>& get_configuration() {
+    static repository_configuration<T> configuration;
+    return configuration;
+  }
+
   std::shared_ptr<sql::Connection> m_connection;
   std::shared_ptr<aws_lambda_cpp::common::logger> m_logger;
 };

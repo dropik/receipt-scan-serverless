@@ -34,8 +34,8 @@ namespace common {
 template <typename T>
 class base_repository_configuration {
  public:
-  std::shared_ptr<sql::PreparedStatement> get_insert_statement(
-      const T& entity, std::shared_ptr<sql::Connection>& connection) {
+  const std::shared_ptr<sql::PreparedStatement>& get_insert_statement(
+      const T& entity, const std::shared_ptr<sql::Connection>& connection) {
     if (!m_insert_statement) {
       if (!m_table) {
         throw std::runtime_error("Table is not configured!");
@@ -65,12 +65,56 @@ class base_repository_configuration {
     }
 
     m_id->configure_statement(1, entity, m_insert_statement);
+    int property_index = 2;
     for (size_t i = 0; i < m_properties.size(); i++) {
       if (!m_properties[i]) continue;
-      m_properties[i]->configure_statement(i + 2, entity, m_insert_statement);
+      m_properties[i]->configure_statement(property_index, entity,
+                                           m_insert_statement);
+      property_index++;
     }
 
     return m_insert_statement;
+  }
+
+  const std::shared_ptr<sql::PreparedStatement>& get_update_statement(
+      const T& entity, const std::shared_ptr<sql::Connection>& connection) {
+    if (!m_update_statement) {
+      if (!m_table) {
+        throw std::runtime_error("Table is not configured!");
+      }
+      if (!m_id) {
+        throw std::runtime_error("Id is not configured!");
+      }
+
+      std::string query = "update " + m_table->get_name() + " set ";
+      for (size_t i = 0; i < m_properties.size(); i++) {
+        if (!m_properties[i]) continue;
+        query += m_properties[i]->get_column_name() + " = ?";
+        if (i < m_properties.size() - 1) {
+          query += ", ";
+        }
+      }
+      query += " where " + m_id->get_column_name() + " = ?";
+      std::cout << "Update query: " << query << std::endl;
+      std::shared_ptr<sql::PreparedStatement> stmt(
+          connection->prepareStatement(query));
+      if (!stmt) {
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      m_update_statement = std::move(stmt);
+    }
+
+    int property_index = 1;
+    for (size_t i = 0; i < m_properties.size(); i++) {
+      if (!m_properties[i]) continue;
+      m_properties[i]->configure_statement(property_index, entity,
+                                           m_update_statement);
+      property_index++;
+    }
+    m_id->configure_statement(property_index + 1, entity,
+                              m_update_statement);
+
+    return m_update_statement;
   }
 
  protected:
@@ -100,6 +144,7 @@ class base_repository_configuration {
 
  private:
   std::shared_ptr<sql::PreparedStatement> m_insert_statement;
+  std::shared_ptr<sql::PreparedStatement> m_update_statement;
   std::shared_ptr<table_configuration> m_table;
   std::shared_ptr<id_configuration<T>> m_id;
   std::vector<std::shared_ptr<base_property_configuration<T>>> m_properties;
