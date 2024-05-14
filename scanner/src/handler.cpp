@@ -69,15 +69,17 @@ std::vector<std::string> date_formats= {
   "%m %d %y"
 };
 
-constexpr auto RECEIPT_NAME = "NAME";
-constexpr auto RECEIPT_VENDOR_NAME = "VENDOR_NAME";
-constexpr auto RECEIPT_DATE = "INVOICE_RECEIPT_DATE";
-constexpr auto RECEIPT_AMOUNT = "AMOUNT_PAID";
-constexpr auto RECEIPT_TOTAL = "TOTAL";
-constexpr auto ITEM_DESC = "ITEM";
-constexpr auto ITEM_QUANTITY = "QUANTITY";
-constexpr auto ITEM_PRICE = "PRICE";
-constexpr auto ITEM_UNIT_PRICE = "UNIT_PRICE";
+constexpr auto receipt_name = "NAME";
+constexpr auto receipt_vendor_name = "VENDOR_NAME";
+constexpr auto receipt_date = "INVOICE_RECEIPT_DATE";
+constexpr auto receipt_amount = "AMOUNT_PAID";
+constexpr auto receipt_total = "TOTAL";
+constexpr auto item_desc = "ITEM";
+constexpr auto item_quantity = "QUANTITY";
+constexpr auto item_price = "PRICE";
+constexpr auto item_unit_price = "UNIT_PRICE";
+
+const std::string default_currency = "EUR";
 
 static std::string parse_name(const std::string& text) {
   std::string result(text);
@@ -192,11 +194,11 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
     double confidence = summary_field.GetType().GetConfidence();
     std::string value = summary_field.GetValueDetection().GetText();
 
-    if ((field_type == RECEIPT_NAME || field_type == RECEIPT_VENDOR_NAME) &&
+    if ((field_type == receipt_name || field_type == receipt_vendor_name) &&
         best_store_name_confidence < confidence) {
       receipt.store_name = parse_name(value);
       best_store_name_confidence = confidence;
-    } else if (field_type == RECEIPT_DATE &&
+    } else if (field_type == receipt_date &&
                best_date_confidence < confidence) {
       std::string found_date;
       if (try_parse_date(found_date, value)) {
@@ -207,7 +209,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
                        value.c_str());
         receipt.date = "";
       }
-    } else if ((field_type == RECEIPT_AMOUNT || field_type == RECEIPT_TOTAL) &&
+    } else if ((field_type == receipt_amount || field_type == receipt_total) &&
                best_total_confidence < confidence) {
       long double found_total = 0;
       if (try_parse_total(found_total, value)) {
@@ -290,11 +292,12 @@ void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
     double confidence = field.GetType().GetConfidence();
     std::string value = field.GetValueDetection().GetText();
 
-    if (field_type == ITEM_DESC && best_description_confidence < confidence) {
+    if (field_type == item_desc && best_description_confidence < confidence) {
       receipt_item.description = parse_name(value);
       best_description_confidence = confidence;
-    } else if (field_type == ITEM_PRICE &&
+    } else if (field_type == item_price &&
                best_amount_confidence < confidence) {
+      receipt_item.currency = try_get_currency(field, receipt_item.sort_order);
       long double found_amount = 0;
       if (try_parse_total(found_amount, value)) {
         best_amount_confidence = confidence;
@@ -304,7 +307,7 @@ void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
                        value.c_str());
         receipt_item.amount = 0;
       }
-    } else if (field_type == ITEM_QUANTITY &&
+    } else if (field_type == item_quantity &&
                best_quantity_confidence < confidence) {
       int found_quantity = std::stoi(value);
       if (found_quantity > 0) {
@@ -315,8 +318,9 @@ void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
                        value.c_str());
         quantity = 1;
       }
-    } else if (field_type == ITEM_UNIT_PRICE &&
+    } else if (field_type == item_unit_price &&
                best_unit_price_confidence < confidence) {
+      receipt_item.currency = try_get_currency(field, receipt_item.sort_order);
       long double found_unit_price = 0;
       if (try_parse_total(found_unit_price, value)) {
         best_unit_price_confidence = confidence;
@@ -449,4 +453,15 @@ bool handler::try_parse_total(long double& result, const std::string& input) con
   }
   result = total / 100.0;
   return true;
+}
+
+const std::string& handler::try_get_currency(
+    const Aws::Textract::Model::ExpenseField& field, int item_number) const {
+  const auto& currency = field.GetCurrency().GetCode();
+  if (currency.length() > 0) {
+    return currency;
+  } else {
+    m_logger->info("No currency found for item %d. Assuming EUR.", item_number);
+    return default_currency;
+  }
 }

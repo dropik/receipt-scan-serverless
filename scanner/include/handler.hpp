@@ -30,7 +30,8 @@ class handler {
   typedef std::vector<Aws::Textract::Model::ExpenseField> expense_fields_t;
   typedef std::vector<Aws::Textract::Model::LineItemGroup> line_item_groups_t;
 
-  void process_s3_object(aws_lambda_cpp::models::lambda_payloads::s3_record& record);
+  void process_s3_object(
+      aws_lambda_cpp::models::lambda_payloads::s3_record& record);
 
   void try_parse_document(const Aws::Textract::Model::ExpenseDocument& document,
                           const std::string& user_id,
@@ -44,6 +45,8 @@ class handler {
                       models::receipt_item& receipt_item);
   bool try_parse_date(std::string& result, const std::string& input) const;
   bool try_parse_total(long double& result, const std::string& input) const;
+  const std::string& try_get_currency(
+      const Aws::Textract::Model::ExpenseField& field, int item_number) const;
 };
 
 }  // namespace scanner

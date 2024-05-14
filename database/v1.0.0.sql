@@ -111,6 +111,11 @@ add constraint doc_number_positive check(doc_number >= 0);
 alter table receipts 
 add unique index ix_request_id_doc_number (request_id, doc_number);
 
+# 2024-05-14: add currency to receipt_items
+alter table receipt_items 
+add column currency varchar(3) not null
+after amount;
+
 
 
 
