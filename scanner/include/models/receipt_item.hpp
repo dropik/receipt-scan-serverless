@@ -5,8 +5,7 @@
 namespace scanner {
 namespace models {
 
-class receipt_item {
- public:
+struct receipt_item {
   std::string id;
   std::string receipt_id;
   std::string description;
