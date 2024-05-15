@@ -13,6 +13,7 @@ struct receipt {
   std::string date;
   long double total_amount;
   std::string store_name;
+  std::string category;
 };
 
 }  // namespace models
