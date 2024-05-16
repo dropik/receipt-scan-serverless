@@ -120,6 +120,11 @@ after amount;
 alter table receipts 
 add column category text not null;
 
+# 2024-05-16: add currency to receipt
+alter table receipts 
+add column currency varchar(3) not null
+after total_amount;
+
 
 
 

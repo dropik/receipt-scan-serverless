@@ -13,6 +13,7 @@
 #include <aws/ssm/SSMClient.h>
 #include <aws/ssm/SSMServiceClientModel.h>
 #include <aws/textract/TextractClient.h>
+#include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
 #include "conncpp/Connection.hpp"
 #include "conncpp/DriverManager.hpp"
@@ -34,6 +35,7 @@ using namespace aws::lambda_runtime;
 using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
 using namespace Aws::Textract;
+using namespace Aws::BedrockRuntime;
 using namespace aws_lambda_cpp;
 using namespace aws_lambda_cpp::common;
 using namespace scanner;
@@ -103,14 +105,18 @@ int main(int argc, char* argv[]) {
         return -1;
       }
       db_connection = std::move(conn);
-      
+
       std::shared_ptr<repository::repository> repo =
           std::make_shared<repository::repository>(connection_string, l);
 
-      std::shared_ptr<TextractClient> textractClient =
+      std::shared_ptr<TextractClient> textract_client =
           Aws::MakeShared<TextractClient>("textract_client", config);
 
-      auto handler = std::make_unique<scanner::handler>(repo, textractClient, l);
+      std::shared_ptr<BedrockRuntimeClient> bedrock_client =
+          Aws::MakeShared<BedrockRuntimeClient>("bedrock_client", config);
+
+      auto handler = std::make_unique<scanner::handler>(repo, textract_client,
+                                                        bedrock_client, l);
       auto handler_f = [&](const invocation_request& req) {
         return handler->handle_request(req);
       };

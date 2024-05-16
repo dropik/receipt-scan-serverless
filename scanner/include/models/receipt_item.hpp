@@ -6,8 +6,8 @@ namespace scanner {
 namespace models {
 
 struct receipt_item {
-  std::string id;
-  std::string receipt_id;
+  guid id;
+  guid receipt_id;
   std::string description;
   long double amount;
   std::string currency;

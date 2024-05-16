@@ -9,6 +9,7 @@
 #include <conncpp/Connection.hpp>
 #include <conncpp/PreparedStatement.hpp>
 
+#include "models/common.hpp"
 #include "id_configuration.hpp"
 #include "property_configuration.hpp"
 #include "table_configuration.hpp"
@@ -17,10 +18,10 @@
 
 #define HAS_ID(id_field) \
   has_id(                                                \
-      [](const entity_t& entity) -> const std::string& { \
+      [](const entity_t& entity) -> const models::guid& { \
         return entity.id_field;                          \
       },                                                 \
-      [](entity_t& entity, const std::string& id) {      \
+      [](entity_t& entity, const models::guid& id) {      \
         entity.id_field = id;                            \
       })
 

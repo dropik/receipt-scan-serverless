@@ -4,6 +4,7 @@
 #include <ctime>
 #include <exception>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 #include <regex>
 #include <sstream>
@@ -16,6 +17,8 @@
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
 #include <aws/textract/model/Document.h>
 
+#include <aws/bedrock-runtime/model/InvokeModelRequest.h>
+
 #include <conncpp/Exception.hpp>
 #include <conncpp/PreparedStatement.hpp>
 
@@ -24,17 +27,48 @@
 #include "utils.hpp"
 
 using namespace Aws::Textract;
+using namespace Aws::BedrockRuntime;
 using namespace aws_lambda_cpp::common;
 using namespace aws_lambda_cpp::models::lambda_payloads;
 using namespace aws::lambda_runtime;
 using namespace aws_lambda_cpp;
 using namespace scanner;
 
+struct bedrock_payload {
+  std::string prompt;
+  int max_tokens_to_sample = 500;
+  double temperature = 0.5;
+  double top_p = 0.5;
+  double top_k = 250;
+  std::vector<std::string> stop_sequences;
+  std::string anthropic_version = "bedrock-2023-05-31";
+
+  JSON_BEGIN_SERIALIZER(bedrock_payload)
+  JSON_PROPERTY("prompt", prompt)
+  JSON_PROPERTY("max_tokens_to_sample", max_tokens_to_sample)
+  JSON_PROPERTY("temperature", temperature)
+  JSON_PROPERTY("top_p", top_p)
+  JSON_PROPERTY("top_k", top_k)
+  JSON_PROPERTY("stop_sequences", stop_sequences)
+  JSON_PROPERTY("anthropic_version", anthropic_version)
+  JSON_END_SERIALIZER()
+};
+
+struct bedrock_response {
+  std::string completion;
+
+  JSON_BEGIN_SERIALIZER(bedrock_response)
+  JSON_PROPERTY("completion", completion)
+  JSON_END_SERIALIZER()
+};
+
 handler::handler(std::shared_ptr<repository::repository> repository,
                  std::shared_ptr<const TextractClient> textract_client,
+                 std::shared_ptr<const BedrockRuntimeClient> bedrock_client,
                  std::shared_ptr<const logger> logger)
     : m_repository(repository),
       m_textract_client(textract_client),
+      m_bedrock_client(bedrock_client),
       m_logger(logger) {}
 
 std::vector<std::string> date_formats= {
@@ -94,6 +128,12 @@ static std::string parse_name(const std::string& text) {
   return result;
 }
 
+static void ltrim(std::string& s) {
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+            return !std::isspace(ch);
+          }));
+}
+
 invocation_response handler::handle_request(invocation_request const& request) {
   m_logger->info("Version %s", VERSION);
 
@@ -135,18 +175,18 @@ void handler::process_s3_object(s3_record& record) {
 
   std::string key_parted = key.substr(6, key.length() - 6);
   int users_delimeter = key_parted.find("/");
-  std::string user_id = key_parted.substr(0, users_delimeter);
+  models::guid user_id = key_parted.substr(0, users_delimeter);
   key_parted.erase(0, users_delimeter + 10);
-  std::string request_id = key_parted;
+  models::guid request_id = key_parted;
 
   m_logger->info("Processing request %s of user %s", request_id.c_str(),
                  user_id.c_str());
 
-  Model::S3Object s3_object;
+  Aws::Textract::Model::S3Object s3_object;
   s3_object.WithBucket(record.s3.bucket.name).WithName(key);
-  Model::Document s3_document;
+  Aws::Textract::Model::Document s3_document;
   s3_document.WithS3Object(s3_object);
-  Model::AnalyzeExpenseRequest expense_request;
+  Aws::Textract::Model::AnalyzeExpenseRequest expense_request;
   expense_request.WithDocument(s3_document);
 
   auto outcome = m_textract_client->AnalyzeExpense(expense_request);
@@ -166,7 +206,7 @@ void handler::process_s3_object(s3_record& record) {
 
 void handler::try_parse_document(
     const Aws::Textract::Model::ExpenseDocument& document,
-    const std::string& user_id, const std::string& request_id) {
+    const models::guid& user_id, const models::guid& request_id) {
   models::receipt receipt;
   receipt.id = utils::gen_uuid();
   receipt.user_id = user_id;
@@ -179,7 +219,10 @@ void handler::try_parse_document(
   }
 
   auto& item_groups = document.GetLineItemGroups();
-  try_parse_items(item_groups, receipt.id);
+  std::vector<models::receipt_item> receipt_items;
+  try_parse_items(item_groups, receipt.id, receipt_items);
+
+  try_assign_categories(receipt, receipt_items);
 }
 
 bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
@@ -211,6 +254,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
       }
     } else if ((field_type == receipt_amount || field_type == receipt_total) &&
                best_total_confidence < confidence) {
+      receipt.currency = try_get_currency(summary_field, -1);
       long double found_total = 0;
       if (try_parse_total(found_total, value)) {
         best_total_confidence = confidence;
@@ -258,8 +302,9 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
   return true;
 }
 
-void handler::try_parse_items(const line_item_groups_t& line_item_groups,
-                              const std::string& receipt_id) {
+void handler::try_parse_items(
+    const line_item_groups_t& line_item_groups, const models::guid& receipt_id,
+    std::vector<models::receipt_item>& receipt_items) {
   int sort_order = 0;
   for (auto& group : line_item_groups) {
     auto& items = group.GetLineItems();
@@ -269,13 +314,15 @@ void handler::try_parse_items(const line_item_groups_t& line_item_groups,
       receipt_item.receipt_id = receipt_id;
       receipt_item.sort_order = sort_order;
 
-      try_parse_item(item, receipt_item);
+      if (try_parse_item(item, receipt_item)) {
+        receipt_items.push_back(receipt_item);
+      }
       sort_order++;
     }
   }
 }
 
-void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
+bool handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
                              models::receipt_item& receipt_item) {
   auto& fields = item.GetLineItemExpenseFields();
 
@@ -363,9 +410,115 @@ void handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
       receipt_item.id = existing_item->id;
       m_repository->update(receipt_item);
     }
-
+    return true;
   } catch (sql::SQLException& e) {
     m_logger->error("Error occured while storing receipt item in database: %s",
+                    e.what());
+    return false;
+  }
+}
+
+void handler::try_assign_categories(models::receipt& receipt,
+                                    std::vector<models::receipt_item>& items) {
+  // Loading categories
+  const auto categories =
+      m_repository
+          ->select<models::category>(
+              "select * from categories c where c.user_id = ? order by c.name")
+          .with_param(receipt.user_id)
+          .all();
+
+  std::ostringstream categories_ss;
+  for (auto& category : *categories) {
+    categories_ss << category->name << ", ";
+  }
+  categories_ss << "Altro";  // hard coding special 'other' category
+  const auto categories_str = categories_ss.str();
+
+  // Preparing prompt
+  Aws::BedrockRuntime::Model::InvokeModelRequest invoke_request;
+  invoke_request.WithModelId("anthropic.claude-instant-v1");
+  invoke_request.SetContentType("application/json");
+  bedrock_payload payload;
+
+  if (items.size() > 0) {
+    std::string promt_start_format =
+        "\n\nHuman: For each receipt item guess and print a category (only) "
+        "using following categories: %s.\nReceipt: %s %.2Lf %s.\nItems:";
+
+    payload.prompt = aws_lambda_cpp::common::str_format(
+        promt_start_format, categories_str.c_str(), receipt.store_name.c_str(),
+        receipt.total_amount, receipt.currency.c_str());
+
+    std::string promt_item_format = "\n%d. %s %.2Lf %s";
+
+    for (auto& item : items) {
+      payload.prompt += aws_lambda_cpp::common::str_format(
+          promt_item_format, item.sort_order, item.description.c_str(),
+          item.amount, item.currency.c_str());
+    }
+  } else {
+    std::string promt_format =
+        "\n\nHuman: Guess and print category (only) of receipt using following "
+        "categories: %s.\nReceipt: %s %.2Lf %s.";
+
+    payload.prompt = aws_lambda_cpp::common::str_format(
+        promt_format, categories_str.c_str(), receipt.store_name.c_str(),
+        receipt.total_amount, receipt.currency.c_str());
+  }
+
+  payload.prompt += "\n\nAssistant:";
+
+  // Invoking bedrock model
+  std::string payload_str = json::serialize(payload);
+  auto ss = std::make_shared<std::stringstream>();
+  *ss << payload_str;
+  invoke_request.SetBody(ss);
+  const auto& outcome = m_bedrock_client->InvokeModel(invoke_request);
+  if (!outcome.IsSuccess()) {
+    m_logger->error("Error occured while invoking bedrock model: %s",
+                    outcome.GetError().GetMessage().c_str());
+    return;
+  }
+  const auto& result = outcome.GetResult();
+  auto& body = result.GetBody();
+  
+  // Parsing categories
+  std::stringstream response_ss;
+  std::string line;
+  while (std::getline(body, line)) {
+    response_ss << line;
+  }
+  std::string response_str = response_ss.str();
+  bedrock_response response = json::deserialize<bedrock_response>(response_str);
+  
+  size_t start = 0;
+  if (items.size() > 0) {
+    size_t end = start;
+    for (size_t i = 0; i < items.size(); i++) {
+      end = response.completion.find("\n", start);
+      auto category = response.completion.substr(start, end - start);
+      ltrim(category);
+      items[i].category = category;
+      start = end + 1;
+      if (end == std::string::npos) {
+        break;
+      }
+    }
+  } else {
+    auto category = response.completion.substr(start);
+    ltrim(category);
+    receipt.category = category;
+  }
+
+  // Storing categories
+  try {
+    m_repository->update(receipt);
+    for (auto& item : items) {
+      m_repository->update(item);
+    }
+  } catch (std::exception& e) {
+    m_logger->error("Error occured while storing receipt in database: %s",
                     e.what());
   }
 }
@@ -461,7 +614,12 @@ const std::string& handler::try_get_currency(
   if (currency.length() > 0) {
     return currency;
   } else {
-    m_logger->info("No currency found for item %d. Assuming EUR.", item_number);
+    if (item_number < 0) {
+      m_logger->info("No currency found for receipt. Assuming EUR.");
+    } else {
+      m_logger->info("No currency found for item %d. Assuming EUR.",
+                     item_number);
+    }
     return default_currency;
   }
 }

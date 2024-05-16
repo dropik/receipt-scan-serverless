@@ -1,10 +1,9 @@
 #pragma once
 
+#include <iostream>
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
-#include <functional>
-#include <iostream>
 
 #include <conncpp/Connection.hpp>
 #include <conncpp/PreparedStatement.hpp>
@@ -14,6 +13,7 @@
 #include "common/selector.hpp"
 #include "repository_configuration.hpp"
 
+#include "category_configuration.hpp"
 #include "receipt_configuration.hpp"
 #include "receipt_item_configuration.hpp"
 
@@ -43,7 +43,7 @@ class repository {
   }
 
   template <typename T>
-  std::shared_ptr<T> get(const std::string& id) {
+  std::shared_ptr<T> get(const models::guid& id) {
     auto& configuration = get_configuration<T>();
     m_logger->info("Getting entity from %s...", configuration.get_table_name().c_str());
     try {
@@ -81,7 +81,7 @@ class repository {
   }
 
   template <typename T>
-  void drop(const std::string& id) {
+  void drop(const models::guid& id) {
     auto& configuration = get_configuration<T>();
     m_logger->info("Deleting from %s...", configuration.get_table_name().c_str());
     try {

@@ -5,6 +5,8 @@
 
 #include <conncpp/PreparedStatement.hpp>
 
+#include "models/common.hpp"
+
 namespace scanner {
 namespace repository {
 namespace common {
@@ -12,8 +14,8 @@ namespace common {
 template <typename T>
 class id_configuration {
  public:
-  typedef const std::string& (*id_selector_t)(const T&);
-  typedef void (*id_setter_t)(T&, const std::string&);
+  typedef const models::guid& (*id_selector_t)(const T&);
+  typedef void (*id_setter_t)(T&, const models::guid&);
 
   id_configuration(const id_selector_t& id_selector,
                    const id_setter_t& id_setter)

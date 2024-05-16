@@ -3,7 +3,7 @@ set(LAMBDA_ID "LScanner")
 
 find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3 ssm textract)
+find_package(AWSSDK COMPONENTS core s3 ssm textract bedrock-runtime)
 
 set(Boost_USE_STATIC_LIBS ON) 
 set(Boost_USE_MULTITHREADED ON)  
