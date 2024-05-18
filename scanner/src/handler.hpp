@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "conncpp/Connection.hpp"
+#include <conncpp/Connection.hpp>
 
 #include <aws/lambda-runtime/runtime.h>
 #include <aws/textract/TextractClient.h>
@@ -10,7 +10,7 @@
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
 
-#include "repository/repository.hpp"
+#include <repository/repository.hpp>
 
 namespace scanner {
 

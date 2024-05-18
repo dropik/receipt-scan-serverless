@@ -11,9 +11,14 @@ set(Boost_USE_STATIC_RUNTIME ON)
 find_package(Boost COMPONENTS locale) 
 
 add_executable(${FUNCTION_NAME}
-  "src/main.cpp"
-  "src/handler.cpp"
-  "src/repository/repository.cpp" "src/utils.cpp")
+        src/main.cpp
+        src/handler.hpp
+        src/handler.cpp
+        src/repository/repository.cpp
+        src/utils.hpp
+        src/utils.cpp
+        src/models/bedrock_payload.hpp
+        src/models/bedrock_response.hpp)
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
   "${PROJECT_SOURCE_DIR}/include"

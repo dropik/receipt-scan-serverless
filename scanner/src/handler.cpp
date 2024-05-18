@@ -21,9 +21,12 @@
 
 #include <conncpp/Exception.hpp>
 
-#include "config.h"
-#include "repository/repository.hpp"
+#include <config.h>
+#include <repository/repository.hpp>
+
 #include "utils.hpp"
+#include "models/bedrock_payload.hpp"
+#include "models/bedrock_response.hpp"
 
 using namespace Aws::Textract;
 using namespace Aws::BedrockRuntime;
@@ -32,34 +35,6 @@ using namespace aws_lambda_cpp::models::lambda_payloads;
 using namespace aws::lambda_runtime;
 using namespace aws_lambda_cpp;
 using namespace scanner;
-
-struct bedrock_payload {
-  std::string prompt;
-  int max_tokens_to_sample = 500;
-  double temperature = 0.5;
-  double top_p = 0.5;
-  double top_k = 250;
-  std::vector<std::string> stop_sequences;
-  std::string anthropic_version = "bedrock-2023-05-31";
-
-  JSON_BEGIN_SERIALIZER(bedrock_payload)
-  JSON_PROPERTY("prompt", prompt)
-  JSON_PROPERTY("max_tokens_to_sample", max_tokens_to_sample)
-  JSON_PROPERTY("temperature", temperature)
-  JSON_PROPERTY("top_p", top_p)
-  JSON_PROPERTY("top_k", top_k)
-  JSON_PROPERTY("stop_sequences", stop_sequences)
-  JSON_PROPERTY("anthropic_version", anthropic_version)
-  JSON_END_SERIALIZER()
-};
-
-struct bedrock_response {
-  std::string completion;
-
-  JSON_BEGIN_SERIALIZER(bedrock_response)
-  JSON_PROPERTY("completion", completion)
-  JSON_END_SERIALIZER()
-};
 
 handler::handler(std::shared_ptr<repository::repository> repository,
                  std::shared_ptr<const TextractClient> textract_client,
@@ -125,12 +100,6 @@ static std::string parse_name(const std::string& text) {
   std::regex space_regex("\\s{2,}", std::regex_constants::extended);
   result = std::regex_replace(result, space_regex, " ");
   return result;
-}
-
-static void ltrim(std::string& s) {
-  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-            return !std::isspace(ch);
-          }));
 }
 
 invocation_response handler::handle_request(invocation_request const& request) {
@@ -444,7 +413,7 @@ void handler::try_assign_categories(models::receipt& receipt,
   Aws::BedrockRuntime::Model::InvokeModelRequest invoke_request;
   invoke_request.WithModelId("anthropic.claude-instant-v1");
   invoke_request.SetContentType("application/json");
-  bedrock_payload payload;
+  models::bedrock_payload payload;
 
   if (!items.empty()) {
     std::string prompt_start_format =
@@ -495,7 +464,7 @@ void handler::try_assign_categories(models::receipt& receipt,
     response_ss << line;
   }
   std::string response_str = response_ss.str();
-  bedrock_response response = json::deserialize<bedrock_response>(response_str);
+  auto response = json::deserialize<models::bedrock_response>(response_str);
   
   size_t start = 0;
   if (!items.empty()) {
@@ -503,7 +472,7 @@ void handler::try_assign_categories(models::receipt& receipt,
     for (auto & item : items) {
       end = response.completion.find('\n', start);
       auto category = response.completion.substr(start, end - start);
-      ltrim(category);
+      utils::ltrim(category);
       item.category = category;
       start = end + 1;
       if (end == std::string::npos) {
@@ -512,7 +481,7 @@ void handler::try_assign_categories(models::receipt& receipt,
     }
   } else {
     auto category = response.completion.substr(start);
-    ltrim(category);
+    utils::ltrim(category);
     receipt.category = category;
   }
 
