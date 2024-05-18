@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <conncpp/PreparedStatement.hpp>
+#include <utility>
 
 #include "repository/repository_configuration.hpp"
 
@@ -15,7 +16,7 @@ class selector {
  public:
   selector(std::shared_ptr<sql::PreparedStatement> stmt,
            const repository_configuration<T>& configuration)
-      : m_stmt(stmt), m_configuration(configuration) {}
+      : m_stmt(std::move(stmt)), m_configuration(configuration) {}
 
   template <typename TProperty>
   selector& with_param(const TProperty& t) {
@@ -44,7 +45,7 @@ class selector {
   }
 
   selector& with_param(long double t) {
-    m_stmt->setDouble(m_param_index++, t);
+    m_stmt->setDouble(m_param_index++, (double)t);
     return *this;
   }
 

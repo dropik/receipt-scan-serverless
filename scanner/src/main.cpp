@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
 
     } catch (sql::SQLException& e) {
       l->error(
-          "Error occured while establishing connection to the database: %s",
+          "Error occurred while establishing connection to the database: %s",
           e.what());
     }
   }

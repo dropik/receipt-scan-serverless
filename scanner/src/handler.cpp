@@ -20,7 +20,6 @@
 #include <aws/bedrock-runtime/model/InvokeModelRequest.h>
 
 #include <conncpp/Exception.hpp>
-#include <conncpp/PreparedStatement.hpp>
 
 #include "config.h"
 #include "repository/repository.hpp"
@@ -66,10 +65,10 @@ handler::handler(std::shared_ptr<repository::repository> repository,
                  std::shared_ptr<const TextractClient> textract_client,
                  std::shared_ptr<const BedrockRuntimeClient> bedrock_client,
                  std::shared_ptr<const logger> logger)
-    : m_repository(repository),
-      m_textract_client(textract_client),
-      m_bedrock_client(bedrock_client),
-      m_logger(logger) {}
+    : m_repository(std::move(repository)),
+      m_textract_client(std::move(textract_client)),
+      m_bedrock_client(std::move(bedrock_client)),
+      m_logger(std::move(logger)) {}
 
 std::vector<std::string> date_formats= {
   // YMD
@@ -142,17 +141,17 @@ invocation_response handler::handle_request(invocation_request const& request) {
         json::deserialize<aws_lambda_cpp::models::lambda_payloads::s3_request>(
             request.payload);
 
-    for (auto& record : s3_request.records) {
+    for (auto &record : s3_request.records) {
       process_s3_object(record);
     }
 
     return invocation_response::success("All files processed!",
                                         "application/json");
 
-  } catch (const std::exception& e) {
+  } catch (const std::exception &e) {
     m_logger->error(
-        "Error occured while processing invocation request: %s", e.what());
-    return invocation_response::failure("Internal error occured.",
+        "Error occurred while processing invocation request: %s", e.what());
+    return invocation_response::failure("Internal error occurred.",
                                         "application/json");
   }
 }
@@ -174,9 +173,9 @@ void handler::process_s3_object(s3_record& record) {
   }
 
   std::string key_parted = key.substr(6, key.length() - 6);
-  int users_delimeter = key_parted.find("/");
-  models::guid user_id = key_parted.substr(0, users_delimeter);
-  key_parted.erase(0, users_delimeter + 10);
+  auto users_delimiter = key_parted.find('/');
+  models::guid user_id = key_parted.substr(0, users_delimiter);
+  key_parted.erase(0, users_delimiter + 10);
   models::guid request_id = key_parted;
 
   m_logger->info("Processing request %s of user %s", request_id.c_str(),
@@ -191,7 +190,7 @@ void handler::process_s3_object(s3_record& record) {
 
   auto outcome = m_textract_client->AnalyzeExpense(expense_request);
   if (!outcome.IsSuccess()) {
-    m_logger->error("Error occured while analyzing expense: %s",
+    m_logger->error("Error occurred while analyzing expense: %s",
                     outcome.GetError().GetMessage().c_str());
     return;
   }
@@ -231,8 +230,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
   double best_date_confidence = 0;
   double best_total_confidence = 0;
 
-  for (int k = 0; k < summary_fields.size(); k++) {
-    auto& summary_field = summary_fields[k];
+  for (const auto & summary_field : summary_fields) {
     std::string field_type = summary_field.GetType().GetText();
     double confidence = summary_field.GetType().GetConfidence();
     std::string value = summary_field.GetValueDetection().GetText();
@@ -254,7 +252,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
       }
     } else if ((field_type == receipt_amount || field_type == receipt_total) &&
                best_total_confidence < confidence) {
-      receipt.currency = try_get_currency(summary_field, -1);
+      receipt.currency = try_get_currency(summary_field);
       long double found_total = 0;
       if (try_parse_total(found_total, value)) {
         best_total_confidence = confidence;
@@ -294,7 +292,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
     }
 
   } catch (sql::SQLException& e) {
-    m_logger->error("Error occured while storing receipt in database: %s",
+    m_logger->error("Error occurred while storing receipt in database: %s",
                     e.what());
     return false;
   }
@@ -410,7 +408,7 @@ bool handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
     }
     return true;
   } catch (sql::SQLException& e) {
-    m_logger->error("Error occured while storing receipt item in database: %s",
+    m_logger->error("Error occurred while storing receipt item in database: %s",
                     e.what());
     return false;
   }
@@ -439,29 +437,29 @@ void handler::try_assign_categories(models::receipt& receipt,
   invoke_request.SetContentType("application/json");
   bedrock_payload payload;
 
-  if (items.size() > 0) {
-    std::string promt_start_format =
+  if (!items.empty()) {
+    std::string prompt_start_format =
         "\n\nHuman: For each receipt item guess and print a category (only) "
         "using following categories: %s.\nReceipt: %s %.2Lf %s.\nItems:";
 
     payload.prompt = aws_lambda_cpp::common::str_format(
-        promt_start_format, categories_str.c_str(), receipt.store_name.c_str(),
+        prompt_start_format, categories_str.c_str(), receipt.store_name.c_str(),
         receipt.total_amount, receipt.currency.c_str());
 
-    std::string promt_item_format = "\n%d. %s %.2Lf %s";
+    std::string prompt_item_format = "\n%d. %s %.2Lf %s";
 
     for (auto& item : items) {
       payload.prompt += aws_lambda_cpp::common::str_format(
-          promt_item_format, item.sort_order, item.description.c_str(),
+          prompt_item_format, item.sort_order, item.description.c_str(),
           item.amount, receipt.currency.c_str());
     }
   } else {
-    std::string promt_format =
+    std::string prompt_format =
         "\n\nHuman: Guess and print category (only) of receipt using following "
         "categories: %s.\nReceipt: %s %.2Lf %s.";
 
     payload.prompt = aws_lambda_cpp::common::str_format(
-        promt_format, categories_str.c_str(), receipt.store_name.c_str(),
+        prompt_format, categories_str.c_str(), receipt.store_name.c_str(),
         receipt.total_amount, receipt.currency.c_str());
   }
 
@@ -474,7 +472,7 @@ void handler::try_assign_categories(models::receipt& receipt,
   invoke_request.SetBody(ss);
   const auto& outcome = m_bedrock_client->InvokeModel(invoke_request);
   if (!outcome.IsSuccess()) {
-    m_logger->error("Error occured while invoking bedrock model: %s",
+    m_logger->error("Error occurred while invoking bedrock model: %s",
                     outcome.GetError().GetMessage().c_str());
     return;
   }
@@ -491,13 +489,13 @@ void handler::try_assign_categories(models::receipt& receipt,
   bedrock_response response = json::deserialize<bedrock_response>(response_str);
   
   size_t start = 0;
-  if (items.size() > 0) {
-    size_t end = start;
-    for (size_t i = 0; i < items.size(); i++) {
-      end = response.completion.find("\n", start);
+  if (!items.empty()) {
+    size_t end;
+    for (auto & item : items) {
+      end = response.completion.find('\n', start);
       auto category = response.completion.substr(start, end - start);
       ltrim(category);
-      items[i].category = category;
+      item.category = category;
       start = end + 1;
       if (end == std::string::npos) {
         break;
@@ -516,25 +514,24 @@ void handler::try_assign_categories(models::receipt& receipt,
       m_repository->update(item);
     }
   } catch (std::exception& e) {
-    m_logger->error("Error occured while storing receipt in database: %s",
+    m_logger->error("Error occurred while storing receipt in database: %s",
                     e.what());
   }
 }
 
-bool handler::try_parse_date(std::string& result, const std::string& input) const {
+bool handler::try_parse_date(std::string& result, const std::string& input) {
   bool parsed = false;
   std::time_t now = std::time(nullptr);
   double best_diff = std::numeric_limits<double>::max();
 
-  for (int i = 0; i < date_formats.size(); i++) {
-    std::string format = date_formats[i];
+  for (const auto& format : date_formats) {
     std::tm datetime = {};
     std::istringstream ss(input);
     ss >> std::get_time(&datetime, format.c_str());
     if (ss.fail()) {
       continue;
     }
-    // sanityzing any short dates parsed incorrectly
+    // sanitizing any short dates parsed incorrectly
     if (datetime.tm_year < 69) {
       datetime.tm_year += 100;
     }
@@ -588,13 +585,13 @@ bool handler::try_parse_total(long double& result, const std::string& input) con
   }
   std::string numeric = text.substr(start, end - start);
 
-  if (numeric.length() == 0) {
+  if (numeric.empty()) {
     m_logger->info("No numeric characters found in the total field.");
     result = 0;
     return false;
   }
 
-  std::istringstream ss(numeric.c_str());
+  std::istringstream ss(numeric);
   long double total;
   ss >> boost::locale::as::currency >> total;
   if (ss.fail()) {
@@ -606,18 +603,12 @@ bool handler::try_parse_total(long double& result, const std::string& input) con
   return true;
 }
 
-const std::string& handler::try_get_currency(
-    const Aws::Textract::Model::ExpenseField& field, int item_number) const {
+const std::string & handler::try_get_currency(const Aws::Textract::Model::ExpenseField &field) const {
   const auto& currency = field.GetCurrency().GetCode();
-  if (currency.length() > 0) {
+  if (!currency.empty()) {
     return currency;
   } else {
-    if (item_number < 0) {
-      m_logger->info("No currency found for receipt. Assuming EUR.");
-    } else {
-      m_logger->info("No currency found for item %d. Assuming EUR.",
-                     item_number);
-    }
+    m_logger->info("No currency found for receipt. Assuming EUR.");
     return default_currency;
   }
 }

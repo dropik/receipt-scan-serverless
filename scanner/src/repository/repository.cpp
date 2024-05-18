@@ -1,5 +1,7 @@
 #include "repository/repository.hpp"
 
+#include <utility>
+
 #include <conncpp/DriverManager.hpp>
 
 using namespace scanner::repository;
@@ -7,7 +9,7 @@ using namespace scanner::repository;
 repository::repository(
     const std::string& connection_string,
     std::shared_ptr<aws_lambda_cpp::common::logger> logger)
-    : m_logger(logger) {
+    : m_logger(std::move(logger)) {
   try {
     m_logger->info("Establishing connection with the database...");
 
@@ -21,7 +23,7 @@ repository::repository(
     m_connection = std::move(conn);
   } catch (std::exception& e) {
     m_logger->error(
-        "Error occured while establishing connection with the database: %s",
+        "Error occurred while establishing connection with the database: %s",
         e.what());
     throw;
   }

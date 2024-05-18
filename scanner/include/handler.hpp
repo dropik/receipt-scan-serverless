@@ -49,10 +49,9 @@ class handler {
                        std::vector<models::receipt_item>& receipt_items);
   bool try_parse_item(const Aws::Textract::Model::LineItemFields& item,
                       models::receipt_item& receipt_item);
-  bool try_parse_date(std::string& result, const std::string& input) const;
+  static bool try_parse_date(std::string& result, const std::string& input);
   bool try_parse_total(long double& result, const std::string& input) const;
-  const std::string& try_get_currency(
-      const Aws::Textract::Model::ExpenseField& field, int item_number) const;
+  const std::string &try_get_currency(const Aws::Textract::Model::ExpenseField &field) const;
   void try_assign_categories(models::receipt& receipt,
                              std::vector<models::receipt_item>& items);
 };

@@ -36,7 +36,7 @@ class repository {
       }
       stmt->executeUpdate();
     } catch (std::exception& e) {
-      m_logger->error("Error occured while creating entity in the database: %s",
+      m_logger->error("Error occurred while creating entity in the database: %s",
                       e.what());
       throw;
     }
@@ -58,7 +58,7 @@ class repository {
       throw std::runtime_error("Entity not found!");
     } catch (std::exception& e) {
       m_logger->error(
-          "Error occured while getting entity from the database: %s", e.what());
+          "Error occurred while getting entity from the database: %s", e.what());
       throw;
     }
   }
@@ -74,7 +74,7 @@ class repository {
       }
       stmt->executeUpdate();
     } catch (std::exception& e) {
-      m_logger->error("Error occured while updating entity in the database: %s",
+      m_logger->error("Error occurred while updating entity in the database: %s",
                       e.what());
       throw;
     }
@@ -91,7 +91,7 @@ class repository {
       }
       stmt->executeUpdate();
     } catch (std::exception& e) {
-      m_logger->error("Error occured while deleting entity in the database: %s",
+      m_logger->error("Error occurred while deleting entity in the database: %s",
                       e.what());
       throw;
     }
@@ -110,7 +110,7 @@ class repository {
       return common::selector<T>(stmt, configuration);
     } catch (std::exception& e) {
       m_logger->error(
-          "Error occured while preparing query: %s",
+          "Error occurred while preparing query: %s",
           e.what());
       throw;
     }
