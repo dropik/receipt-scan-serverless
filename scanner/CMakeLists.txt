@@ -5,11 +5,6 @@ find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3 ssm textract bedrock-runtime)
 
-set(Boost_USE_STATIC_LIBS ON) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME ON) 
-find_package(Boost COMPONENTS locale) 
-
 add_executable(${FUNCTION_NAME}
         src/main.cpp
         src/handler.hpp
@@ -23,8 +18,7 @@ add_executable(${FUNCTION_NAME}
 target_include_directories(${FUNCTION_NAME} PUBLIC
   "${PROJECT_SOURCE_DIR}/include"
   "include"
-  "${CMAKE_SYSROOT}/usr/local/include/mariadb"
-  ${Boost_INCLUDE_DIRS})
+  "${CMAKE_SYSROOT}/usr/local/include/mariadb")
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
   AWS::aws-lambda-runtime
@@ -32,7 +26,6 @@ target_link_libraries(${FUNCTION_NAME} PUBLIC
   aws-lambda-cpp-common
   "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
   "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
-  ${Boost_LIBRARIES}
   ssl
   gssapi_krb5)
 

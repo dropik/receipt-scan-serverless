@@ -10,8 +10,6 @@
 #include <sstream>
 #include <string>
 
-#include <boost/locale.hpp>
-
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
@@ -571,7 +569,7 @@ bool handler::try_parse_total(long double& result, const std::string& input) con
 
   std::istringstream ss(numeric);
   long double total;
-  ss >> boost::locale::as::currency >> total;
+  ss >> std::get_money(total);
   if (ss.fail()) {
     m_logger->info("Unable to parse total as currency.");
     result = 0;

@@ -15,11 +15,17 @@
 #include "conncpp/SQLString.hpp"
 
 #include <aws-lambda-cpp/common/logger.hpp>
-#include <aws-lambda-cpp/common/runtime.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
-#include <config.h>
 #include <repository/repository.hpp>
+
+#ifdef DEBUG
+#include <aws-lambda-cpp/common/runtime.hpp>
+#include <config.h>
+#else
+#include <aws/ssm/SSMClient.h>
+#include <aws/ssm/model/GetParameterRequest.h>
+#endif
 
 #include "handler.hpp"
 
@@ -83,7 +89,7 @@ int main(int argc, char* argv[]) {
         ssmClient.GetParameter(connStrReq);
     if (!outcome.IsSuccess()) {
       throw std::runtime_error(
-          str_format("Error occured while obtaining parameter from ssm: %s",
+          str_format("Error occurred while obtaining parameter from ssm: %s",
                      outcome.GetError().GetMessage().c_str()));
     }
     connection_string = outcome.GetResult().GetParameter().GetValue();
