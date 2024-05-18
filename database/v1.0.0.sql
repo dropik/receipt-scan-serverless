@@ -125,6 +125,10 @@ alter table receipts
 add column currency varchar(3) not null
 after total_amount;
 
+# 2024-05-18: remove currency from receipt_items
+alter table receipt_items 
+drop column currency;
+
 
 
 

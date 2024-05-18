@@ -18,7 +18,6 @@ class repository_configuration<models::receipt_item>
     HAS_STRING(receipt_id) WITH_COLUMN("receipt_id");
     HAS_STRING(description) WITH_COLUMN("description");
     HAS_DECIMAL(amount) WITH_COLUMN("amount");
-    HAS_STRING(currency) WITH_COLUMN("currency");
     HAS_STRING(category) WITH_COLUMN("category");
     HAS_INT(sort_order) WITH_COLUMN("sort_order");
   }

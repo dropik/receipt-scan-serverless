@@ -10,7 +10,6 @@ struct receipt_item {
   guid receipt_id;
   std::string description;
   long double amount;
-  std::string currency;
   std::string category;
   int sort_order;
 };

@@ -344,7 +344,6 @@ bool handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
       best_description_confidence = confidence;
     } else if (field_type == item_price &&
                best_amount_confidence < confidence) {
-      receipt_item.currency = try_get_currency(field, receipt_item.sort_order);
       long double found_amount = 0;
       if (try_parse_total(found_amount, value)) {
         best_amount_confidence = confidence;
@@ -367,7 +366,6 @@ bool handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
       }
     } else if (field_type == item_unit_price &&
                best_unit_price_confidence < confidence) {
-      receipt_item.currency = try_get_currency(field, receipt_item.sort_order);
       long double found_unit_price = 0;
       if (try_parse_total(found_unit_price, value)) {
         best_unit_price_confidence = confidence;
@@ -455,7 +453,7 @@ void handler::try_assign_categories(models::receipt& receipt,
     for (auto& item : items) {
       payload.prompt += aws_lambda_cpp::common::str_format(
           promt_item_format, item.sort_order, item.description.c_str(),
-          item.amount, item.currency.c_str());
+          item.amount, receipt.currency.c_str());
     }
   } else {
     std::string promt_format =
