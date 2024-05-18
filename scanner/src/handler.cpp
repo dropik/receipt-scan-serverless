@@ -144,6 +144,7 @@ invocation_response handler::handle_request(invocation_request const& request) {
     for (auto &record : s3_request.records) {
       process_s3_object(record);
     }
+    m_logger->info("All files processed.");
 
     return invocation_response::success("All files processed!",
                                         "application/json");
@@ -157,7 +158,7 @@ invocation_response handler::handle_request(invocation_request const& request) {
 }
 
 void handler::process_s3_object(s3_record& record) {
-  const auto& key = record.s3.object.key;
+  const auto &key = record.s3.object.key;
 
   if (!record.is_put()) {
     m_logger->info("Skipping not put request.");
@@ -195,15 +196,21 @@ void handler::process_s3_object(s3_record& record) {
     return;
   }
 
-  auto& expense_result = outcome.GetResult();
+  auto &expense_result = outcome.GetResult();
 
-  auto& expense_documents = expense_result.GetExpenseDocuments();
-  for (auto& doc : expense_documents) {
-    try_parse_document(doc, user_id, request_id);
+  auto &expense_documents = expense_result.GetExpenseDocuments();
+  int extracted_documents = 0;
+  for (auto &doc : expense_documents) {
+    if (try_parse_document(doc, user_id, request_id)) {
+      extracted_documents++;
+    }
   }
+  m_logger->info("Successfully extracted %d of %d documents from the request.",
+                 extracted_documents,
+                 expense_documents.size());
 }
 
-void handler::try_parse_document(
+bool handler::try_parse_document(
     const Aws::Textract::Model::ExpenseDocument& document,
     const models::guid& user_id, const models::guid& request_id) {
   models::receipt receipt;
@@ -214,7 +221,7 @@ void handler::try_parse_document(
 
   auto& summary_fields = document.GetSummaryFields();
   if (!try_parse_summary_fields(summary_fields, receipt)) {
-    return;
+    return false;
   }
 
   auto& item_groups = document.GetLineItemGroups();
@@ -222,6 +229,8 @@ void handler::try_parse_document(
   try_parse_items(item_groups, receipt.id, receipt_items);
 
   try_assign_categories(receipt, receipt_items);
+
+  return true;
 }
 
 bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,

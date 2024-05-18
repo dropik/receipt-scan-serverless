@@ -65,17 +65,18 @@ int main(int argc, char* argv[]) {
   {
     std::shared_ptr<logger> l = std::make_shared<logger>("Scanner");
     Aws::Client::ClientConfiguration config;
-    config.region = AWS_REGION;
 
 #ifdef DEBUG
+    config.region = AWS_REGION;
     connection_string = getenv("DB_CONNECTION_STRING");
 #else
-    std::string functionName = getenv("AWS_LAMBDA_FUNCTION_NAME");
-    l->info("Executing function %s", functionName.c_str());
 
-    int envStartPos = functionName.find_last_of('-');
-    std::string stage = functionName.substr(
-        envStartPos + 1, functionName.size() - envStartPos - 1);
+    std::string function_name = getenv("AWS_LAMBDA_FUNCTION_NAME");
+    l->info("Executing function %s", function_name.c_str());
+
+    auto envStartPos = function_name.find_last_of('-');
+    std::string stage = function_name.substr(
+        envStartPos + 1, function_name.size() - envStartPos - 1);
     l->info("Running on stage %s", stage.c_str());
 
     std::string ssmPrefix = str_format("/receipt-scan/%s", stage.c_str());

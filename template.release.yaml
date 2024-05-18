@@ -37,6 +37,13 @@ Resources:
   LScanner:
     Properties:
       FunctionName: !Sub "receipt-scan-scanner-${Stage}"
+      Events:
+        Analyze:
+          Type: S3
+          Properties:
+            Bucket: !Ref ImagesBucket
+            Events:
+              - s3:ObjectCreated:*
       Policies:
         - Version: 2012-10-17
           Statement:
@@ -46,6 +53,24 @@ Resources:
                 - "ssm:GetParameter"
                 - "ssm:GetParameters"
                 - "ssm:GetParameterByPath"
+              Resource:
+                - "*"
+            - Sid: S3Access
+              Effect: Allow
+              Action:
+                - "s3:GetObject"
+              Resource:
+                - !Sub "arn:aws:s3:::${AWS::StackName}-images-bucket/*"
+            - Sid: Textract
+              Effect: Allow
+              Action:
+                - "textract:AnalyzeExpense"
+              Resource:
+                - "*"
+            - Sid: Bedrock
+              Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
               Resource:
                 - "*"
 

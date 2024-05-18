@@ -38,7 +38,7 @@ class handler {
   void process_s3_object(
       aws_lambda_cpp::models::lambda_payloads::s3_record& record);
 
-  void try_parse_document(const Aws::Textract::Model::ExpenseDocument& document,
+  bool try_parse_document(const Aws::Textract::Model::ExpenseDocument& document,
                           const models::guid& user_id,
                           const models::guid& request_id);
 

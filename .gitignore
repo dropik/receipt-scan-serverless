@@ -5,3 +5,4 @@ template.yaml
 !.vs/launch.vs.json
 out/
 .clion.source.upload.marker
+.idea/dataSources*
