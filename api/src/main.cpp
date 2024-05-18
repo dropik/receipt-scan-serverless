@@ -1,12 +1,11 @@
 #include <memory>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <aws/lambda-runtime/runtime.h>
 
 #include <aws/core/Aws.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/http/HttpTypes.h>
-#include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 
 #include <aws/s3/S3Client.h>
