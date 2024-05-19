@@ -14,4 +14,3 @@ Resources:
       Environment:
         Variables:
           DB_CONNECTION_STRING:
-

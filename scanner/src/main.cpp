@@ -9,11 +9,6 @@
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
-#include "mariadb/conncpp/Connection.hpp"
-#include "mariadb/conncpp/DriverManager.hpp"
-#include "mariadb/conncpp/Exception.hpp"
-#include "mariadb/conncpp/SQLString.hpp"
-
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
@@ -70,7 +65,6 @@ int main(int argc, char* argv[]) {
     config.region = AWS_REGION;
     connection_string = getenv("DB_CONNECTION_STRING");
 #else
-
     std::string function_name = getenv("AWS_LAMBDA_FUNCTION_NAME");
     l->info("Executing function %s", function_name.c_str());
 
@@ -96,17 +90,6 @@ int main(int argc, char* argv[]) {
 #endif
 
     try {
-      l->info("Establishing connection with the database...");
-
-      sql::SQLString url(connection_string);
-      std::unique_ptr<sql::Connection> conn(
-          sql::DriverManager::getConnection(url));
-      if (conn == nullptr) {
-        l->error("Unable to establish connection with database!");
-        return -1;
-      }
-      db_connection = std::move(conn);
-
       auto repo = std::make_shared<repository::client>(connection_string, l);
 
       std::shared_ptr<TextractClient> textract_client =
@@ -127,16 +110,11 @@ int main(int argc, char* argv[]) {
       run_handler(handler_f);
 #endif  // DEBUG
 
-    } catch (sql::SQLException &e) {
-      l->error(
-          "Error occurred while establishing connection to the database: %s",
-          e.what());
+    } catch (std::exception &e) {
+      l->error("Error occurred during execution of the function.");
     }
   }
 
-  if (db_connection) {
-    db_connection->close();
-  }
   ShutdownAPI(options);
 
   return 0;

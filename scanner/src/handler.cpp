@@ -100,7 +100,7 @@ static std::string parse_name(const std::string& text) {
 }
 
 invocation_response handler::handle_request(invocation_request const& request) {
-  m_logger->info("Version %s", VERSION);
+  m_logger->info("Version %s", APP_VERSION);
 
   try {
     aws_lambda_cpp::models::lambda_payloads::s3_request s3_request =

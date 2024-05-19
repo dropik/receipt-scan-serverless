@@ -23,6 +23,7 @@ class client {
  public:
   client(const std::string& connection_string,
          std::shared_ptr<aws_lambda_cpp::common::logger> logger);
+  ~client();
 
   template <typename T>
   void create(const T& entity) {

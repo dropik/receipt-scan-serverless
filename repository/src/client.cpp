@@ -28,3 +28,10 @@ client::client(
     throw;
   }
 }
+
+client::~client() {
+  if (m_connection) {
+    m_logger->info("Closing connection with the database...");
+    m_connection->close();
+  }
+}

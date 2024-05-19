@@ -2,10 +2,7 @@
 
 #include <aws-lambda-cpp/common/macros.h>
 
-#define VERSION XSTR(@receipt-scan-serverless_VERSION@)
-#define VERSION_MAJOR @receipt-scan-serverless_VERSION_MAJOR@
-#define VERSION_MINOR @receipt-scan-serverless_VERSION_MINOR@
-#define VERSION_PATCH @receipt-scan-serverless_VERSION_PATCH@
+#define APP_VERSION "@receipt-scan-serverless_VERSION@"
 
 #ifdef DEBUG
 #define AWS_REGION "eu-central-1"

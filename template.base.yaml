@@ -46,4 +46,3 @@ Resources:
       BuildMethod: makefile
     Properties:
       CodeUri: out/scanner/
-

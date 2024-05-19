@@ -32,7 +32,7 @@ static invocation_response lambda_handler(
   const aws_lambda_cpp::common::logger& logger,
   const invocation_request& request) {
 
-  logger.info("Version %s", VERSION);
+  logger.info("Version %s", APP_VERSION);
 
   gateway_proxy_request<upload_file_params> gpr = deserialize<gateway_proxy_request<upload_file_params>>(request.payload);
 
