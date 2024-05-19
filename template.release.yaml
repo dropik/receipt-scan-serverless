@@ -8,10 +8,79 @@ Parameters:
       - prod
 
 Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "${AWS::StackName}-user-pool"
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AutoVerifiedAttributes:
+        - email
+      DeletionProtection: ACTIVE
+      DeviceConfiguration:
+        ChallengeRequiredOnNewDevice: true
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub "${AWS::StackName}"
+      UserPoolId: !Ref CognitoUserPool
+
+  CognitoUserPoolDefaultClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "${AWS::StackName}-user-pool-client"
+      UserPoolId: !Ref CognitoUserPool
+      AccessTokenValidity: 60
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      CallbackURLs:
+        - "https://localhost:4200"
+      DefaultRedirectURI: "https://localhost:4200"
+      EnableTokenRevocation: true
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      GenerateSecret: false
+      IdTokenValidity: 60
+      LogoutURLs:
+        - "https://localhost:4200"
+      RefreshTokenValidity: 1440
+      SupportedIdentityProviders:
+        - COGNITO
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: minutes
+
   RESTApi:
     Properties:
       StageName:
         Ref: Stage
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            AuthorizationScopes:
+              - "email"
+            UserPoolArn: !GetAtt CognitoUserPool.Arn
+            Identity:
+              Header: Authorization
 
   ImagesBucket:
     Properties:
@@ -23,6 +92,11 @@ Resources:
       Environment:
         Variables:
           IMAGES_BUCKET: !Ref ImagesBucket
+      Events:
+        Api:
+          Properties:
+            Auth:
+              Authorizer: CognitoAuthorizer
       Policies:
         - Version: 2012-10-17
           Statement:
