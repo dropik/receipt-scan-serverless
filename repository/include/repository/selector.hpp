@@ -5,7 +5,7 @@
 #include <mariadb/conncpp/PreparedStatement.hpp>
 #include <utility>
 
-#include <repository/configurations/repository_configuration.hpp>
+#include "configurations/repository_configuration.hpp"
 
 namespace repository {
 namespace configurations {

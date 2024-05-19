@@ -12,7 +12,7 @@ add_library(repository STATIC
         include/repository/configurations/common/base_repository_configuration.hpp
         include/repository/configurations/common/id_configuration.hpp
         include/repository/configurations/common/property_configuration.hpp
-        include/repository/configurations/common/selector.hpp
+        include/repository/selector.hpp
         include/repository/configurations/common/table_configuration.hpp
         include/repository/configurations/repository_configuration.hpp
         include/repository/configurations/category_configuration.hpp

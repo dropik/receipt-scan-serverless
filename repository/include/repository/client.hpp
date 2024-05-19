@@ -11,7 +11,7 @@
 #include <aws-lambda-cpp/common/logger.hpp>
 
 #include "repository/configurations/repository_configuration.hpp"
-#include "repository/configurations/common/selector.hpp"
+#include "selector.hpp"
 
 #include "repository/configurations/category_configuration.hpp"
 #include "repository/configurations/receipt_configuration.hpp"
