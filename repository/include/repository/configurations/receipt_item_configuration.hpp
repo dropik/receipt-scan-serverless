@@ -1,10 +1,10 @@
 #pragma once
 
+#include <repository/models/receipt_item.hpp>
 #include "repository_configuration.hpp"
-#include "models/receipt_item.hpp"
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 
 template <>
 class repository_configuration<models::receipt_item>
@@ -23,5 +23,5 @@ class repository_configuration<models::receipt_item>
   }
 };
 
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner

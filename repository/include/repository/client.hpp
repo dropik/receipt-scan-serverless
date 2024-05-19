@@ -5,25 +5,24 @@
 #include <memory>
 #include <string>
 
-#include <conncpp/Connection.hpp>
-#include <conncpp/PreparedStatement.hpp>
+#include <mariadb/conncpp/Connection.hpp>
+#include <mariadb/conncpp/PreparedStatement.hpp>
 
 #include <aws-lambda-cpp/common/logger.hpp>
 
-#include "common/selector.hpp"
-#include "repository_configuration.hpp"
+#include "repository/configurations/repository_configuration.hpp"
+#include "repository/configurations/common/selector.hpp"
 
-#include "category_configuration.hpp"
-#include "receipt_configuration.hpp"
-#include "receipt_item_configuration.hpp"
+#include "repository/configurations/category_configuration.hpp"
+#include "repository/configurations/receipt_configuration.hpp"
+#include "repository/configurations/receipt_item_configuration.hpp"
 
-namespace scanner {
 namespace repository {
 
-class repository {
+class client {
  public:
-  repository(const std::string& connection_string,
-             std::shared_ptr<aws_lambda_cpp::common::logger> logger);
+  client(const std::string& connection_string,
+         std::shared_ptr<aws_lambda_cpp::common::logger> logger);
 
   template <typename T>
   void create(const T& entity) {
@@ -98,7 +97,7 @@ class repository {
   }
 
   template <typename T>
-  common::selector<T> select(const std::string& query) {
+  configurations::common::selector<T> select(const std::string& query) {
     auto& configuration = get_configuration<T>();
     m_logger->info("Executing query: %s", query.c_str());
     try {
@@ -107,7 +106,7 @@ class repository {
       if (!stmt) {
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      return common::selector<T>(stmt, configuration);
+      return configurations::common::selector<T>(stmt, configuration);
     } catch (std::exception& e) {
       m_logger->error(
           "Error occurred while preparing query: %s",
@@ -118,8 +117,8 @@ class repository {
 
  private:
   template <typename T>
-  repository_configuration<T>& get_configuration() {
-    static repository_configuration<T> configuration;
+  configurations::repository_configuration<T>& get_configuration() {
+    static configurations::repository_configuration<T> configuration;
     return configuration;
   }
 
@@ -127,5 +126,4 @@ class repository {
   std::shared_ptr<aws_lambda_cpp::common::logger> m_logger;
 };
 
-}  // namespace repository
-}  // namespace scanner
+}  // namespace client

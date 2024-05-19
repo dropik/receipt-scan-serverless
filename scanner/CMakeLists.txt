@@ -9,7 +9,6 @@ add_executable(${FUNCTION_NAME}
         src/main.cpp
         src/handler.hpp
         src/handler.cpp
-        src/repository/repository.cpp
         src/utils.hpp
         src/utils.cpp
         src/models/bedrock_payload.hpp
@@ -17,17 +16,12 @@ add_executable(${FUNCTION_NAME}
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
   "${PROJECT_SOURCE_DIR}/include"
-  "include"
-  "${CMAKE_SYSROOT}/usr/local/include/mariadb")
+  "${PROJECT_SOURCE_DIR}/repository/include")
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
-  AWS::aws-lambda-runtime
-  ${AWSSDK_LINK_LIBRARIES}
-  aws-lambda-cpp-common
-  "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
-  "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
-  ssl
-  gssapi_krb5)
+        AWS::aws-lambda-runtime
+        ${AWSSDK_LINK_LIBRARIES}
+        repository)
 
 set_target_properties(${FUNCTION_NAME}
   PROPERTIES

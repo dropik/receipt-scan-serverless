@@ -2,13 +2,13 @@
 
 #include <memory>
 
-#include <conncpp/PreparedStatement.hpp>
+#include <mariadb/conncpp/PreparedStatement.hpp>
 #include <utility>
 
-#include "repository/repository_configuration.hpp"
+#include <repository/configurations/repository_configuration.hpp>
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 namespace common {
 
 template <typename T>
@@ -73,5 +73,5 @@ class selector {
 };
 
 }  // namespace common
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner

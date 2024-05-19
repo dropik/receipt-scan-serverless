@@ -17,10 +17,7 @@
 
 #include <aws/bedrock-runtime/model/InvokeModelRequest.h>
 
-#include <conncpp/Exception.hpp>
-
 #include <config.h>
-#include <repository/repository.hpp>
 
 #include "utils.hpp"
 #include "models/bedrock_payload.hpp"
@@ -33,8 +30,10 @@ using namespace aws_lambda_cpp::models::lambda_payloads;
 using namespace aws::lambda_runtime;
 using namespace aws_lambda_cpp;
 using namespace scanner;
+using namespace repository;
+using namespace repository::models;
 
-handler::handler(std::shared_ptr<repository::repository> repository,
+handler::handler(std::shared_ptr<client> repository,
                  std::shared_ptr<const TextractClient> textract_client,
                  std::shared_ptr<const BedrockRuntimeClient> bedrock_client,
                  std::shared_ptr<const logger> logger)
@@ -142,9 +141,9 @@ void handler::process_s3_object(s3_record& record) {
 
   std::string key_parted = key.substr(6, key.length() - 6);
   auto users_delimiter = key_parted.find('/');
-  models::guid user_id = key_parted.substr(0, users_delimiter);
+  guid user_id = key_parted.substr(0, users_delimiter);
   key_parted.erase(0, users_delimiter + 10);
-  models::guid request_id = key_parted;
+  guid request_id = key_parted;
 
   m_logger->info("Processing request %s of user %s", request_id.c_str(),
                  user_id.c_str());
@@ -179,8 +178,8 @@ void handler::process_s3_object(s3_record& record) {
 
 bool handler::try_parse_document(
     const Aws::Textract::Model::ExpenseDocument& document,
-    const models::guid& user_id, const models::guid& request_id) {
-  models::receipt receipt;
+    const guid& user_id, const guid& request_id) {
+  receipt receipt;
   receipt.id = utils::gen_uuid();
   receipt.user_id = user_id;
   receipt.request_id = request_id;
@@ -192,7 +191,7 @@ bool handler::try_parse_document(
   }
 
   auto& item_groups = document.GetLineItemGroups();
-  std::vector<models::receipt_item> receipt_items;
+  std::vector<receipt_item> receipt_items;
   try_parse_items(item_groups, receipt.id, receipt_items);
 
   try_assign_categories(receipt, receipt_items);
@@ -201,7 +200,7 @@ bool handler::try_parse_document(
 }
 
 bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
-                                       models::receipt& receipt) {
+                                       receipt& receipt) {
   double best_store_name_confidence = 0;
   double best_date_confidence = 0;
   double best_total_confidence = 0;
@@ -253,7 +252,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
   try {
     auto existing_receipt =
         m_repository
-            ->select<models::receipt>(
+            ->select<repository::models::receipt>(
                 "select * from receipts r "
                 "where r.request_id = ? and r.doc_number = ?")
             .with_param(receipt.request_id)
@@ -267,7 +266,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
       m_repository->update(receipt);
     }
 
-  } catch (sql::SQLException& e) {
+  } catch (std::exception& e) {
     m_logger->error("Error occurred while storing receipt in database: %s",
                     e.what());
     return false;
@@ -277,13 +276,13 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
 }
 
 void handler::try_parse_items(
-    const line_item_groups_t& line_item_groups, const models::guid& receipt_id,
-    std::vector<models::receipt_item>& receipt_items) {
+    const line_item_groups_t& line_item_groups, const guid& receipt_id,
+    std::vector<receipt_item>& receipt_items) {
   int sort_order = 0;
   for (auto& group : line_item_groups) {
     auto& items = group.GetLineItems();
     for (auto& item : items) {
-      models::receipt_item receipt_item;
+      receipt_item receipt_item;
       receipt_item.id = utils::gen_uuid();
       receipt_item.receipt_id = receipt_id;
       receipt_item.sort_order = sort_order;
@@ -297,7 +296,7 @@ void handler::try_parse_items(
 }
 
 bool handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
-                             models::receipt_item& receipt_item) {
+                             receipt_item& receipt_item) {
   auto& fields = item.GetLineItemExpenseFields();
 
   int quantity = 1;
@@ -369,7 +368,7 @@ bool handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
   try {
     auto existing_item =
         m_repository
-            ->select<models::receipt_item>(
+            ->select<repository::models::receipt_item>(
                 "select * from receipt_items ri "
                 "where ri.receipt_id = ? and ri.sort_order = ?")
             .with_param(receipt_item.receipt_id)
@@ -383,19 +382,19 @@ bool handler::try_parse_item(const Aws::Textract::Model::LineItemFields& item,
       m_repository->update(receipt_item);
     }
     return true;
-  } catch (sql::SQLException& e) {
+  } catch (std::exception& e) {
     m_logger->error("Error occurred while storing receipt item in database: %s",
                     e.what());
     return false;
   }
 }
 
-void handler::try_assign_categories(models::receipt& receipt,
-                                    std::vector<models::receipt_item>& items) {
+void handler::try_assign_categories(receipt& receipt,
+                                    std::vector<receipt_item>& items) {
   // Loading categories
   const auto categories =
       m_repository
-          ->select<models::category>(
+          ->select<category>(
               "select * from categories c where c.user_id = ? order by c.name")
           .with_param(receipt.user_id)
           .all();

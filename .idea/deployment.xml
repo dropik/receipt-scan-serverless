@@ -10,11 +10,13 @@
           </mappings>
           <excludedPaths>
             <excludedPath local="true" path="$PROJECT_DIR$/out/debug" />
+            <excludedPath local="true" path="$PROJECT_DIR$/out/debug" />
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-remote-host" />
-            <excludedPath local="true" path="$PROJECT_DIR$/out" />
-            <excludedPath local="true" path="$PROJECT_DIR$/out" />
             <excludedPath local="true" path="$PROJECT_DIR$/.vs" />
+            <excludedPath local="true" path="$PROJECT_DIR$/out" />
             <excludedPath local="true" path="$PROJECT_DIR$/out/release" />
+            <excludedPath local="true" path="$PROJECT_DIR$/out/release" />
+            <excludedPath local="true" path="$PROJECT_DIR$/.vs" />
           </excludedPaths>
         </serverdata>
       </paths>

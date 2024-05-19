@@ -1,12 +1,12 @@
-#include "repository/repository.hpp"
+#include "repository/client.hpp"
 
 #include <utility>
 
-#include <conncpp/DriverManager.hpp>
+#include <mariadb/conncpp/DriverManager.hpp>
 
-using namespace scanner::repository;
+using namespace repository;
 
-repository::repository(
+client::client(
     const std::string& connection_string,
     std::shared_ptr<aws_lambda_cpp::common::logger> logger)
     : m_logger(std::move(logger)) {

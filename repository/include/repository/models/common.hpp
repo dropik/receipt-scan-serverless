@@ -2,10 +2,10 @@
 
 #include <string>
 
-namespace scanner {
+namespace repository {
 namespace models {
 
 typedef std::string guid;
 
 }  // namespace models
-}  // namespace scanner
+}  // namespace repository

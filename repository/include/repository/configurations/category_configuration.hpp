@@ -1,10 +1,10 @@
 #pragma once
 
+#include <repository/models/category.hpp>
 #include "repository_configuration.hpp"
-#include "models/category.hpp"
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 
 template <>
 class repository_configuration<models::category>
@@ -20,5 +20,5 @@ class repository_configuration<models::category>
   }
 };
 
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner

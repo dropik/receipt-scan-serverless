@@ -6,10 +6,11 @@
 #include <string>
 #include <vector>
 
-#include <conncpp/Connection.hpp>
-#include <conncpp/PreparedStatement.hpp>
+#include <mariadb/conncpp/Connection.hpp>
+#include <mariadb/conncpp/PreparedStatement.hpp>
 
-#include "models/common.hpp"
+#include <repository/models/common.hpp>
+
 #include "id_configuration.hpp"
 #include "property_configuration.hpp"
 #include "table_configuration.hpp"
@@ -54,15 +55,15 @@
 
 #define WITH_COLUMN(column_name) .with_column_name(column_name)
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 namespace common {
 
-template <typename T>
+template<typename T>
 class base_repository_configuration {
  public:
-  const std::shared_ptr<sql::PreparedStatement>& get_insert_statement(
-      const T& entity, const std::shared_ptr<sql::Connection>& connection) {
+  const std::shared_ptr<sql::PreparedStatement> &get_insert_statement(
+      const T &entity, const std::shared_ptr<sql::Connection> &connection) {
     if (!m_insert_statement) {
       if (!m_table) {
         throw std::runtime_error("Table is not configured!");
@@ -73,7 +74,7 @@ class base_repository_configuration {
 
       std::string query =
           "insert into " + m_table->get_name() + " (" + m_id->get_column_name();
-      for (const auto& property : m_properties) {
+      for (const auto &property : m_properties) {
         if (!property) continue;
         query += ", " + property->get_column_name();
       }
@@ -102,9 +103,9 @@ class base_repository_configuration {
     return m_insert_statement;
   }
 
-  const std::shared_ptr<sql::PreparedStatement>& get_select_statement(
-      const std::string& id,
-      const std::shared_ptr<sql::Connection>& connection) {
+  const std::shared_ptr<sql::PreparedStatement> &get_select_statement(
+      const std::string &id,
+      const std::shared_ptr<sql::Connection> &connection) {
     if (!m_select_statement) {
       if (!m_table) {
         throw std::runtime_error("Table is not configured!");
@@ -114,12 +115,12 @@ class base_repository_configuration {
       }
 
       std::string query = "select " + m_id->get_column_name();
-      for (const auto& property : m_properties) {
+      for (const auto &property : m_properties) {
         if (!property) continue;
         query += ", " + property->get_column_name();
       }
       query += " from " + m_table->get_name() + " where " +
-               m_id->get_column_name() + " = ?";
+          m_id->get_column_name() + " = ?";
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -133,7 +134,7 @@ class base_repository_configuration {
     return m_select_statement;
   }
 
-  std::shared_ptr<T> get_entity(sql::ResultSet* result) {
+  std::shared_ptr<T> get_entity(sql::ResultSet *result) {
     auto entity = std::make_shared<T>();
     m_id->set_id(*entity, result);
     for (size_t i = 0; i < m_properties.size(); i++) {
@@ -143,8 +144,8 @@ class base_repository_configuration {
     return entity;
   }
 
-  const std::shared_ptr<sql::PreparedStatement>& get_update_statement(
-      const T& entity, const std::shared_ptr<sql::Connection>& connection) {
+  const std::shared_ptr<sql::PreparedStatement> &get_update_statement(
+      const T &entity, const std::shared_ptr<sql::Connection> &connection) {
     if (!m_update_statement) {
       if (!m_table) {
         throw std::runtime_error("Table is not configured!");
@@ -183,8 +184,8 @@ class base_repository_configuration {
     return m_update_statement;
   }
 
-  const std::shared_ptr<sql::PreparedStatement>& get_delete_statement(
-      const std::string& id, const std::shared_ptr<sql::Connection>& connection) {
+  const std::shared_ptr<sql::PreparedStatement> &get_delete_statement(
+      const std::string &id, const std::shared_ptr<sql::Connection> &connection) {
     if (!m_delete_statement) {
       if (!m_table) {
         throw std::runtime_error("Table is not configured!");
@@ -194,7 +195,7 @@ class base_repository_configuration {
       }
 
       std::string query = "delete from " + m_table->get_name() + " where " +
-                          m_id->get_column_name() + " = ?";
+          m_id->get_column_name() + " = ?";
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -208,7 +209,7 @@ class base_repository_configuration {
     return m_delete_statement;
   }
 
-  const std::string& get_table_name() const {
+  const std::string &get_table_name() const {
     if (!m_table) {
       throw std::runtime_error("Table is not configured!");
     }
@@ -217,28 +218,31 @@ class base_repository_configuration {
 
  protected:
   typedef T entity_t;
-  
-  table_configuration& has_table(const std::string& table_name) {
+
+  table_configuration &has_table(const std::string &table_name) {
     m_table = std::make_shared<table_configuration>(table_name);
     return *m_table;
   }
 
-  id_configuration<T>& has_id(
-      const typename id_configuration<T>::id_selector_t& id_selector,
-      const typename id_configuration<T>::id_setter_t& id_setter) {
-    m_id = std::make_shared<id_configuration<T>>(id_selector, id_setter);
+  id_configuration<T> &has_id(
+      const typename id_configuration<T>::id_selector_t &id_selector,
+      const typename id_configuration<T>::id_setter_t &id_setter) {
+    m_id = std::make_shared<id_configuration < T>>
+    (id_selector, id_setter);
     return *m_id;
   }
 
-  template <typename TProperty>
-  base_property_configuration<T>& has_property(
-      const typename property_configuration<T, TProperty>::property_selector_t&
-          property_selector,
-      const typename property_configuration<T, TProperty>::property_setter_t&
-          property_setter) {
-    std::shared_ptr<property_configuration<T, TProperty>> property =
-        std::make_shared<property_configuration<T, TProperty>>(
-            property_selector, property_setter);
+  template<typename TProperty>
+  base_property_configuration<T> &has_property(
+      const typename property_configuration<T, TProperty>::property_selector_t &
+      property_selector,
+      const typename property_configuration<T, TProperty>::property_setter_t &
+      property_setter) {
+    std::shared_ptr<property_configuration < T, TProperty>>
+    property =
+        std::make_shared<property_configuration < T, TProperty>>
+    (
+        property_selector, property_setter);
     m_properties.push_back(std::move(property));
     return *m_properties.back();
   }
@@ -254,5 +258,5 @@ class base_repository_configuration {
 };
 
 }  // namespace common
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner

@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace scanner {
+namespace repository {
 namespace models {
 
 struct receipt_item {
@@ -15,4 +15,4 @@ struct receipt_item {
 };
 
 }  // namespace models
-}  // namespace scanner
+}  // namespace repository

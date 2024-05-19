@@ -9,15 +9,15 @@
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
-#include "conncpp/Connection.hpp"
-#include "conncpp/DriverManager.hpp"
-#include "conncpp/Exception.hpp"
-#include "conncpp/SQLString.hpp"
+#include "mariadb/conncpp/Connection.hpp"
+#include "mariadb/conncpp/DriverManager.hpp"
+#include "mariadb/conncpp/Exception.hpp"
+#include "mariadb/conncpp/SQLString.hpp"
 
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws-lambda-cpp/common/string_utils.hpp>
 
-#include <repository/repository.hpp>
+#include <repository/client.hpp>
 
 #ifdef DEBUG
 #include <aws-lambda-cpp/common/runtime.hpp>
@@ -107,8 +107,7 @@ int main(int argc, char* argv[]) {
       }
       db_connection = std::move(conn);
 
-      std::shared_ptr<repository::repository> repo =
-          std::make_shared<repository::repository>(connection_string, l);
+      auto repo = std::make_shared<repository::client>(connection_string, l);
 
       std::shared_ptr<TextractClient> textract_client =
           Aws::MakeShared<TextractClient>("textract_client", config);
@@ -118,7 +117,7 @@ int main(int argc, char* argv[]) {
 
       auto handler = std::make_unique<scanner::handler>(repo, textract_client,
                                                         bedrock_client, l);
-      auto handler_f = [&](const invocation_request& req) {
+      auto handler_f = [&](const invocation_request &req) {
         return handler->handle_request(req);
       };
 
@@ -128,7 +127,7 @@ int main(int argc, char* argv[]) {
       run_handler(handler_f);
 #endif  // DEBUG
 
-    } catch (sql::SQLException& e) {
+    } catch (sql::SQLException &e) {
       l->error(
           "Error occurred while establishing connection to the database: %s",
           e.what());

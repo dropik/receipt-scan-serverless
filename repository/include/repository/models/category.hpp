@@ -2,9 +2,9 @@
 
 #include <string>
 
-#include "models/common.hpp"
+#include "common.hpp"
 
-namespace scanner {
+namespace repository {
 namespace models {
 
 struct category {
@@ -14,4 +14,4 @@ struct category {
 };
 
 }  // namespace models
-}  // namespace scanner
+}  // namespace repository

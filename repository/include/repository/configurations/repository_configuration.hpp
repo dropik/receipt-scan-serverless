@@ -2,8 +2,8 @@
 
 #include "common/base_repository_configuration.hpp"
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 
 template <typename T>
 class repository_configuration;
@@ -16,5 +16,5 @@ class repository_configuration : public common::base_repository_configuration<T>
   }
 };
 
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner

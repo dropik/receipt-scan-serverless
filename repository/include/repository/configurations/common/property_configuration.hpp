@@ -1,12 +1,11 @@
 #pragma once
 
-#include <functional>
 #include <string>
 
 #include "base_property_configuration.hpp"
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 namespace common {
 
 template <typename T, typename TProperty>
@@ -162,5 +161,5 @@ class property_configuration<T, bool> : public base_property_configuration<T> {
 };
 
 }  // namespace common
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner

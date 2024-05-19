@@ -3,8 +3,8 @@
 #include <string>
 #include <utility>
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 namespace common {
 
 class table_configuration {
@@ -18,5 +18,5 @@ class table_configuration {
 };
 
 }  // namespace common
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner

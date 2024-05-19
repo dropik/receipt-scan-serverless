@@ -2,11 +2,11 @@
 
 #include <string>
 
+#include <repository/models/receipt.hpp>
 #include "repository_configuration.hpp"
-#include "models/receipt.hpp"
 
-namespace scanner {
 namespace repository {
+namespace configurations {
 
 template <>
 class repository_configuration<models::receipt>
@@ -28,5 +28,5 @@ class repository_configuration<models::receipt>
   }
 };
 
+}  // namespace configurations
 }  // namespace repository
-}  // namespace scanner
