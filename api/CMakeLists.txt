@@ -5,7 +5,12 @@ find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3)
 
-add_executable(${FUNCTION_NAME} "src/main.cpp" "src/models/upload_file_params.hpp" "src/models/upload_file_response.hpp")
+add_executable(${FUNCTION_NAME}
+        src/main.cpp
+        src/models/upload_file_params.hpp
+        src/models/upload_file_response.hpp
+        src/api_root.hpp
+)
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
   "${PROJECT_SOURCE_DIR}/include"

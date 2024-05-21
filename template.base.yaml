@@ -35,8 +35,8 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /file
-            Method: post
+            Path: /{proxy+}
+            Method: ANY
             RestApiId:
               Ref: RESTApi
 
