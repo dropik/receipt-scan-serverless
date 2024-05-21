@@ -1,8 +1,6 @@
 #include <memory>
 #include <cstdlib>
 
-#include <aws/lambda-runtime/runtime.h>
-
 #include <aws/core/Aws.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/http/HttpTypes.h>
@@ -11,8 +9,6 @@
 #include <aws/s3/S3Client.h>
 
 #include <aws-lambda-cpp/common/logger.hpp>
-#include <aws-lambda-cpp/http/responses.hpp>
-#include <aws-lambda-cpp/models/lambda_payloads/gateway_proxy.hpp>
 
 #include <config.h>
 
@@ -39,34 +35,6 @@ using namespace api;
 using namespace api::models;
 using namespace repository::models;
 
-static invocation_response lambda_handler(
-  const std::shared_ptr<logger>& logger,
-  const invocation_request& request) {
-
-  logger->info("Version %s", APP_VERSION);
-
-  gateway_proxy_request<upload_file_params> gpr = deserialize<gateway_proxy_request<upload_file_params>>(request.payload);
-
-  upload_file_params params = gpr.get_payload();
-
-  Aws::Client::ClientConfiguration config;
-#ifdef DEBUG
-  config.region = AWS_REGION;
-#endif
-  S3Client s3Client(config);
-  
-  std::string bucketName(getenv(IMAGES_BUCKET));
-  std::string presignedUrl = s3Client.GeneratePresignedUrlWithSSES3(
-    bucketName,
-    params.name,
-    Aws::Http::HttpMethod::HTTP_PUT);
-
-  upload_file_response response;
-  response.url = presignedUrl;
-
-  return aws_lambda_cpp::http::ok(response);
-}
-
 static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
   return [] {
     return Aws::MakeShared<ConsoleLogSystem>(
@@ -88,25 +56,39 @@ int main(int argc, char** argv) {
   InitAPI(options);
   {
     auto l = std::make_shared<logger>("Api");
-//    std::function<invocation_response(const invocation_request&)> handler = [&](const invocation_request& req) {
-//      return lambda_handler(l, req);
-//    };
+
+    Aws::Client::ClientConfiguration config;
+#ifdef DEBUG
+    config.region = AWS_REGION;
+#endif
+    auto s3Client= std::make_shared<S3Client>(config);
 
     api_root api;
 
-    api.map("/hello").get([&l](const api_request_t& request) {
+    api.get("/hello")([&l]() {
       l->info("Version %s", APP_VERSION);
       return message_response{"Hello, World!"};
     });
 
-    api.map<int>().get([&l](const api_request_t& request, int count) {
+    api.get<int>()([&l](int count) {
         l->info("Version %s", APP_VERSION);
       return message_response{"Let's count to " + std::to_string(count)};
     });
 
-    api.map<guid>().get([&l](const api_request_t& request, const guid& id) {
+    api.get<guid>()([&l](const guid& id) {
       l->info("Version %s", APP_VERSION);
       return message_response{"GUID: " + id};
+    });
+
+    api.post<upload_file_params>("/files")([&l, s3Client = std::weak_ptr<S3Client>(s3Client)](const upload_file_params &params) {
+      l->info("Version %s", APP_VERSION);
+
+      std::string bucketName(getenv(IMAGES_BUCKET));
+      std::string presignedUrl = s3Client.lock()->GeneratePresignedUrlWithSSES3(bucketName,
+                                                                                params.name,
+                                                                                Aws::Http::HttpMethod::HTTP_PUT);
+
+      return upload_file_response{presignedUrl};
     });
 
 #ifdef DEBUG

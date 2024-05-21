@@ -23,6 +23,10 @@ struct message_response {
 typedef aws_lambda_cpp::models::lambda_payloads::base_gateway_proxy_request api_request_t;
 typedef aws_lambda_cpp::models::lambda_responses::base_gateway_proxy_response api_response_t;
 
+static bool is_status_ok(int status_code) {
+  return status_code >= 200 && status_code < 300;
+}
+
 template<typename T>
 static api_response_t ok(const T &payload) {
   api_response_t response;
@@ -60,8 +64,6 @@ class base_route_handler {
 template<typename THandler>
 class route_handler : public base_route_handler {
  public:
-  typedef THandler handler_t;
-
   explicit route_handler(THandler &&handler) : m_handler(std::move(handler)) {}
 
   api_response_t operator()(const api_request_t &request) override {
@@ -98,9 +100,7 @@ std::string parse_string(const std::string &s) {
 
 template<typename TParam>
 struct parser {
-  static TParam parse(const std::string &s) {
-    throw std::invalid_argument("Unsupported type for parsing");
-  }
+  constexpr static auto parse = 0;
 };
 
 template<>
@@ -165,28 +165,29 @@ struct route_map {
   std::shared_ptr<base_route_handler> handler;
 };
 
-class static_route_map_builder {
- public:
-  explicit static_route_map_builder(route_map &&map) : m_map(std::move(map)) {}
-
-  template<typename THandler>
-  static_route_map_builder &get(THandler &&h) {
-    m_map.method = "GET";
-    m_map.handler = make_handler(std::forward<THandler>(h));
-    return *this;
-  }
-
- private:
-  route_map &&m_map;
-};
+//template<typename TMatch>
+//class static_route_map_builder {
+// public:
+//  explicit static_route_map_builder(TMatch &&map) : m_match(std::move(map)) {}
+//
+//  template<typename THandler>
+//  static_route_map_builder &get(THandler &&h) {
+//    m_map.method = "GET";
+//    m_map.handler = make_handler(std::forward<THandler>(h));
+//    return *this;
+//  }
+//
+// private:
+//  TMatch m_match;
+//};
 
 template<typename TParam>
 class param_route_map_builder {
  public:
-  explicit param_route_map_builder(route_map&& map) : m_map(std::move(map)) {}
+  explicit param_route_map_builder(route_map &&map) : m_map(std::move(map)) {}
 
   template<typename THandler>
-  param_route_map_builder<TParam>& get(THandler &&h) {
+  param_route_map_builder<TParam> &get(THandler &&h) {
     m_map.method = "GET";
     std::weak_ptr<param_route_match<TParam>> m(std::dynamic_pointer_cast<param_route_match<TParam>>(m_map.match));
     m_map.handler = make_handler([m, &h] (const api_request_t &request) {
@@ -199,65 +200,117 @@ class param_route_map_builder {
   route_map &&m_map;
 };
 
+static std::string get_next_segment(const std::string &path) {
+  auto next_pos = path.find('/', 1);
+  if (next_pos == std::string::npos) {
+    return path;
+  } else {
+    return path.substr(0, next_pos - 1);
+  }
+}
+
+static void validate_path(const std::string &path) {
+  if (path.empty()) {
+    throw std::invalid_argument("Path cannot be empty");
+  }
+  if (path[0] != '/') {
+    throw std::invalid_argument("Path must start with /");
+  }
+  if (path.size() > 1 && path.find('/', 1) != std::string::npos) {
+    throw std::invalid_argument("Path cannot contain more than one segment");
+  }
+}
+
 class api_root {
  public:
-  static_route_map_builder map(const std::string &path) {
-    if (path.empty()) {
-      throw std::invalid_argument("Path cannot be empty");
-    }
-    if (path[0] != '/') {
-      throw std::invalid_argument("Path must start with /");
-    }
-    if (path.size() > 1 && path.find('/', 1) != std::string::npos) {
-      throw std::invalid_argument("Path cannot contain more than one segment");
-    }
+  auto get(const std::string &path) {
+    validate_path(path);
 
-    route_map rm{
-        .match = std::make_shared<exact_route_match>(path),
+    return [this, path](auto &&h) {
+      this->m_routes.push_back([path, h](const api_request_t &request, const std::string &p) {
+        auto next_segment = get_next_segment(p);
+        if (next_segment != path) {
+          return not_found();
+        }
+        if (request.http_method != "GET") {
+          return method_not_allowed();
+        }
+        return ok(h());
+      });
     };
-    m_route_maps.push_back(rm);
-    return static_route_map_builder(std::forward<route_map>(m_route_maps.back()));
+  }
+
+  template<typename TBody>
+  auto post(const std::string &path) {
+    validate_path(path);
+
+    return [this, path](auto &&h) {
+      this->m_routes.push_back([path, h](const api_request_t &request, const std::string &p) {
+        auto next_segment = get_next_segment(p);
+        if (next_segment != path) {
+          return not_found();
+        }
+        if (request.http_method != "POST") {
+          return method_not_allowed();
+        }
+        TBody body;
+        try {
+          body = aws_lambda_cpp::json::deserialize<TBody>(request.get_body());
+        } catch (std::exception &e) {
+          return bad_request();
+        }
+        return ok(h(body));
+      });
+    };
   }
 
   template<typename TParam>
-  param_route_map_builder<TParam> map() {
-    route_map rm{
-        .match = std::make_shared<param_route_match<TParam>>(parser<TParam>::parse),
+  auto get() {
+    static_assert(std::is_function<decltype(parser<TParam>::parse)>::value, "No parser found for type");
+
+    return [this](auto &&h) {
+      this->m_routes.push_back([h](const api_request_t &request, const std::string &p) {
+        auto next_segment = get_next_segment(p);
+        if (next_segment.empty()) {
+          return not_found();
+        }
+        if (request.http_method != "GET") {
+          return method_not_allowed();
+        }
+        TParam param;
+        try {
+          param = parser<TParam>::parse(next_segment);
+        } catch (std::exception &e) {
+          return not_found();
+        }
+        return ok(h(param));
+      });
     };
-    m_route_maps.push_back(rm);
-    return param_route_map_builder<TParam>(std::forward<route_map>(m_route_maps.back()));
   }
 
-  api_response_t operator()(const api_request_t &request, const std::string& path) {
-    std::string next_segment;
-    std::string::size_type pos;
-    if ((pos = path.find('/', 1)) != std::string::npos) {
-      next_segment = path.substr(0, pos - 1);
-    } else {
-      next_segment = path.substr(0);
-    }
-
-    std::vector<route_map> matching_routes;
-    for (const auto &rm : m_route_maps) {
-      if ((*rm.match)(next_segment)) {
-        matching_routes.push_back(rm);
+  api_response_t operator()(const api_request_t &request, const std::string &path) {
+    bool met404 = false;
+    bool met405 = false;
+    for (const auto &route : m_routes) {
+      auto response = route(request, path);
+      if (response.status_code == 404) {
+        met404 = true;
+        continue;
+      } else if (response.status_code == 405) {
+        met405 = true;
+        continue;
+      } else {
+        return response;
       }
     }
-    if (matching_routes.empty()) {
-      return not_found();
-    }
 
-    std::vector<route_map> matching_routes_with_method;
-    for (const auto &rm : matching_routes) {
-      if (rm.method == request.http_method) {
-        matching_routes_with_method.push_back(rm);
-      }
-    }
-    if (matching_routes_with_method.empty()) {
+    if (met405) {
       return method_not_allowed();
+    } else if (met404) {
+      return not_found();
+    } else {
+      return bad_request();
     }
-
-    return (*matching_routes_with_method[0].handler)(request);
   }
 
   aws::lambda_runtime::invocation_response operator()(const aws::lambda_runtime::invocation_request &request) {
@@ -268,7 +321,7 @@ class api_root {
   }
 
  private:
-  std::vector<route_map> m_route_maps;
+  std::vector<std::function<api_response_t(const api_request_t&, const std::string&)>> m_routes;
 };
 
 }
