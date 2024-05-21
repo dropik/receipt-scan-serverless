@@ -78,13 +78,22 @@ static std::shared_ptr<base_route_handler> make_handler(THandler &&h) {
   return std::make_shared<route_handler<THandler>>(std::forward<THandler>(h));
 }
 
-int parse_int(const std::string &s) {
-  std::string int_text = s;
+static std::string remove_slashes(const std::string &s) {
+  std::string text = s;
   std::string::size_type pos = 0;
-  while ((pos = int_text.find('/', pos)) != std::string::npos) {
-    int_text.erase(pos, 1);
+  while ((pos = text.find('/', pos)) != std::string::npos) {
+    text.erase(pos, 1);
   }
+  return text;
+}
+
+int parse_int(const std::string &s) {
+  std::string int_text = remove_slashes(s);
   return std::stoi(int_text);
+}
+
+std::string parse_string(const std::string &s) {
+  return remove_slashes(s);
 }
 
 template<typename TParam>
@@ -98,6 +107,13 @@ template<>
 struct parser<int> {
   static int parse(const std::string &s) {
     return parse_int(s);
+  }
+};
+
+template<>
+struct parser<std::string> {
+  static std::string parse(const std::string &s) {
+    return parse_string(s);
   }
 };
 
@@ -239,10 +255,6 @@ class api_root {
     }
     if (matching_routes_with_method.empty()) {
       return method_not_allowed();
-    }
-
-    if (matching_routes_with_method.size() > 1) {
-      return bad_request();
     }
 
     return (*matching_routes_with_method[0].handler)(request);

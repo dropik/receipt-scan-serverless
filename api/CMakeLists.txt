@@ -13,13 +13,16 @@ add_executable(${FUNCTION_NAME}
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
-  "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/repository/include/"
 )
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
-  AWS::aws-lambda-runtime
-  ${AWSSDK_LINK_LIBRARIES}
-  aws-lambda-cpp-common)
+        AWS::aws-lambda-runtime
+        ${AWSSDK_LINK_LIBRARIES}
+        aws-lambda-cpp-common
+        repository
+)
 
 set_target_properties(${FUNCTION_NAME}
   PROPERTIES

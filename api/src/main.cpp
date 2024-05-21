@@ -20,9 +20,12 @@
 #include <aws-lambda-cpp/common/runtime.hpp>
 #endif
 
+#include <repository/models/common.hpp>
+
 #include "api_root.hpp"
 #include "models/upload_file_params.hpp"
 #include "models/upload_file_response.hpp"
+
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -34,6 +37,7 @@ using namespace aws_lambda_cpp::common;
 using namespace aws_lambda_cpp::models::lambda_payloads;
 using namespace api;
 using namespace api::models;
+using namespace repository::models;
 
 static invocation_response lambda_handler(
   const std::shared_ptr<logger>& logger,
@@ -89,6 +93,7 @@ int main(int argc, char** argv) {
 //    };
 
     api_root api;
+
     api.map("/hello").get([&l](const api_request_t& request) {
       l->info("Version %s", APP_VERSION);
       return message_response{"Hello, World!"};
@@ -97,6 +102,11 @@ int main(int argc, char** argv) {
     api.map<int>().get([&l](const api_request_t& request, int count) {
         l->info("Version %s", APP_VERSION);
       return message_response{"Let's count to " + std::to_string(count)};
+    });
+
+    api.map<guid>().get([&l](const api_request_t& request, const guid& id) {
+      l->info("Version %s", APP_VERSION);
+      return message_response{"GUID: " + id};
     });
 
 #ifdef DEBUG
