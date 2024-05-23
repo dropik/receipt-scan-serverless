@@ -35,6 +35,16 @@ using namespace api;
 using namespace api::models;
 using namespace repository::models;
 
+struct user {
+  std::string name;
+  std::string email;
+
+  JSON_BEGIN_SERIALIZER(user)
+      JSON_PROPERTY("name", name)
+      JSON_PROPERTY("email", email)
+  JSON_END_SERIALIZER()
+};
+
 static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
   return [] {
     return Aws::MakeShared<ConsoleLogSystem>(
@@ -65,23 +75,48 @@ int main(int argc, char** argv) {
 
     api_root api;
 
-    api.get("/hello")([&l]() {
-      l->info("Version %s", APP_VERSION);
-      return message_response{"Hello, World!"};
+    api.any("/hello")([l = std::weak_ptr<logger>(l)](api_resource &res) {
+      res.get("/")([l]() {
+        l.lock()->info("Version %s", APP_VERSION);
+        return message_response{"Hello, World!"};
+      });
+
+      res.get<std::string>()([l](const std::string &name) {
+        l.lock()->info("Version %s", APP_VERSION);
+        return message_response{"Hello, " + name + "!"};
+      });
     });
 
-    api.get<int>()([&l](int count) {
-        l->info("Version %s", APP_VERSION);
+    api.any("/users")([](api_resource &res) {
+      res.post<user>("/")([](const user &u) {
+        return message_response{"User " + u.name + " created"};
+      });
+
+      res.any<int>()([](int user_id, api_resource &res) {
+        res.get("/")([user_id]() {
+          return message_response{"User with id " + std::to_string(user_id)};
+        });
+
+        res.any("/files")([user_id](api_resource &res) {
+          res.get("/")([user_id]() {
+            return message_response{"User " + std::to_string(user_id) + " files"};
+          });
+        });
+      });
+    });
+
+    api.get<int>()([l = std::weak_ptr<logger>(l)](int count) {
+        l.lock()->info("Version %s", APP_VERSION);
       return message_response{"Let's count to " + std::to_string(count)};
     });
 
-    api.get<guid>()([&l](const guid& id) {
-      l->info("Version %s", APP_VERSION);
+    api.get<guid>()([l = std::weak_ptr<logger>(l)](const guid &id) {
+      l.lock()->info("Version %s", APP_VERSION);
       return message_response{"GUID: " + id};
     });
 
-    api.post<upload_file_params>("/files")([&l, s3Client = std::weak_ptr<S3Client>(s3Client)](const upload_file_params &params) {
-      l->info("Version %s", APP_VERSION);
+    api.post<upload_file_params>("/files")([l = std::weak_ptr<logger>(l), s3Client = std::weak_ptr<S3Client>(s3Client)](const upload_file_params &params) {
+      l.lock()->info("Version %s", APP_VERSION);
 
       std::string bucketName(getenv(IMAGES_BUCKET));
       std::string presignedUrl = s3Client.lock()->GeneratePresignedUrlWithSSES3(bucketName,

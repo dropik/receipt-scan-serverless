@@ -205,7 +205,7 @@ static std::string get_next_segment(const std::string &path) {
   if (next_pos == std::string::npos) {
     return path;
   } else {
-    return path.substr(0, next_pos - 1);
+    return path.substr(0, next_pos);
   }
 }
 
@@ -221,15 +221,14 @@ static void validate_path(const std::string &path) {
   }
 }
 
-class api_root {
+class api_resource {
  public:
   auto get(const std::string &path) {
     validate_path(path);
 
     return [this, path](auto &&h) {
       this->m_routes.push_back([path, h](const api_request_t &request, const std::string &p) {
-        auto next_segment = get_next_segment(p);
-        if (next_segment != path) {
+        if (p != path) {
           return not_found();
         }
         if (request.http_method != "GET") {
@@ -246,8 +245,7 @@ class api_root {
 
     return [this, path](auto &&h) {
       this->m_routes.push_back([path, h](const api_request_t &request, const std::string &p) {
-        auto next_segment = get_next_segment(p);
-        if (next_segment != path) {
+        if (p != path) {
           return not_found();
         }
         if (request.http_method != "POST") {
@@ -264,9 +262,29 @@ class api_root {
     };
   }
 
+  auto any(const std::string &path) {
+    validate_path(path);
+
+    return [this, path](auto &&config_function) {
+      this->m_routes.push_back([path, config_function](const api_request_t &request, const std::string &p) {
+        auto next_segment = get_next_segment(p);
+        if (next_segment != path) {
+          return not_found();
+        }
+
+        api_resource nested;
+        config_function(nested);
+
+        auto nested_path = p.size() == path.size() ? "/" : p.substr(path.size());
+        return nested(request, nested_path);
+      });
+    };
+  }
+
   template<typename TParam>
   auto get() {
-    static_assert(std::is_function<decltype(parser<TParam>::parse)>::value, "No parser found for type");
+    using TRawParam = typename std::decay<TParam>::type;
+    static_assert(std::is_function<decltype(parser<TRawParam>::parse)>::value, "No parser found for type");
 
     return [this](auto &&h) {
       this->m_routes.push_back([h](const api_request_t &request, const std::string &p) {
@@ -274,16 +292,48 @@ class api_root {
         if (next_segment.empty()) {
           return not_found();
         }
+        if (next_segment.size() != p.size()) {
+          // this is indeed not found, because a non ANY route should not have any segments after the path
+          return not_found();
+        }
         if (request.http_method != "GET") {
           return method_not_allowed();
         }
-        TParam param;
+        TRawParam param;
         try {
-          param = parser<TParam>::parse(next_segment);
+          param = parser<TRawParam>::parse(next_segment);
         } catch (std::exception &e) {
           return not_found();
         }
         return ok(h(param));
+      });
+    };
+  }
+
+  template<typename TParam>
+  auto any() {
+    using TRawParam = typename std::decay<TParam>::type;
+    static_assert(std::is_function<decltype(parser<TRawParam>::parse)>::value, "No parser found for type");
+
+    return [this](auto &&config_function) {
+      this->m_routes.push_back([config_function](const api_request_t &request, const std::string &p) {
+        auto next_segment = get_next_segment(p);
+        if (next_segment.empty()) {
+          return not_found();
+        }
+
+        TRawParam param;
+        try {
+          param = parser<TRawParam>::parse(next_segment);
+        } catch (std::exception &e) {
+          return not_found();
+        }
+
+        api_resource nested;
+        config_function(param, nested);
+
+        auto nested_path = next_segment.size() >= p.size() ? "/" : p.substr(next_segment.size());
+        return nested(request, nested_path);
       });
     };
   }
@@ -313,15 +363,26 @@ class api_root {
     }
   }
 
+ private:
+  std::vector<std::function<api_response_t(const api_request_t &, const std::string &)>> m_routes;
+};
+
+class api_root : public api_resource {
+ public:
   aws::lambda_runtime::invocation_response operator()(const aws::lambda_runtime::invocation_request &request) {
     api_request_t gpr = aws_lambda_cpp::json::deserialize<api_request_t>(request.payload);
-    api_response_t response = (*this)(gpr, gpr.path);
+
+    auto path = gpr.path;
+    // sanitizing trailing slashes
+    if (path.size() > 1 && path[path.size() - 1] == '/') {
+      path = path.substr(0, path.size() - 1);
+    }
+
+    api_response_t response = this->api_resource::operator()(gpr, path);
+
     auto response_json = aws_lambda_cpp::json::serialize(response, true);
     return aws::lambda_runtime::invocation_response::success(response_json, "application/json");
   }
-
- private:
-  std::vector<std::function<api_response_t(const api_request_t&, const std::string&)>> m_routes;
 };
 
 }
