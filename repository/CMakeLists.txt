@@ -27,8 +27,7 @@ target_link_libraries(repository PUBLIC
         "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
         "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
         aws-lambda-cpp-common
-        ssl
-        gssapi_krb5)
+        ssl)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(repository PRIVATE DEBUG)
