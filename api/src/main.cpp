@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
 #ifdef DEBUG
     aws_lambda_cpp::runtime::run_debug(api);
 #else
-    run_handler(handler);
+    run_handler(api);
 #endif // DEBUG
   }
   ShutdownAPI(options);

@@ -6,3 +6,5 @@ template.yaml
 out/
 .clion.source.upload.marker
 .idea/dataSources*
+.idea/deployment.xml
+.idea/other.xml
