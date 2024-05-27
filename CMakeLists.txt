@@ -9,5 +9,6 @@ configure_file(include/config.h.in
   "${CMAKE_CURRENT_SOURCE_DIR}/include/config.h")
 
 add_subdirectory(repository)
+add_subdirectory(rest)
 add_subdirectory(api)
 add_subdirectory(scanner)

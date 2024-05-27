@@ -9,12 +9,13 @@ add_executable(${FUNCTION_NAME}
         src/main.cpp
         src/models/upload_file_params.hpp
         src/models/upload_file_response.hpp
-        src/api_root.hpp
+        ../rest/include/rest/api_root.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
         "${PROJECT_SOURCE_DIR}/include"
         "${PROJECT_SOURCE_DIR}/repository/include/"
+        "${PROJECT_SOURCE_DIR}/rest/include/"
 )
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC

@@ -17,11 +17,10 @@
 #endif
 
 #include <repository/models/common.hpp>
+#include <rest/api_root.hpp>
 
-#include "api_root.hpp"
 #include "models/upload_file_params.hpp"
 #include "models/upload_file_response.hpp"
-
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -34,6 +33,14 @@ using namespace aws_lambda_cpp::models::lambda_payloads;
 using namespace api;
 using namespace api::models;
 using namespace repository::models;
+
+struct message_response {
+  std::string message;
+
+  JSON_BEGIN_SERIALIZER(message_response)
+      JSON_PROPERTY("message", message)
+  JSON_END_SERIALIZER()
+};
 
 struct user {
   std::string name;
