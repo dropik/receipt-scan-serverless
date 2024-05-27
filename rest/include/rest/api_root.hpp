@@ -10,7 +10,7 @@
 #include <aws-lambda-cpp/models/lambda_responses/gateway_proxy.hpp>
 #include <utility>
 
-namespace api {
+namespace rest {
 
 typedef aws_lambda_cpp::models::lambda_payloads::base_gateway_proxy_request api_request_t;
 typedef aws_lambda_cpp::models::lambda_responses::base_gateway_proxy_response api_response_t;
@@ -161,7 +161,7 @@ class api_resource {
         config_function(nested);
 
         auto nested_path = p.size() == path.size() ? "/" : p.substr(path.size());
-        return nested(request, nested_path);
+        return nested.route(request, nested_path);
       });
     };
   }
@@ -218,12 +218,18 @@ class api_resource {
         config_function(param, nested);
 
         auto nested_path = next_segment.size() >= p.size() ? "/" : p.substr(next_segment.size());
-        return nested(request, nested_path);
+        return nested.route(request, nested_path);
       });
     };
   }
 
-  api_response_t operator()(const api_request_t &request, const std::string &path) {
+  api_response_t route(const api_request_t &request, const std::string &p) {
+    // sanitizing trailing slashes
+    auto path = p;
+    if (path.size() > 1 && path[path.size() - 1] == '/') {
+      path = path.substr(0, path.size() - 1);
+    }
+
     bool met404 = false;
     bool met405 = false;
     for (const auto &route : m_routes) {
@@ -257,13 +263,7 @@ class api_root : public api_resource {
   aws::lambda_runtime::invocation_response operator()(const aws::lambda_runtime::invocation_request &request) {
     api_request_t gpr = aws_lambda_cpp::json::deserialize<api_request_t>(request.payload);
 
-    auto path = gpr.path;
-    // sanitizing trailing slashes
-    if (path.size() > 1 && path[path.size() - 1] == '/') {
-      path = path.substr(0, path.size() - 1);
-    }
-
-    api_response_t response = this->api_resource::operator()(gpr, path);
+    api_response_t response = route(gpr, gpr.path);
 
     auto response_json = aws_lambda_cpp::json::serialize(response, true);
     return aws::lambda_runtime::invocation_response::success(response_json, "application/json");

@@ -33,6 +33,7 @@ using namespace aws_lambda_cpp::models::lambda_payloads;
 using namespace api;
 using namespace api::models;
 using namespace repository::models;
+using namespace rest;
 
 struct message_response {
   std::string message;
