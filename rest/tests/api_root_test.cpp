@@ -69,7 +69,7 @@ TEST(api_root, does_post_captures_body) {
   EXPECT_EQ(response.body, R"({"value":"Daniil"})");
 }
 
-TEST(api_root, is_not_found) {
+TEST(api_root, is_not_found_on_empty_api) {
   api_root api;
   api_request_t request;
   request.path = "/";

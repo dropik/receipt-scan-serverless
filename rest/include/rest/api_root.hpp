@@ -224,6 +224,10 @@ class api_resource {
   }
 
   api_response_t route(const api_request_t &request, const std::string &p) {
+    if (m_routes.empty()) {
+      return not_found();
+    }
+
     // sanitizing trailing slashes
     auto path = p;
     if (path.size() > 1 && path[path.size() - 1] == '/') {
