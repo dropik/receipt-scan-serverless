@@ -59,7 +59,12 @@ static std::string remove_slashes(const std::string &s) {
 
 int parse_int(const std::string &s) {
   std::string int_text = remove_slashes(s);
-  return std::stoi(int_text);
+  size_t pos;
+  auto res = std::stoi(int_text, &pos);
+  if (pos != int_text.size()) {
+    throw std::invalid_argument("Cannot parse int");
+  }
+  return res;
 }
 
 std::string parse_string(const std::string &s) {
