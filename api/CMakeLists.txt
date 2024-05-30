@@ -25,21 +25,12 @@ target_link_libraries(${FUNCTION_NAME} PUBLIC
         repository
 )
 
-set_target_properties(${FUNCTION_NAME}
-  PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/bin")
-
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(${FUNCTION_NAME} PRIVATE DEBUG)
 endif()
 
-set(BOOTSTRAP "${FUNCTION_NAME}-bootstrap")
-add_custom_target(${BOOTSTRAP} ALL
-  COMMAND ln -sf "bin/${FUNCTION_NAME}" "${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/bootstrap")
-
-add_dependencies(${BOOTSTRAP} ${FUNCTION_NAME})
-
-set(MAKEFILE_PATH "${PROJECT_SOURCE_DIR}/out/${FUNCTION_NAME}/Makefile")
-file(WRITE "${MAKEFILE_PATH}"
-  "build-${LAMBDA_ID}:\n"
-  "\tcp -r ${PROJECT_SOURCE_DIR}/build/${FUNCTION_NAME}/* $(ARTIFACTS_DIR)")
+file(WRITE "${PROJECT_BINARY_DIR}/${FUNCTION_NAME}/Makefile"
+    "build-${LAMBDA_ID}:\n"
+    "\tmkdir -p $(ARTIFACTS_DIR)/bin\n"
+    "\tcp ${FUNCTION_NAME} $(ARTIFACTS_DIR)/bin\n"
+    "\tln -sf bin/${FUNCTION_NAME} $(ARTIFACTS_DIR)/bootstrap\n")

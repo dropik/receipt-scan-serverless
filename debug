@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-env=$(cat /usr/local/receipt-scan-serverless/$1/debug.env | paste -sd "," -)
+env=$(cat ~/.receipt-scan-serverless/$1/debug.env | paste -sd "," -)
 if [ -z "${env}" ]; then
 	envArg=""
 else

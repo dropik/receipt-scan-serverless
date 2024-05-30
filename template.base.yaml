@@ -30,7 +30,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
-      CodeUri: out/api/
+      CodeUri: out/arm64/api
       Events:
         Api:
           Type: Api
@@ -45,4 +45,4 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
-      CodeUri: out/scanner/
+      CodeUri: out/arm64/api

@@ -5,12 +5,14 @@ Globals:
 Resources:
   LApi:
     Properties:
+      CodeUri: out/arm64/debug/api
       Environment:
         Variables:
           IMAGES_BUCKET: receipt-scan-dev-images-bucket
 
   LScanner:
     Properties:
+      CodeUri: out/arm64/debug/scanner
       Environment:
         Variables:
           DB_CONNECTION_STRING:

@@ -88,6 +88,7 @@ Resources:
 
   LApi:
     Properties:
+      CodeUri: out/arm64/release/api
       FunctionName: !Sub "receipt-scan-api-${Stage}"
       Environment:
         Variables:
@@ -110,6 +111,7 @@ Resources:
 
   LScanner:
     Properties:
+      CodeUri: out/arm64/release/scanner
       FunctionName: !Sub "receipt-scan-scanner-${Stage}"
       Events:
         Analyze:
