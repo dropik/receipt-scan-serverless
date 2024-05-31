@@ -99,7 +99,7 @@ static std::string parse_name(const std::string& text) {
   return result;
 }
 
-invocation_response handler::handle_request(invocation_request const& request) {
+invocation_response handler::operator()(invocation_request const& request) {
   m_logger->info("Version %s", APP_VERSION);
 
   try {

@@ -20,7 +20,7 @@ class handler {
               bedrock_client,
           std::shared_ptr<const aws_lambda_cpp::common::logger> logger);
 
-  aws::lambda_runtime::invocation_response handle_request(
+  aws::lambda_runtime::invocation_response operator()(
       const aws::lambda_runtime::invocation_request& request);
 
  private:

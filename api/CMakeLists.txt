@@ -9,7 +9,6 @@ add_executable(${FUNCTION_NAME}
         src/main.cpp
         src/models/upload_file_params.hpp
         src/models/upload_file_response.hpp
-        ../rest/include/rest/api_root.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

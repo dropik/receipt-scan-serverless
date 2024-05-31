@@ -1,4 +1,0 @@
-#!/bin/bash
-set -e
-yq '. *= load("template.debug.yaml")' template.base.yaml > template.yaml
-sam build --build-in-source

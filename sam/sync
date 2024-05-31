@@ -1,0 +1,3 @@
+#!/bin/bash
+set -e
+sam sync --watch --code --stack-name receipt-scan-dev

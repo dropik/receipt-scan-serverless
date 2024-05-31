@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
 #ifdef DEBUG
     config.region = AWS_REGION;
 #endif
+
     auto s3Client= std::make_shared<S3Client>(config);
 
     api_root api;

@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-yq '. *= load("template.release.yaml")' template.base.yaml > template.yaml
 sam build
 stackname=receipt-scan-$1
 shift

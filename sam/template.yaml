@@ -1,3 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless application for scanning and categorizing receipts
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+    Handler: bootstrap
+    Runtime: provided.al2
+    RuntimeManagementConfig:
+      UpdateRuntimeOn: Manual
+      RuntimeVersionArn: arn:aws:lambda:eu-central-1::runtime:c2f9d23694707c1161c0d3fbc0673f4ee14150265f4f3081161948aa71fad0a0
+    Architectures:
+      - arm64
+
 Parameters:
   Stage:
     Type: String
@@ -69,6 +86,7 @@ Resources:
         RefreshToken: minutes
 
   RESTApi:
+    Type: AWS::Serverless::Api
     Properties:
       StageName:
         Ref: Stage
@@ -83,21 +101,31 @@ Resources:
               Header: Authorization
 
   ImagesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       BucketName: !Sub "${AWS::StackName}-images-bucket"
 
   LApi:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
     Properties:
-      CodeUri: out/arm64/release/api
+      CodeUri: api/
       FunctionName: !Sub "receipt-scan-api-${Stage}"
       Environment:
         Variables:
           IMAGES_BUCKET: !Ref ImagesBucket
       Events:
         Api:
+          Type: Api
           Properties:
+            Path: /{proxy+}
+            Method: ANY
+            RestApiId:
+              Ref: RESTApi
             Auth:
-              Authorizer: CognitoAuthorizer
+              Authorizer: NONE
       Policies:
         - Version: 2012-10-17
           Statement:
@@ -110,8 +138,11 @@ Resources:
                 - !Sub "arn:aws:s3:::${ImagesBucket}/*"
 
   LScanner:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
     Properties:
-      CodeUri: out/arm64/release/scanner
+      CodeUri: scanner/
       FunctionName: !Sub "receipt-scan-scanner-${Stage}"
       Events:
         Analyze:
