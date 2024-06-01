@@ -27,6 +27,37 @@ static api_response_t ok(const T &payload) {
   return response;
 }
 
+static api_response_t ok() {
+  api_response_t response;
+  response.status_code = 200;
+  response.set_body("", false);
+  return response;
+}
+
+template<typename TId>
+std::string id_to_string(const TId &id) {
+  return std::to_string(id);
+}
+
+template<>
+std::string id_to_string(const std::string &id) {
+  return id;
+}
+
+template<typename TId>
+static api_response_t created_at(const std::string &req_path, const TId &id) {
+  api_response_t response;
+  response.status_code = 201;
+  response.set_body("", false);
+  auto location = req_path;
+  if (location.back() != '/') {
+    location += "/";
+  }
+  location += id_to_string(id);
+  response.headers["Location"] = location;
+  return response;
+}
+
 static api_response_t bad_request() {
   api_response_t response;
   response.status_code = 400;
@@ -111,12 +142,52 @@ static void validate_path(const std::string &path) {
   }
 }
 
+template<typename T, class Enabled = void>
+struct has_id {
+  constexpr static auto value = false;
+};
+
+template<typename T>
+struct has_id<T, typename std::enable_if_t<!std::is_void<decltype(T().id)>::value>> {
+  constexpr static auto value = true;
+};
+
+template<typename THandler, typename TBody, class Enabled = void>
+struct empty_ok {
+  api_response_t operator()(const api_request_t &request, const THandler &&handler, const TBody &body) {
+    return ok();
+  }
+};
+
+template<typename THandler, typename TBody>
+struct empty_ok<THandler, TBody, typename std::enable_if_t<has_id<TBody>::value>> {
+  api_response_t operator()(const api_request_t &request, const THandler &&handler, const TBody &body) {
+    auto id = body.id;
+    return created_at(request.path, id);
+  }
+};
+
+template<typename THandler, typename TBody, class Enabled = void>
+struct post_response {
+  api_response_t operator()(const api_request_t &request, const THandler &&handler, const TBody &body) {
+    return ok(handler(body));
+  }
+};
+
+template<typename THandler, typename TBody>
+struct post_response<THandler, TBody, typename std::enable_if_t<std::is_void<std::result_of_t<THandler(const TBody&)>>::value>> {
+  api_response_t operator()(const api_request_t &request, const THandler &&handler, const TBody &body) {
+    handler(body);
+    return empty_ok<THandler, TBody>()(request, std::forward<THandler>(handler), body);
+  }
+};
+
 class api_resource {
  public:
   auto get(const std::string &path) {
     validate_path(path);
 
-    return [this, path](auto &&h) {
+    return [this, path](const auto &&h) {
       this->m_routes.push_back([path, h](const api_request_t &request, const std::string &p) {
         if (p != path) {
           return not_found();
@@ -133,7 +204,7 @@ class api_resource {
   auto post(const std::string &path) {
     validate_path(path);
 
-    return [this, path](auto &&h) {
+    return [this, path](const auto &&h) {
       this->m_routes.push_back([path, h](const api_request_t &request, const std::string &p) {
         if (p != path) {
           return not_found();
@@ -147,7 +218,9 @@ class api_resource {
         } catch (std::exception &e) {
           return bad_request();
         }
-        return ok(h(body));
+
+        using THandler = decltype(h);
+        return post_response<THandler, TBody>()(request, std::forward<THandler>(h), body);
       });
     };
   }
@@ -176,7 +249,7 @@ class api_resource {
     using TRawParam = typename std::decay<TParam>::type;
     static_assert(std::is_function<decltype(parser<TRawParam>::parse)>::value, "No parser found for type");
 
-    return [this](auto &&h) {
+    return [this](const auto &&h) {
       this->m_routes.push_back([h](const api_request_t &request, const std::string &p) {
         auto next_segment = get_next_segment(p);
         if (next_segment.empty()) {

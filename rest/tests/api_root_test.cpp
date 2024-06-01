@@ -9,11 +9,29 @@
 using namespace aws::lambda_runtime;
 using namespace rest;
 
+struct test_generic_parameter {
+  std::string value;
+
+  JSON_BEGIN_SERIALIZER(test_generic_parameter)
+      JSON_PROPERTY("value", value)
+  JSON_END_SERIALIZER()
+};
+
 struct test_parameter {
-  int id = 0;
+  std::string id = "0";
   std::string name;
 
   JSON_BEGIN_SERIALIZER(test_parameter)
+      JSON_PROPERTY("id", id)
+      JSON_PROPERTY("name", name)
+  JSON_END_SERIALIZER()
+};
+
+struct parameter_with_int_id {
+  int id = 0;
+  std::string name;
+
+  JSON_BEGIN_SERIALIZER(parameter_with_int_id)
       JSON_PROPERTY("id", id)
       JSON_PROPERTY("name", name)
   JSON_END_SERIALIZER()
@@ -29,7 +47,7 @@ struct test_response {
 
 // General path validation
 
-TEST(api_root, path_must_contain_slash) {
+TEST(api_root, path_should_contain_slash) {
   api_root api;
   try {
     api.get("123")([]() { return test_response{.value = "3"}; });
@@ -39,7 +57,7 @@ TEST(api_root, path_must_contain_slash) {
   }
 }
 
-TEST(api_root, path_must_start_with_slash) {
+TEST(api_root, path_should_start_with_slash) {
   api_root api;
   try {
     api.get("123/")([]() { return test_response{.value = "3"}; });
@@ -49,7 +67,7 @@ TEST(api_root, path_must_start_with_slash) {
   }
 }
 
-TEST(api_root, path_must_not_end_with_slash) {
+TEST(api_root, path_should_not_end_with_slash) {
   api_root api;
   try {
     api.get("/123/")([]() { return test_response{.value = "3"}; });
@@ -59,7 +77,7 @@ TEST(api_root, path_must_not_end_with_slash) {
   }
 }
 
-TEST(api_root, path_must_contain_one_segment) {
+TEST(api_root, path_should_contain_one_segment) {
   api_root api;
   try {
     api.get("/123/456")([]() { return test_response{.value = "3"}; });
@@ -69,7 +87,7 @@ TEST(api_root, path_must_contain_one_segment) {
   }
 }
 
-TEST(api_root, path_must_not_be_empty) {
+TEST(api_root, path_should_not_be_empty) {
   api_root api;
   try {
     api.get("")([]() { return test_response{.value = "3"}; });
@@ -81,7 +99,7 @@ TEST(api_root, path_must_not_be_empty) {
 
 // GET
 
-TEST(api_root, does_get_return_value) {
+TEST(api_root, get_should_return_value) {
   api_root api;
   api.get("/")([]() { return test_response{.value = "3"}; });
   api_request_t request;
@@ -92,7 +110,7 @@ TEST(api_root, does_get_return_value) {
   EXPECT_EQ(response.body, R"({"value":"3"})");
 }
 
-TEST(api_root, does_get_captures_int_path_parameters) {
+TEST(api_root, get_should_capture_int_path_parameters) {
   api_root api;
   api.get<int>()([](int id) { return test_response{.value = std::to_string(id)}; });
   api_request_t request;
@@ -102,7 +120,7 @@ TEST(api_root, does_get_captures_int_path_parameters) {
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
 
-TEST(api_root, does_get_captures_string_path_parameters) {
+TEST(api_root, get_should_capture_string_path_parameters) {
   api_root api;
   api.get<std::string>()([](std::string id) { return test_response{.value = std::move(id)}; });
   api_request_t request;
@@ -112,7 +130,7 @@ TEST(api_root, does_get_captures_string_path_parameters) {
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
 
-TEST(api_root, is_not_found_when_get_parameter_parse_fails) {
+TEST(api_root, get_should_return_not_found_when_parameter_parse_fails) {
   auto test = [](const std::string &path) {
     api_root api;
     api.get<int>()([](int id) { return test_response{.value = std::to_string(id)}; });
@@ -133,51 +151,142 @@ TEST(api_root, is_not_found_when_get_parameter_parse_fails) {
   test("/12*3");
 }
 
+TEST(api_root, get_should_allow_only_get) {
+  auto test = [](const std::string &method) {
+    api_root api;
+    api.get("/")([]() { return test_response{.value = "3"}; });
+    api_request_t request;
+    request.path = "/";
+    request.http_method = method;
+    auto response = api.route(request, request.path);
+    EXPECT_EQ(response.status_code, 405);
+  };
+
+  test("POST");
+  test("PUT");
+  test("DELETE");
+  test("PATCH");
+}
+
+TEST(api_root, get_should_not_find_mismatching_route) {
+  auto test = [](const std::string &listen_path, const std::string &path) {
+    api_root api;
+    api.get(listen_path)([]() { return test_response{.value = "3"}; });
+    api_request_t request;
+    request.path = path;
+    request.http_method = "GET";
+    auto response = api.route(request, request.path);
+    EXPECT_EQ(response.status_code, 404);
+  };
+
+  test("/123", "/456");
+  test("/123", "/123/456");
+  test("/123", "/12/");
+  test("/123", "/1234/");
+}
+
 // POST
 
-TEST(api_root, does_post_captures_body) {
+TEST(api_root, post_should_capture_body) {
   api_root api;
   api.post<test_parameter>("/")([](const test_parameter &param) { return test_response{.value = param.name}; });
   api_request_t request;
-  request.body = R"({"id": 0, "name": "Daniil"})";
+  request.body = R"({"id": "0", "name": "Daniil"})";
   request.path = "/";
   request.http_method = "POST";
   auto response = api.route(request, request.path);
   EXPECT_EQ(response.body, R"({"value":"Daniil"})");
 }
 
-// Basic routing
-
-TEST(api_root, is_not_found_on_empty_api) {
+TEST(api_root, post_should_return_empty_200_if_handler_returns_void) {
   api_root api;
+  api.post<test_generic_parameter>("/")([](const test_generic_parameter &param) {});
   api_request_t request;
-  request.path = "/";
-  request.http_method = "GET";
-  auto response = api.route(request, request.path);
-  EXPECT_EQ(response.status_code, 404);
-}
-
-TEST(api_root, is_method_not_allowed) {
-  api_root api;
-  api.get("/")([]() { return test_response{.value = "3"}; });
-  api_request_t request;
+  request.body = R"({"value": "Daniil"})";
   request.path = "/";
   request.http_method = "POST";
   auto response = api.route(request, request.path);
-  EXPECT_EQ(response.status_code, 405);
+  EXPECT_EQ(response.status_code, 200);
+  EXPECT_EQ(response.body, "");
 }
 
-TEST(api_root, is_route_not_found) {
+TEST(api_root, post_handler_should_capture_outside_variables) {
   api_root api;
-  api.get("/123")([]() { return test_response{.value = "3"}; });
+  std::string captured;
+  api.post<test_parameter>("/")([&captured](const test_parameter &param) { captured = param.id; });
   api_request_t request;
-  request.path = "/456";
+  request.body = R"({"id": "123", "name": "Daniil"})";
+  request.path = "/";
+  request.http_method = "POST";
+  auto response = api.route(request, request.path);
+  EXPECT_EQ(captured, "123");
+}
+
+// testing has_id at compile time
+static_assert(has_id<test_parameter>::value == true, "has_id<> should give true on types that have id");
+static_assert(has_id<test_generic_parameter>::value == false, "has_id<> should give false on types that don't have id");
+
+TEST(api_root, post_should_return_created_at_if_payload_has_id_and_handler_returns_void) {
+  auto test = [](const std::string &path, const std::string &expected_location) {
+    api_root api;
+    api.post<test_parameter>(path)([](const test_parameter &param) {});
+    api_request_t request;
+    request.body = R"({"id": "123", "name": "Daniil"})";
+    request.path = path;
+    request.http_method = "POST";
+    auto response = api.route(request, request.path);
+    EXPECT_EQ(response.status_code, 201);
+    EXPECT_EQ(response.headers["Location"], expected_location);
+    EXPECT_EQ(response.body, "");
+  };
+
+  test("/", "/123");
+  test("/users", "/users/123");
+}
+
+TEST(api_root, post_parameter_should_work_with_int_id) {
+  api_root api;
+  api.post<parameter_with_int_id>("/")([](const parameter_with_int_id &param) {});
+  api_request_t request;
+  request.body = R"({"id": 123, "name": "Daniil"})";
+  request.path = "/";
+  request.http_method = "POST";
+  auto response = api.route(request, request.path);
+  EXPECT_EQ(response.status_code, 201);
+  EXPECT_EQ(response.headers["Location"], "/123");
+  EXPECT_EQ(response.body, "");
+}
+
+TEST(api_root, post_should_allow_only_post) {
+  auto test = [](const std::string &method) {
+    api_root api;
+    api.post<test_parameter>("/")([](const test_parameter &param) {});
+    api_request_t request;
+    request.body = R"({"id": "123", "name": "Daniil"})";
+    request.path = "/";
+    request.http_method = method;
+    auto response = api.route(request, request.path);
+    EXPECT_EQ(response.status_code, 405);
+  };
+
+  test("GET");
+  test("PUT");
+  test("DELETE");
+  test("PATCH");
+}
+
+// Basic routing
+
+TEST(api_root, empty_api_should_return_not_found) {
+  api_root api;
+  api_request_t request;
+  request.path = "/";
   request.http_method = "GET";
   auto response = api.route(request, request.path);
   EXPECT_EQ(response.status_code, 404);
 }
 
-TEST(api_root, is_trailing_slash_identical) {
+TEST(api_root, trailing_slash_should_be_identical) {
   api_root api;
   api.get("/123")([]() { return test_response{.value = "3"}; });
   api_request_t request;
@@ -190,7 +299,7 @@ TEST(api_root, is_trailing_slash_identical) {
 
 // Nested routing
 
-TEST(api_root, does_nested_routing_work) {
+TEST(api_root, any_should_configure_nested_routes) {
   api_root api;
   api.any("/123")([](api_resource &res) {
     res.get("/")([]() { return test_response{.value = "3"}; });
@@ -203,7 +312,7 @@ TEST(api_root, does_nested_routing_work) {
   EXPECT_EQ(response.body, R"({"value":"3"})");
 }
 
-TEST(api_root, does_nested_routing_work_with_parameters) {
+TEST(api_root, any_should_pass_parameters_to_nested_routes) {
   api_root api;
   api.any<int>()([](int id, api_resource &res) {
     res.get("/")([id]() { return test_response{.value = std::to_string(id)}; });
@@ -216,7 +325,7 @@ TEST(api_root, does_nested_routing_work_with_parameters) {
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
 
-TEST(api_root, does_nested_routing_work_with_parameters_and_path) {
+TEST(api_root, nested_route_should_be_reachable_behind_parameter) {
   api_root api;
   api.any<int>()([](int id, api_resource &res) {
     res.get("/456")([id]() { return test_response{.value = std::to_string(id)}; });
@@ -229,7 +338,7 @@ TEST(api_root, does_nested_routing_work_with_parameters_and_path) {
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
 
-TEST(api_root, does_nested_routing_work_with_parameters_and_path_and_parameters) {
+TEST(api_root, nested_route_should_capture_outside_parameters) {
   api_root api;
   api.any<int>()([](int id, api_resource &res) {
     res.get<int>()([id](int id2) { return test_response{.value = std::to_string(id + id2)}; });
@@ -242,7 +351,7 @@ TEST(api_root, does_nested_routing_work_with_parameters_and_path_and_parameters)
   EXPECT_EQ(response.body, R"({"value":"4"})");
 }
 
-TEST(api_root, does_deep_nested_routing_work) {
+TEST(api_root, any_should_support_multiple_nested_routes) {
   api_root api;
   api.any("/1")([](api_resource &res) {
     res.any("/2")([](api_resource &res) {
@@ -261,7 +370,7 @@ TEST(api_root, does_deep_nested_routing_work) {
   EXPECT_EQ(response.body, R"({"value":"4"})");
 }
 
-TEST(api_root, does_deep_nested_routing_work_with_parameters) {
+TEST(api_root, any_should_support_multiple_nested_routes_with_parameters) {
   api_root api;
   api.any<int>()([](int id, api_resource &res) {
     res.any<int>()([](int id2, api_resource &res) {
@@ -280,7 +389,7 @@ TEST(api_root, does_deep_nested_routing_work_with_parameters) {
   EXPECT_EQ(response.body, R"({"value":"4"})");
 }
 
-TEST(api_root, does_nesting_work_with_multiple_empty_routes) {
+TEST(api_root, any_should_support_empty_routes) {
   api_root api;
   api.any("/")([](api_resource &res) {
     res.any("/")([](api_resource &res) {
