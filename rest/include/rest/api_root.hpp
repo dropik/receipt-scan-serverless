@@ -250,6 +250,31 @@ class api_resource {
     };
   }
 
+  template<typename TBody>
+  auto patch(const std::string &path) {
+    validate_path(path);
+
+    return [this, path](const auto &&h) {
+      this->m_routes.push_back([path, h](const api_request_t &request, const std::string &p) {
+        if (p != path) {
+          return not_found();
+        }
+        if (request.http_method != "PATCH") {
+          return method_not_allowed();
+        }
+        TBody body;
+        try {
+          body = aws_lambda_cpp::json::deserialize<TBody>(request.get_body());
+        } catch (std::exception &e) {
+          return bad_request();
+        }
+
+        h(body);
+        return ok();
+      });
+    };
+  }
+
   auto any(const std::string &path) {
     validate_path(path);
 
