@@ -4,11 +4,13 @@
 
 #pragma once
 
+#include <utility>
+
 #include <aws/lambda-runtime/runtime.h>
 
 #include <aws-lambda-cpp/models/lambda_payloads/gateway_proxy.hpp>
 #include <aws-lambda-cpp/models/lambda_responses/gateway_proxy.hpp>
-#include <utility>
+#include <aws-lambda-cpp/common/logger.hpp>
 
 namespace rest {
 
@@ -462,23 +464,29 @@ class api_root : public api_resource {
   }
 
   void use_exception_filter() {
-    use([](const api_request_t &request, const auto &next) {
+    use([this](const api_request_t &request, const auto &next) {
       try {
         return next(request);
       } catch (api_exception &e) {
+        if (m_logger) {
+          m_logger->info("API Exception: %d %s", e.error, e.message.c_str());
+        }
         return bad_request(e);
       } catch (std::exception &e) {
+        if (m_logger) {
+          m_logger->error("Internal error: %s", e.what());
+        }
         return internal_server_error();
       }
     });
   }
 
-  template<typename TLogger>
-  void use_logging(const std::shared_ptr<TLogger> &logger) {
-    use([logger = std::weak_ptr<TLogger>(logger)](const api_request_t &request, const auto &next) {
-      logger.lock()->info("Request: %s %s", request.http_method.c_str(), request.path.c_str());
+  void use_logging(const std::shared_ptr<aws_lambda_cpp::common::logger> &logger) {
+    m_logger = logger;
+    use([this](const api_request_t &request, const auto &next) {
+      m_logger->info("Request: %s %s", request.http_method.c_str(), request.path.c_str());
       auto response = next(request);
-      logger.lock()->info("%s %s Response: %d", request.http_method.c_str(), request.path.c_str(), response.status_code);
+      m_logger->info("%s %s Response: %d", request.http_method.c_str(), request.path.c_str(), response.status_code);
       return response;
     });
   }
@@ -498,6 +506,7 @@ class api_root : public api_resource {
 
  private:
   std::function<api_response_t(const api_request_t &)> m_api_entrypoint;
+  std::shared_ptr<aws_lambda_cpp::common::logger> m_logger = nullptr;
 };
 
 }
