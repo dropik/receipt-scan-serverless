@@ -275,6 +275,49 @@ TEST(api_root, post_should_allow_only_post) {
   test("PATCH");
 }
 
+// PUT
+
+TEST(api_root, put_should_capture_body) {
+  api_root api;
+  std::string name;
+  api.put<test_parameter>("/")([&name](const test_parameter &param) { name = param.name; });
+  api_request_t request;
+  request.body = R"({"id": "0", "name": "Daniil"})";
+  request.path = "/";
+  request.http_method = "PUT";
+  auto response = api.route(request, request.path);
+  EXPECT_EQ(response.status_code, 200);
+}
+
+TEST(api_root, put_should_return_empty_body) {
+  api_root api;
+  api.put<test_parameter>("/")([](const test_parameter &param) {});
+  api_request_t request;
+  request.body = R"({"id": "0", "name": "Daniil"})";
+  request.path = "/";
+  request.http_method = "PUT";
+  auto response = api.route(request, request.path);
+  EXPECT_EQ(response.body, "");
+}
+
+TEST(api_root, put_should_allow_only_put) {
+  auto test = [](const std::string &method) {
+    api_root api;
+    api.put<test_parameter>("/")([](const test_parameter &param) {});
+    api_request_t request;
+    request.body = R"({"id": "123", "name": "Daniil"})";
+    request.path = "/";
+    request.http_method = method;
+    auto response = api.route(request, request.path);
+    EXPECT_EQ(response.status_code, 405);
+  };
+
+  test("GET");
+  test("POST");
+  test("DELETE");
+  test("PATCH");
+}
+
 // Basic routing
 
 TEST(api_root, empty_api_should_return_not_found) {
