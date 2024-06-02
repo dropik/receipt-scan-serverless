@@ -6,22 +6,23 @@ find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3)
 
 add_executable(${FUNCTION_NAME}
-        src/main.cpp
-        src/models/upload_file_params.hpp
-        src/models/upload_file_response.hpp
+    src/main.cpp
+    src/models/upload_file_params.hpp
+    src/models/upload_file_response.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
-        "${PROJECT_SOURCE_DIR}/include"
-        "${PROJECT_SOURCE_DIR}/repository/include/"
-        "${PROJECT_SOURCE_DIR}/rest/include/"
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_SOURCE_DIR}/repository/include/"
+    "${PROJECT_SOURCE_DIR}/rest/include/"
 )
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
-        AWS::aws-lambda-runtime
-        ${AWSSDK_LINK_LIBRARIES}
-        aws-lambda-cpp-common
-        repository
+    AWS::aws-lambda-runtime
+    ${AWSSDK_LINK_LIBRARIES}
+    aws-lambda-cpp-common
+    repository
+    rest
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

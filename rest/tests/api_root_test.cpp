@@ -2,9 +2,9 @@
 // Created by Daniil Ryzhkov on 27/05/2024.
 //
 
+#include <utility>
 #include <gtest/gtest.h>
 #include <rest/api_root.hpp>
-#include <utility>
 
 using namespace aws::lambda_runtime;
 using namespace rest;

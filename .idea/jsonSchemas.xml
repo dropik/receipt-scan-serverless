@@ -14,6 +14,9 @@
                   <Item>
                     <option name="path" value="template.yaml" />
                   </Item>
+                  <Item>
+                    <option name="path" value="sam/template.yaml" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

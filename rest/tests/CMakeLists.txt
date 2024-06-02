@@ -11,6 +11,7 @@ target_include_directories(rest_tests_run PUBLIC
     ${gtest_SOURCE_DIR})
 
 target_link_libraries(rest_tests_run
+    rest
     ${AWSSDK_LINK_LIBRARIES}
     aws-lambda-cpp-common
     gtest

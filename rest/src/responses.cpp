@@ -1,0 +1,51 @@
+//
+// Created by Daniil Ryzhkov on 02/06/2024.
+//
+
+#include <rest/responses.hpp>
+
+namespace rest {
+
+api_response_t ok() {
+  api_response_t response;
+  response.status_code = 200;
+  response.set_body("", false);
+  return response;
+}
+
+api_response_t bad_request() {
+  api_response_t response;
+  response.status_code = 400;
+  response.set_body("Bad request", false);
+  return response;
+}
+
+api_response_t bad_request(const api_exception &e) {
+  api_response_t response;
+  response.status_code = 400;
+  response.set_body(aws_lambda_cpp::json::serialize(e, true), false);
+  return response;
+}
+
+api_response_t not_found() {
+  api_response_t response;
+  response.status_code = 404;
+  response.set_body("Not found", false);
+  return response;
+}
+
+api_response_t method_not_allowed() {
+  api_response_t response;
+  response.status_code = 405;
+  response.set_body("Method not allowed", false);
+  return response;
+}
+
+api_response_t internal_server_error() {
+  api_response_t response;
+  response.status_code = 500;
+  response.set_body("", false);
+  return response;
+}
+
+}
