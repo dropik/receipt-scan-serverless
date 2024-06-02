@@ -105,7 +105,7 @@ TEST(api_root, get_should_return_value) {
   api_request_t request;
   request.path = "/";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"3"})");
 }
@@ -116,7 +116,7 @@ TEST(api_root, get_should_capture_int_path_parameters) {
   api_request_t request;
   request.path = "/123";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
 
@@ -126,7 +126,7 @@ TEST(api_root, get_should_capture_string_path_parameters) {
   api_request_t request;
   request.path = "/123";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
 
@@ -137,7 +137,7 @@ TEST(api_root, get_should_return_not_found_when_parameter_parse_fails) {
     api_request_t request;
     request.path = path;
     request.http_method = "GET";
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 404);
   };
 
@@ -158,7 +158,7 @@ TEST(api_root, get_should_allow_only_get) {
     api_request_t request;
     request.path = "/";
     request.http_method = method;
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 405);
   };
 
@@ -175,7 +175,7 @@ TEST(api_root, get_should_not_find_mismatching_route) {
     api_request_t request;
     request.path = path;
     request.http_method = "GET";
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 404);
   };
 
@@ -194,7 +194,7 @@ TEST(api_root, post_should_capture_body) {
   request.body = R"({"id": "0", "name": "Daniil"})";
   request.path = "/";
   request.http_method = "POST";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.body, R"({"value":"Daniil"})");
 }
 
@@ -205,7 +205,7 @@ TEST(api_root, post_should_return_empty_200_if_handler_returns_void) {
   request.body = R"({"value": "Daniil"})";
   request.path = "/";
   request.http_method = "POST";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, "");
 }
@@ -218,7 +218,7 @@ TEST(api_root, post_handler_should_capture_outside_variables) {
   request.body = R"({"id": "123", "name": "Daniil"})";
   request.path = "/";
   request.http_method = "POST";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(captured, "123");
 }
 
@@ -234,7 +234,7 @@ TEST(api_root, post_should_return_created_at_if_payload_has_id_and_handler_retur
     request.body = R"({"id": "123", "name": "Daniil"})";
     request.path = path;
     request.http_method = "POST";
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 201);
     EXPECT_EQ(response.headers["Location"], expected_location);
     EXPECT_EQ(response.body, "");
@@ -251,7 +251,7 @@ TEST(api_root, post_parameter_should_work_with_int_id) {
   request.body = R"({"id": 123, "name": "Daniil"})";
   request.path = "/";
   request.http_method = "POST";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 201);
   EXPECT_EQ(response.headers["Location"], "/123");
   EXPECT_EQ(response.body, "");
@@ -265,7 +265,7 @@ TEST(api_root, post_should_allow_only_post) {
     request.body = R"({"id": "123", "name": "Daniil"})";
     request.path = "/";
     request.http_method = method;
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 405);
   };
 
@@ -285,7 +285,7 @@ TEST(api_root, put_should_capture_body) {
   request.body = R"({"id": "0", "name": "Daniil"})";
   request.path = "/";
   request.http_method = "PUT";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
 }
 
@@ -296,7 +296,7 @@ TEST(api_root, put_should_return_empty_body) {
   request.body = R"({"id": "0", "name": "Daniil"})";
   request.path = "/";
   request.http_method = "PUT";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.body, "");
 }
 
@@ -308,7 +308,7 @@ TEST(api_root, put_should_allow_only_put) {
     request.body = R"({"id": "123", "name": "Daniil"})";
     request.path = "/";
     request.http_method = method;
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 405);
   };
 
@@ -328,7 +328,7 @@ TEST(api_root, patch_should_capture_body) {
   request.body = R"({"id": "0", "name": "Daniil"})";
   request.path = "/";
   request.http_method = "PATCH";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
 }
 
@@ -339,7 +339,7 @@ TEST(api_root, patch_should_return_empty_body) {
   request.body = R"({"id": "0", "name": "Daniil"})";
   request.path = "/";
   request.http_method = "PATCH";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.body, "");
 }
 
@@ -351,7 +351,7 @@ TEST(api_root, patch_should_allow_only_patch) {
     request.body = R"({"id": "123", "name": "Daniil"})";
     request.path = "/";
     request.http_method = method;
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 405);
   };
 
@@ -370,7 +370,7 @@ TEST(api_root, delete_should_capture_int_parameter) {
   api_request_t request;
   request.path = "/123";
   request.http_method = "DELETE";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(id, 123);
 }
 
@@ -381,7 +381,7 @@ TEST(api_root, delete_should_capture_string_parameter) {
   api_request_t request;
   request.path = "/123";
   request.http_method = "DELETE";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(id, "123");
 }
 
@@ -391,7 +391,7 @@ TEST(api_root, delete_should_return_empty_body) {
   api_request_t request;
   request.path = "/123";
   request.http_method = "DELETE";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.body, "");
   EXPECT_EQ(response.status_code, 200);
 }
@@ -403,7 +403,7 @@ TEST(api_root, delete_should_allow_only_delete) {
     api_request_t request;
     request.path = "/123";
     request.http_method = method;
-    auto response = api.route(request, request.path);
+    auto response = api(request);
     EXPECT_EQ(response.status_code, 405);
   };
 
@@ -420,7 +420,7 @@ TEST(api_root, empty_api_should_return_not_found) {
   api_request_t request;
   request.path = "/";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 404);
 }
 
@@ -430,7 +430,7 @@ TEST(api_root, trailing_slash_should_be_identical) {
   api_request_t request;
   request.path = "/123/";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"3"})");
 }
@@ -445,7 +445,7 @@ TEST(api_root, any_should_configure_nested_routes) {
   api_request_t request;
   request.path = "/123";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"3"})");
 }
@@ -458,7 +458,7 @@ TEST(api_root, any_should_pass_parameters_to_nested_routes) {
   api_request_t request;
   request.path = "/123";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
@@ -471,7 +471,7 @@ TEST(api_root, nested_route_should_be_reachable_behind_parameter) {
   api_request_t request;
   request.path = "/123/456";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"123"})");
 }
@@ -484,7 +484,7 @@ TEST(api_root, nested_route_should_capture_outside_parameters) {
   api_request_t request;
   request.path = "/2/2";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"4"})");
 }
@@ -503,7 +503,7 @@ TEST(api_root, any_should_support_multiple_nested_routes) {
   api_request_t request;
   request.path = "/1/2/3/4";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"4"})");
 }
@@ -522,7 +522,7 @@ TEST(api_root, any_should_support_multiple_nested_routes_with_parameters) {
   api_request_t request;
   request.path = "/1/2/3/4";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"4"})");
 }
@@ -541,7 +541,46 @@ TEST(api_root, any_should_support_empty_routes) {
   api_request_t request;
   request.path = "////";
   request.http_method = "GET";
-  auto response = api.route(request, request.path);
+  auto response = api(request);
   EXPECT_EQ(response.status_code, 200);
   EXPECT_EQ(response.body, R"({"value":"4"})");
+}
+
+// Middleware
+
+TEST(api_root, middleware_should_be_executed) {
+  api_root api;
+  int value = 0;
+  api.use([&value](const api_request_t &req, auto next) {
+    value = 3;
+    return next(req);
+  });
+  api.get("/")([]() { return test_response{.value = "123"}; });
+  api_request_t request;
+  request.path = "/";
+  request.http_method = "GET";
+  auto response = api(request);
+  EXPECT_EQ(response.status_code, 200);
+  EXPECT_EQ(response.body, R"({"value":"123"})");
+  EXPECT_EQ(value, 3);
+}
+
+TEST(api_root, middleware_should_be_executed_in_order) {
+  api_root api;
+  std::vector<int> values;
+  api.use([&values](const api_request_t &req, auto next) {
+    values.push_back(2);
+    return next(req);
+  });
+  api.use([&values](const api_request_t &req, auto next) {
+    values.push_back(1);
+    return next(req);
+  });
+  api.get("/")([]() { return test_response{.value = "123"}; });
+  api_request_t request;
+  request.path = "/";
+  request.http_method = "GET";
+  auto response = api(request);
+  std::vector<int> expected_values = {1, 2};
+  EXPECT_EQ(values, expected_values);
 }

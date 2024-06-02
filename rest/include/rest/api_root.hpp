@@ -422,14 +422,34 @@ class api_resource {
 
 class api_root : public api_resource {
  public:
+  api_root() {
+    m_api_entrypoint = [&](const api_request_t &request) {
+      return route(request, request.path);
+    };
+  }
+
+  template<typename TMiddleware>
+  void use(const TMiddleware &&middleware) {
+    m_api_entrypoint = [next = m_api_entrypoint, middleware](const api_request_t &request) {
+      return middleware(request, next);
+    };
+  }
+
+  api_response_t operator()(const api_request_t &request) {
+    return m_api_entrypoint(request);
+  }
+
   aws::lambda_runtime::invocation_response operator()(const aws::lambda_runtime::invocation_request &request) {
     api_request_t gpr = aws_lambda_cpp::json::deserialize<api_request_t>(request.payload);
 
-    api_response_t response = route(gpr, gpr.path);
+    api_response_t response = this->operator()(gpr);
 
     auto response_json = aws_lambda_cpp::json::serialize(response, true);
     return aws::lambda_runtime::invocation_response::success(response_json, "application/json");
   }
+
+ private:
+  std::function<api_response_t(const api_request_t &)> m_api_entrypoint;
 };
 
 }
