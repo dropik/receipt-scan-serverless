@@ -361,6 +361,58 @@ TEST(api_root, patch_should_allow_only_patch) {
   test("DELETE");
 }
 
+// DELETE
+
+TEST(api_root, delete_should_capture_int_parameter) {
+  api_root api;
+  int id = 0;
+  api.del<int>()([&id](int param) { id = param; });
+  api_request_t request;
+  request.path = "/123";
+  request.http_method = "DELETE";
+  auto response = api.route(request, request.path);
+  EXPECT_EQ(id, 123);
+}
+
+TEST(api_root, delete_should_capture_string_parameter) {
+  api_root api;
+  std::string id;
+  api.del<std::string>()([&id](std::string param) { id = std::move(param); });
+  api_request_t request;
+  request.path = "/123";
+  request.http_method = "DELETE";
+  auto response = api.route(request, request.path);
+  EXPECT_EQ(id, "123");
+}
+
+TEST(api_root, delete_should_return_empty_body) {
+  api_root api;
+  api.del<int>()([](int param) {});
+  api_request_t request;
+  request.path = "/123";
+  request.http_method = "DELETE";
+  auto response = api.route(request, request.path);
+  EXPECT_EQ(response.body, "");
+  EXPECT_EQ(response.status_code, 200);
+}
+
+TEST(api_root, delete_should_allow_only_delete) {
+  auto test = [](const std::string &method) {
+    api_root api;
+    api.del<int>()([](int param) {});
+    api_request_t request;
+    request.path = "/123";
+    request.http_method = method;
+    auto response = api.route(request, request.path);
+    EXPECT_EQ(response.status_code, 405);
+  };
+
+  test("GET");
+  test("POST");
+  test("PUT");
+  test("PATCH");
+}
+
 // Basic routing
 
 TEST(api_root, empty_api_should_return_not_found) {

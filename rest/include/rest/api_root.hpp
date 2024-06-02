@@ -324,6 +324,36 @@ class api_resource {
   }
 
   template<typename TParam>
+  auto del() {
+    using TRawParam = typename std::decay<TParam>::type;
+    static_assert(std::is_function<decltype(parser<TRawParam>::parse)>::value, "No parser found for type");
+
+    return [this](const auto &&h) {
+      this->m_routes.push_back([h](const api_request_t &request, const std::string &p) {
+        auto next_segment = get_next_segment(p);
+        if (next_segment.empty()) {
+          return not_found();
+        }
+        if (next_segment.size() != p.size()) {
+          // this is indeed not found, because a non ANY route should not have any segments after the path
+          return not_found();
+        }
+        if (request.http_method != "DELETE") {
+          return method_not_allowed();
+        }
+        TRawParam param;
+        try {
+          param = parser<TRawParam>::parse(next_segment);
+        } catch (std::exception &e) {
+          return not_found();
+        }
+        h(param);
+        return ok();
+      });
+    };
+  }
+
+  template<typename TParam>
   auto any() {
     using TRawParam = typename std::decay<TParam>::type;
     static_assert(std::is_function<decltype(parser<TRawParam>::parse)>::value, "No parser found for type");
