@@ -9,6 +9,8 @@ add_executable(${FUNCTION_NAME}
     src/main.cpp
     src/models/upload_file_params.hpp
     src/models/upload_file_response.hpp
+    src/di.hpp
+    src/di.cpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

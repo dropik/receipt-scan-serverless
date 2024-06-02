@@ -1,8 +1,8 @@
 {
   "body": "{\"name\": \"sadfsdafsa\"}",
   "resource": "/{proxy+}",
-  "path": "/users/1/files",
-  "httpMethod": "GET",
+  "path": "/files",
+  "httpMethod": "POST",
   "isBase64Encoded": false,
   "pathParameters": {
     "proxy": "/file"

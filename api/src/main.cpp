@@ -2,7 +2,6 @@
 #include <cstdlib>
 
 #include <aws/core/Aws.h>
-#include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/http/HttpTypes.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 
@@ -21,6 +20,8 @@
 
 #include "models/upload_file_params.hpp"
 #include "models/upload_file_response.hpp"
+
+#include "di.hpp"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -73,14 +74,8 @@ int main(int argc, char** argv) {
 
   InitAPI(options);
   {
-    auto l = std::make_shared<logger>("Api");
-
-    Aws::Client::ClientConfiguration config;
-#ifdef DEBUG
-    config.region = AWS_REGION;
-#endif
-
-    auto s3Client= std::make_shared<S3Client>(config);
+    auto l = di<logger>::get();
+    auto s3Client = di<S3Client>::get();
 
     api_root api;
 
