@@ -15,6 +15,18 @@ namespace rest {
 typedef aws_lambda_cpp::models::lambda_payloads::base_gateway_proxy_request api_request_t;
 typedef aws_lambda_cpp::models::lambda_responses::base_gateway_proxy_response api_response_t;
 
+struct api_exception : public std::exception {
+  int error;
+  std::string message;
+
+  api_exception(int error, std::string message) : error(error), message(std::move(message)) {}
+
+  JSON_BEGIN_SERIALIZER(api_exception)
+      JSON_PROPERTY("error", error)
+      JSON_PROPERTY("message", message)
+  JSON_END_SERIALIZER()
+};
+
 static bool is_status_ok(int status_code) {
   return status_code >= 200 && status_code < 300;
 }
@@ -65,6 +77,13 @@ static api_response_t bad_request() {
   return response;
 }
 
+static api_response_t bad_request(const api_exception &e) {
+  api_response_t response;
+  response.status_code = 400;
+  response.set_body(aws_lambda_cpp::json::serialize(e, true), false);
+  return response;
+}
+
 static api_response_t not_found() {
   api_response_t response;
   response.status_code = 404;
@@ -76,6 +95,13 @@ static api_response_t method_not_allowed() {
   api_response_t response;
   response.status_code = 405;
   response.set_body("Method not allowed", false);
+  return response;
+}
+
+static api_response_t internal_server_error() {
+  api_response_t response;
+  response.status_code = 500;
+  response.set_body("", false);
   return response;
 }
 
@@ -433,6 +459,18 @@ class api_root : public api_resource {
     m_api_entrypoint = [next = m_api_entrypoint, middleware](const api_request_t &request) {
       return middleware(request, next);
     };
+  }
+
+  void use_exception_filter() {
+    use([](const api_request_t &request, const auto &next) {
+      try {
+        return next(request);
+      } catch (api_exception &e) {
+        return bad_request(e);
+      } catch (std::exception &e) {
+        return internal_server_error();
+      }
+    });
   }
 
   api_response_t operator()(const api_request_t &request) {

@@ -551,11 +551,11 @@ TEST(api_root, any_should_support_empty_routes) {
 TEST(api_root, middleware_should_be_executed) {
   api_root api;
   int value = 0;
+  api.get("/")([]() { return test_response{.value = "123"}; });
   api.use([&value](const api_request_t &req, auto next) {
     value = 3;
     return next(req);
   });
-  api.get("/")([]() { return test_response{.value = "123"}; });
   api_request_t request;
   request.path = "/";
   request.http_method = "GET";
@@ -568,6 +568,7 @@ TEST(api_root, middleware_should_be_executed) {
 TEST(api_root, middleware_should_be_executed_in_order) {
   api_root api;
   std::vector<int> values;
+  api.get("/")([]() { return test_response{.value = "123"}; });
   api.use([&values](const api_request_t &req, auto next) {
     values.push_back(2);
     return next(req);
@@ -576,11 +577,39 @@ TEST(api_root, middleware_should_be_executed_in_order) {
     values.push_back(1);
     return next(req);
   });
-  api.get("/")([]() { return test_response{.value = "123"}; });
   api_request_t request;
   request.path = "/";
   request.http_method = "GET";
   auto response = api(request);
   std::vector<int> expected_values = {1, 2};
   EXPECT_EQ(values, expected_values);
+}
+
+TEST(api_root, api_should_return_500_on_generic_exception) {
+  api_root api;
+  api.get("/")([]() {
+    throw std::runtime_error("error");
+    return test_response{.value = "123"};
+  });
+  api.use_exception_filter();
+  api_request_t request;
+  request.path = "/";
+  request.http_method = "GET";
+  auto response = api(request);
+  EXPECT_EQ(response.status_code, 500);
+}
+
+TEST(api_root, api_should_return_400_if_api_exception_occured) {
+  api_root api;
+  api.get("/")([]() {
+    throw api_exception(0, "Handled API error");
+    return test_response{.value = "123"};
+  });
+  api.use_exception_filter();
+  api_request_t request;
+  request.path = "/";
+  request.http_method = "GET";
+  auto response = api(request);
+  EXPECT_EQ(response.status_code, 400);
+  EXPECT_EQ(response.body, R"({"error":0,"message":"Handled API error"})");
 }
