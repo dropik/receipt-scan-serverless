@@ -135,6 +135,8 @@ int main(int argc, char** argv) {
       return upload_file_response{presignedUrl};
     });
 
+    api.use_logging(l);
+
 #ifdef DEBUG
     aws_lambda_cpp::runtime::run_debug(api);
 #else

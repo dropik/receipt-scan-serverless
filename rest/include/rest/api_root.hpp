@@ -473,6 +473,16 @@ class api_root : public api_resource {
     });
   }
 
+  template<typename TLogger>
+  void use_logging(const std::shared_ptr<TLogger> &logger) {
+    use([logger = std::weak_ptr<TLogger>(logger)](const api_request_t &request, const auto &next) {
+      logger.lock()->info("Request: %s %s", request.http_method.c_str(), request.path.c_str());
+      auto response = next(request);
+      logger.lock()->info("%s %s Response: %d", request.http_method.c_str(), request.path.c_str(), response.status_code);
+      return response;
+    });
+  }
+
   api_response_t operator()(const api_request_t &request) {
     return m_api_entrypoint(request);
   }
