@@ -50,11 +50,16 @@ std::shared_ptr<repository::client> di<repository::client>::get() {
   return singleton_repository;
 }
 
+const models::identity& di<models::identity>::get() {
+  return models::current_identity;
+}
+
 std::unique_ptr<services::file_service> di<services::file_service>::get() {
   return std::make_unique<services::file_service>(
       di<Aws::S3::S3Client>::get(),
       getenv(IMAGES_BUCKET),
-      di<repository::client>::get());
+      di<repository::client>::get(),
+      di<models::identity>::get());
 }
 
 }

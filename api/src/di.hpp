@@ -9,6 +9,8 @@
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws/s3/S3Client.h>
 #include "repository/client.hpp"
+#include "models/identity.hpp"
+
 #include "services/file_service.hpp"
 
 namespace api {
@@ -34,6 +36,11 @@ struct di<Aws::S3::S3Client> {
 template<>
 struct di<repository::client> {
   static std::shared_ptr<repository::client> get();
+};
+
+template<>
+struct di<models::identity> {
+  static const models::identity& get();
 };
 
 template<>

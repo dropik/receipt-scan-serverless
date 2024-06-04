@@ -12,6 +12,7 @@ namespace rest {
 api_response_t ok();
 api_response_t bad_request();
 api_response_t bad_request(const api_exception &e);
+api_response_t unauthorized();
 api_response_t not_found();
 api_response_t method_not_allowed();
 api_response_t internal_server_error();

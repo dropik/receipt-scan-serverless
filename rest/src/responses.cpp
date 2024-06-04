@@ -27,6 +27,13 @@ api_response_t bad_request(const api_exception &e) {
   return response;
 }
 
+api_response_t unauthorized() {
+  api_response_t response;
+  response.status_code = 401;
+  response.set_body("Unauthorized", false);
+  return response;
+}
+
 api_response_t not_found() {
   api_response_t response;
   response.status_code = 404;

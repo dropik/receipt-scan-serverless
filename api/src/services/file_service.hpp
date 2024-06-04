@@ -9,6 +9,7 @@
 
 #include "../models/upload_file_response.hpp"
 #include "../models/upload_file_params.hpp"
+#include "../models/identity.hpp"
 
 namespace api {
 namespace services {
@@ -17,15 +18,16 @@ class file_service {
  public:
   explicit file_service(std::shared_ptr<Aws::S3::S3Client> s3_client,
                         std::string bucket,
-                        std::shared_ptr<repository::client> repository);
+                        std::shared_ptr<repository::client> repository,
+                        const models::identity &identity);
 
-  models::upload_file_response get_upload_file_url(const std::string &user_id,
-                                                   const models::upload_file_params &request);
+  models::upload_file_response get_upload_file_url(const models::upload_file_params &request);
 
  private:
   std::shared_ptr<Aws::S3::S3Client> m_s3_client;
   std::string m_bucket;
   std::shared_ptr<repository::client> m_repository;
+  const models::identity &m_identity;
 };
 
 }

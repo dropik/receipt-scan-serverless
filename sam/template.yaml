@@ -125,7 +125,7 @@ Resources:
             RestApiId:
               Ref: RESTApi
             Auth:
-              Authorizer: NONE
+              Authorizer: CognitoAuthorizer
       Policies:
         - Version: 2012-10-17
           Statement:
