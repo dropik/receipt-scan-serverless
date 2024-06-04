@@ -18,6 +18,7 @@
 #include "repository/configurations/category_configuration.hpp"
 #include "repository/configurations/receipt_configuration.hpp"
 #include "repository/configurations/receipt_item_configuration.hpp"
+#include "repository/configurations/user_configuration.hpp"
 
 namespace repository {
 

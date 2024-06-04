@@ -15,6 +15,7 @@ add_executable(${FUNCTION_NAME}
     src/rest_api.cpp
     src/services/file_service.cpp
     src/services/file_service.hpp
+    src/api_errors.h
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
