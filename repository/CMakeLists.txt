@@ -1,5 +1,5 @@
 find_package(ZLIB REQUIRED)
-find_package(AWSSDK COMPONENTS core)
+find_package(AWSSDK COMPONENTS core ssm)
 
 add_library(repository STATIC
         include/repository/client.hpp

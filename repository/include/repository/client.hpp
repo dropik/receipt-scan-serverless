@@ -10,6 +10,8 @@
 
 #include <aws-lambda-cpp/common/logger.hpp>
 
+#include <aws/core/client/ClientConfiguration.h>
+
 #include "repository/configurations/repository_configuration.hpp"
 #include "selector.hpp"
 
@@ -18,6 +20,8 @@
 #include "repository/configurations/receipt_item_configuration.hpp"
 
 namespace repository {
+
+std::string get_connection_string(const std::string& stage, const Aws::Client::ClientConfiguration& config);
 
 class client {
  public:

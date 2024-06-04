@@ -11,12 +11,17 @@ add_executable(${FUNCTION_NAME}
     src/models/upload_file_response.hpp
     src/di.hpp
     src/di.cpp
+    src/rest_api.hpp
+    src/rest_api.cpp
+    src/services/file_service.cpp
+    src/services/file_service.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/repository/include/"
     "${PROJECT_SOURCE_DIR}/rest/include/"
+    "${PROJECT_SOURCE_DIR}/lambda/include/"
 )
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
@@ -25,6 +30,7 @@ target_link_libraries(${FUNCTION_NAME} PUBLIC
     aws-lambda-cpp-common
     repository
     rest
+    lambda
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

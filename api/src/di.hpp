@@ -8,6 +8,8 @@
 
 #include <aws-lambda-cpp/common/logger.hpp>
 #include <aws/s3/S3Client.h>
+#include "repository/client.hpp"
+#include "services/file_service.hpp"
 
 namespace api {
 
@@ -27,6 +29,16 @@ struct di<Aws::Client::ClientConfiguration> {
 template<>
 struct di<Aws::S3::S3Client> {
   static std::shared_ptr<Aws::S3::S3Client> get();
+};
+
+template<>
+struct di<repository::client> {
+  static std::shared_ptr<repository::client> get();
+};
+
+template<>
+struct di<services::file_service> {
+  static std::unique_ptr<services::file_service> get();
 };
 
 }

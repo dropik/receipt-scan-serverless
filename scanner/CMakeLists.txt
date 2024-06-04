@@ -3,7 +3,7 @@ set(LAMBDA_ID "LScanner")
 
 find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3 ssm textract bedrock-runtime)
+find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime)
 
 add_executable(${FUNCTION_NAME}
         src/main.cpp
@@ -16,12 +16,16 @@ add_executable(${FUNCTION_NAME}
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
   "${PROJECT_SOURCE_DIR}/include"
-  "${PROJECT_SOURCE_DIR}/repository/include")
+  "${PROJECT_SOURCE_DIR}/repository/include"
+  "${PROJECT_SOURCE_DIR}/lambda/include"
+)
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
-        AWS::aws-lambda-runtime
-        ${AWSSDK_LINK_LIBRARIES}
-        repository)
+    AWS::aws-lambda-runtime
+    ${AWSSDK_LINK_LIBRARIES}
+    repository
+    lambda
+)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(${FUNCTION_NAME} PRIVATE DEBUG)

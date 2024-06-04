@@ -1,7 +1,7 @@
 {
   "body": "{\"name\": \"sadfsdafsa\"}",
   "resource": "/{proxy+}",
-  "path": "/files",
+  "path": "/v1/users/20a79fcd-1783-475b-9095-35afb0d34b7f/files",
   "httpMethod": "POST",
   "isBase64Encoded": false,
   "pathParameters": {
