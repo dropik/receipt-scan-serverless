@@ -18,6 +18,8 @@ add_executable(${FUNCTION_NAME}
     src/api_errors.h
     src/models/identity.hpp
     src/models/identity.cpp
+    src/services/user_service.cpp
+    src/services/user_service.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

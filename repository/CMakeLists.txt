@@ -20,6 +20,9 @@ add_library(repository STATIC
     include/repository/configurations/receipt_item_configuration.hpp
     include/repository/models/user.hpp
     include/repository/configurations/user_configuration.hpp
+    include/repository/base_query.hpp
+    src/base_query.cpp
+    src/statement.cpp
 )
 
 target_include_directories(repository PUBLIC

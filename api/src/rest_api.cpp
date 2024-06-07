@@ -15,6 +15,9 @@ using namespace services;
 api_root api::create_api() {
   api_root api;
 
+  // Middleware
+
+  // Identity
   api.use([](const auto &request, const auto &next) {
     auto auth = request.request_context.authorizer;
     auto user_id = auth.claims["sub"];
@@ -26,6 +29,8 @@ api_root api::create_api() {
   });
 
   api.use_logging(di<aws_lambda_cpp::common::logger>::get());
+
+  // Version
   api.use([](const auto &request, const auto &next) {
     di<aws_lambda_cpp::common::logger>::get()->info("App Version: %s", APP_VERSION);
     return next(request);
@@ -33,8 +38,12 @@ api_root api::create_api() {
 
   api.use_exception_filter();
 
+  // Routes
+
   api.any("/v1")([](api_resource &v1) {
     v1.any("/user")([](api_resource &user) {
+      user.post("/")([]() { return di<user_service>::get()->init_user(); });
+
       user.post<models::upload_file_params>("/files")([](const auto &request) {
         return di<file_service>::get()->get_upload_file_url(request);
       });

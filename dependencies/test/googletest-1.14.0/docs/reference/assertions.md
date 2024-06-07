@@ -524,7 +524,7 @@ Verifies that *`expression`* is a failure `HRESULT`.
 The following assertions verify that a piece of code causes the process to
 terminate. For context, see [Death Tests](../advanced.md#death-tests).
 
-These assertions spawn a new process and execute the code under test in that
+These assertions spawn a new process and go the code under test in that
 process. How that happens depends on the platform and the variable
 `::testing::GTEST_FLAG(death_test_style)`, which is initialized from the
 command-line flag `--gtest_death_test_style`.

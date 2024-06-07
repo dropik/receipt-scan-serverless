@@ -1,7 +1,7 @@
 {
   "body": "{\"name\": \"sadfsdafsa\"}",
   "resource": "/{proxy+}",
-  "path": "/v1/users/20a79fcd-1783-475b-9095-35afb0d34b7f/files",
+  "path": "/v1/user",
   "httpMethod": "POST",
   "isBase64Encoded": false,
   "pathParameters": {
@@ -33,6 +33,11 @@
       "userArn": null,
       "userAgent": "Custom User Agent String",
       "user": null
+    },
+    "authorizer": {
+      "claims": {
+        "sub": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef"
+      }
     },
     "path": "/prod/path/to/resource",
     "resourcePath": "/{proxy+}",

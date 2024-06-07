@@ -39,7 +39,7 @@ inline api_response_t created_at(const std::string &req_path, const TId &id) {
   return response;
 }
 
-template<typename THandler, typename TBody, class Enabled = void>
+template<typename THandler, typename TBody = void, class Enabled = void>
 struct empty_ok {
   api_response_t operator()(const api_request_t &request, const THandler &&handler, const TBody &body) {
     return ok();
@@ -54,7 +54,14 @@ struct empty_ok<THandler, TBody, typename std::enable_if_t<has_id<TBody>::value>
   }
 };
 
-template<typename THandler, typename TBody, class Enabled = void>
+template<typename THandler>
+struct empty_ok<THandler, void, void> {
+  api_response_t operator()(const api_request_t &request, const THandler &&handler) {
+    return ok();
+  }
+};
+
+template<typename THandler, typename TBody = void, class Enabled = void>
 struct post_response {
   api_response_t operator()(const api_request_t &request, const THandler &&handler, const TBody &body) {
     return ok(handler(body));
@@ -66,6 +73,21 @@ struct post_response<THandler, TBody, typename std::enable_if_t<std::is_void<std
   api_response_t operator()(const api_request_t &request, const THandler &&handler, const TBody &body) {
     handler(body);
     return empty_ok<THandler, TBody>()(request, std::forward<THandler>(handler), body);
+  }
+};
+
+template<typename THandler, class Enabled>
+struct post_response<THandler, void, Enabled> {
+  api_response_t operator()(const api_request_t &request, const THandler &&handler) {
+    return ok(handler());
+  }
+};
+
+template<typename THandler>
+struct post_response<THandler, void, typename std::enable_if_t<std::is_void<std::result_of_t<THandler()>>::value>> {
+  api_response_t operator()(const api_request_t &request, const THandler &&handler) {
+    handler();
+    return empty_ok<THandler, void>()(request, std::forward<THandler>(handler));
   }
 };
 

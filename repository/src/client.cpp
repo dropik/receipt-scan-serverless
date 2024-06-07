@@ -41,6 +41,23 @@ client::~client() {
   }
 }
 
+statement client::execute(const std::string &query) {
+  m_logger->info("Executing query: %s", query.c_str());
+  try {
+    std::shared_ptr<sql::PreparedStatement> stmt(m_connection->prepareStatement(query));
+    stmt->closeOnCompletion();
+    if (!stmt) {
+      throw std::runtime_error("Unable to create prepared statement!");
+    }
+    return statement(stmt);
+  } catch (std::exception& e) {
+    m_logger->error(
+        "Error occurred while preparing query: %s",
+        e.what());
+    throw;
+  }
+}
+
 std::string repository::get_connection_string(const std::string &stage, const Aws::Client::ClientConfiguration &config) {
   auto conn_env = getenv("DB_CONNECTION_STRING");
   if (conn_env != nullptr) {

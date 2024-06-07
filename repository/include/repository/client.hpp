@@ -19,6 +19,7 @@
 #include "repository/configurations/receipt_configuration.hpp"
 #include "repository/configurations/receipt_item_configuration.hpp"
 #include "repository/configurations/user_configuration.hpp"
+#include "statement.hpp"
 
 namespace repository {
 
@@ -103,7 +104,7 @@ class client {
   }
 
   template <typename T>
-  configurations::common::selector<T> select(const std::string& query) {
+  selector<T> select(const std::string& query) {
     auto& configuration = get_configuration<T>();
     m_logger->info("Executing query: %s", query.c_str());
     try {
@@ -112,7 +113,7 @@ class client {
       if (!stmt) {
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      return configurations::common::selector<T>(stmt, configuration);
+      return selector<T>(stmt, configuration);
     } catch (std::exception& e) {
       m_logger->error(
           "Error occurred while preparing query: %s",
@@ -120,6 +121,8 @@ class client {
       throw;
     }
   }
+
+  statement execute(const std::string& query);
 
  private:
   template <typename T>

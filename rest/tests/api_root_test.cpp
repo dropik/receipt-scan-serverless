@@ -275,6 +275,17 @@ TEST(api_root, post_should_allow_only_post) {
   test("PATCH");
 }
 
+TEST(api_root, post_may_take_no_body) {
+  api_root api;
+  api.post("/abc")([]() { return test_response{.value = "3"}; });
+  api_request_t request;
+  request.path = "/abc";
+  request.http_method = "POST";
+  auto response = api(request);
+  EXPECT_EQ(response.status_code, 200);
+  EXPECT_EQ(response.body, R"({"value":"3"})");
+}
+
 // PUT
 
 TEST(api_root, put_should_capture_body) {

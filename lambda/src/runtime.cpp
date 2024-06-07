@@ -7,7 +7,12 @@
 namespace lambda {
 
 std::string get_stage() {
-  std::string function_name = getenv("AWS_LAMBDA_FUNCTION_NAME");
+  auto function_name_env = getenv("AWS_LAMBDA_FUNCTION_NAME");
+  if (!function_name_env) {
+      return "local";
+  }
+
+  std::string function_name(function_name_env);
 
   auto envStartPos = function_name.find_last_of('-');
   std::string stage = function_name.substr(

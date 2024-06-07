@@ -57,6 +57,24 @@ class api_resource {
     };
   }
 
+  auto post(const std::string &path) {
+    rest::validate_path(path);
+
+    return [this, path](const auto &&h) {
+      this->m_routes.push_back([path, h](const rest::api_request_t &request, const std::string &p) {
+        if (p != path) {
+          return rest::not_found();
+        }
+        if (request.http_method != "POST") {
+          return rest::method_not_allowed();
+        }
+
+        using THandler = decltype(h);
+        return post_response<THandler>()(request, std::forward<THandler>(h));
+      });
+    };
+  }
+
   template<typename TBody>
   auto put(const std::string &path) {
     validate_path(path);

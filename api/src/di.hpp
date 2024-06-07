@@ -12,6 +12,7 @@
 #include "models/identity.hpp"
 
 #include "services/file_service.hpp"
+#include "services/user_service.hpp"
 
 namespace api {
 
@@ -46,6 +47,11 @@ struct di<models::identity> {
 template<>
 struct di<services::file_service> {
   static std::unique_ptr<services::file_service> get();
+};
+
+template<>
+struct di<services::user_service> {
+  static std::unique_ptr<services::user_service> get();
 };
 
 }
