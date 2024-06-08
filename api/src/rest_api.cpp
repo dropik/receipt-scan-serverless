@@ -41,10 +41,9 @@ api_root api::create_api() {
   // Routes
 
   api.any("/v1")([](api_resource &v1) {
-    v1.any("/user")([](api_resource &user) {
-      user.post("/")([]() { return di<user_service>::get()->init_user(); });
-
-      user.post<models::upload_file_params>("/files")([](const auto &request) {
+    v1.post("/user")([]() { return di<user_service>::get()->init_user(); });
+    v1.any("/files")([](api_resource &user) {
+      user.post<models::upload_file_params>("/")([](const auto &request) {
         return di<file_service>::get()->get_upload_file_url(request);
       });
     });
