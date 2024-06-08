@@ -68,4 +68,11 @@ std::unique_ptr<services::user_service> di<services::user_service>::get() {
       di<models::identity>::get());
 }
 
+std::unique_ptr<services::receipt_service> di<services::receipt_service>::get() {
+  return std::make_unique<services::receipt_service>(
+      di<repository::client>::get(),
+      di<models::identity>::get(),
+      di<services::file_service>::get());
+}
+
 }

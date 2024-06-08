@@ -13,6 +13,10 @@ using namespace api::models;
 namespace api {
 namespace services {
 
+static std::string get_key(const std::string &user_id, const std::string &name) {
+  return aws_lambda_cpp::common::str_format("users/%s/receipts/%s", user_id.c_str(), name.c_str());
+}
+
 file_service::file_service(std::shared_ptr<Aws::S3::S3Client> s3_client,
                            std::string bucket,
                            std::shared_ptr<repository::client> repository,
@@ -22,19 +26,32 @@ file_service::file_service(std::shared_ptr<Aws::S3::S3Client> s3_client,
     m_repository(std::move(repository)),
     m_identity(identity) {}
 
-upload_file_response file_service::get_upload_file_url(const upload_file_params &params) {
+file_response file_service::get_upload_file_url(const upload_file_params &params) {
   if (params.name.empty()) {
     throw rest::api_exception(invalid_argument, "Name is required");
   }
 
-  auto key=
-      aws_lambda_cpp::common::str_format("users/%s/receipts/%s", m_identity.user_id.c_str(), params.name.c_str());
+  auto key = get_key(m_identity.user_id, params.name);
 
   std::string presignedUrl = m_s3_client->GeneratePresignedUrlWithSSES3(m_bucket,
                                                                         key,
                                                                         Aws::Http::HttpMethod::HTTP_PUT);
 
-  return upload_file_response{presignedUrl};
+  return file_response{presignedUrl};
+}
+
+models::file_response file_service::get_download_file_url(const std::string &name) {
+  if (name.empty()) {
+    throw rest::api_exception(invalid_argument, "Name is required");
+  }
+
+  auto key = get_key(m_identity.user_id, name);
+
+  std::string presignedUrl = m_s3_client->GeneratePresignedUrlWithSSES3(m_bucket,
+                                                                        key,
+                                                                        Aws::Http::HttpMethod::HTTP_GET);
+
+  return file_response{presignedUrl};
 }
 
 }

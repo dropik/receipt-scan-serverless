@@ -8,7 +8,7 @@ find_package(AWSSDK COMPONENTS core s3)
 add_executable(${FUNCTION_NAME}
     src/main.cpp
     src/models/upload_file_params.hpp
-    src/models/upload_file_response.hpp
+    src/models/file_response.hpp
     src/di.hpp
     src/di.cpp
     src/rest_api.hpp
@@ -20,6 +20,10 @@ add_executable(${FUNCTION_NAME}
     src/models/identity.cpp
     src/services/user_service.cpp
     src/services/user_service.hpp
+    src/models/receipt_response.hpp
+    src/models/model_types.hpp
+    src/services/receipt_service.cpp
+    src/services/receipt_service.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

@@ -11,6 +11,7 @@
 using namespace api;
 using namespace rest;
 using namespace services;
+using namespace models;
 
 api_root api::create_api() {
   api_root api;
@@ -42,10 +43,15 @@ api_root api::create_api() {
 
   api.any("/v1")([](api_resource &v1) {
     v1.post("/user")([]() { return di<user_service>::get()->init_user(); });
-    v1.any("/files")([](api_resource &user) {
-      user.post<models::upload_file_params>("/")([](const auto &request) {
+
+    v1.any("/files")([](api_resource &files) {
+      files.post<upload_file_params>("/")([](const auto &request) {
         return di<file_service>::get()->get_upload_file_url(request);
       });
+    });
+
+    v1.any("/receipts")([](api_resource &receipts) {
+      receipts.get("/")([]() { return di<receipt_service>::get()->get_receipts(); });
     });
   });
 
