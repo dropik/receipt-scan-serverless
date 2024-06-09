@@ -18,8 +18,6 @@ class repository_configuration<models::receipt>
     HAS_ID(id) WITH_COLUMN("id");
 
     HAS_STRING(user_id) WITH_COLUMN("user_id");
-    HAS_STRING(file_name) WITH_COLUMN("file_name");
-    HAS_INT(doc_number) WITH_COLUMN("doc_number");
     HAS_STRING(date) WITH_COLUMN("date");
     HAS_DECIMAL(total_amount) WITH_COLUMN("total_amount");
     HAS_STRING(currency) WITH_COLUMN("currency");

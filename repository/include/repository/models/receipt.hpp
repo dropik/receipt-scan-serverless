@@ -8,8 +8,6 @@ namespace models {
 struct receipt {
   guid id;
   guid user_id;
-  guid file_name;
-  int doc_number;
   std::string date;
   long double total_amount;
   std::string currency;

@@ -252,6 +252,7 @@ class base_repository_configuration {
   std::shared_ptr<sql::PreparedStatement> m_select_statement;
   std::shared_ptr<sql::PreparedStatement> m_update_statement;
   std::shared_ptr<sql::PreparedStatement> m_delete_statement;
+  std::shared_ptr<sql::PreparedStatement> m_put_statement;
   std::shared_ptr<table_configuration> m_table;
   std::shared_ptr<id_configuration<T>> m_id;
   std::vector<std::shared_ptr<base_property_configuration<T>>> m_properties;

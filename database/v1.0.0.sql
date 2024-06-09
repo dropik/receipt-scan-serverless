@@ -138,3 +138,29 @@ drop index ix_request_id_doc_number;
 
 alter table receipts
 add unique index ix_file_name_doc_number (file_name, doc_number);
+
+alter table receipts
+drop index ix_file_name_doc_number;
+
+alter table receipts
+drop column file_name;
+
+alter table receipts
+drop column doc_number;
+
+create table receipt_files (
+  id char(36) not null primary key,
+  receipt_id char(36) not null,
+  file_name varchar(100) not null,
+  doc_number int not null,
+
+  unique index ix_receipt_id (receipt_id),
+  unique index ix_file_name_doc_number (file_name, doc_number),
+
+  constraint fk_receipt_receipt_file foreign key (receipt_id)
+    references receipts(id)
+    on delete cascade
+    on update restrict,
+
+  constraint ch_file_name_not_empty check(file_name is null or length(file_name) > 0)
+);

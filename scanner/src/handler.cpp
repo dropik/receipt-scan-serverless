@@ -181,11 +181,9 @@ bool handler::try_parse_document(
   receipt receipt;
   receipt.id = utils::gen_uuid();
   receipt.user_id = user_id;
-  receipt.file_name = file_name;
-  receipt.doc_number = document.GetExpenseIndex();
 
   auto& summary_fields = document.GetSummaryFields();
-  if (!try_parse_summary_fields(summary_fields, receipt)) {
+  if (!try_parse_summary_fields(summary_fields, receipt, file_name, document.GetExpenseIndex())) {
     return false;
   }
 
@@ -199,12 +197,12 @@ bool handler::try_parse_document(
 }
 
 bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
-                                       receipt& receipt) {
+                                       receipt& receipt, const std::string &file_name, const int &doc_number) {
   double best_store_name_confidence = 0;
   double best_date_confidence = 0;
   double best_total_confidence = 0;
 
-  for (const auto & summary_field : summary_fields) {
+  for (const auto &summary_field : summary_fields) {
     std::string field_type = summary_field.GetType().GetText();
     double confidence = summary_field.GetType().GetConfidence();
     std::string value = summary_field.GetValueDetection().GetText();
@@ -214,7 +212,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
       receipt.store_name = parse_name(value);
       best_store_name_confidence = confidence;
     } else if (field_type == receipt_date &&
-               best_date_confidence < confidence) {
+        best_date_confidence < confidence) {
       std::string found_date;
       if (try_parse_date(found_date, value)) {
         best_date_confidence = confidence;
@@ -225,7 +223,7 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
         receipt.date = "";
       }
     } else if ((field_type == receipt_amount || field_type == receipt_total) &&
-               best_total_confidence < confidence) {
+        best_total_confidence < confidence) {
       receipt.currency = try_get_currency(summary_field);
       long double found_total = 0;
       if (try_parse_total(found_total, value)) {
@@ -249,23 +247,25 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
   }
 
   try {
-    auto existing_receipt =
+    auto existing_file =
         m_repository
-            ->select<repository::models::receipt>(
-                "select * from receipts r "
-                "where r.file_name = ? and r.doc_number = ?")
-            .with_param(receipt.file_name)
-            .with_param(receipt.doc_number)
+            ->select<repository::models::receipt_file>(
+                "select * from receipt_files rf "
+                "where rf.file_name = ? and rf.doc_number = ?")
+            .with_param(file_name)
+            .with_param(doc_number)
             .first_or_default();
 
-    if (!existing_receipt) {
+    if (!existing_file) {
       m_repository->create(receipt);
+      receipt_file rf{utils::gen_uuid(), receipt.id, file_name, doc_number};
+      m_repository->create(rf);
     } else {
-      receipt.id = existing_receipt->id;
+      receipt.id = existing_file->receipt_id;
       m_repository->update(receipt);
     }
 
-  } catch (std::exception& e) {
+  } catch (std::exception &e) {
     m_logger->error("Error occurred while storing receipt in database: %s",
                     e.what());
     return false;

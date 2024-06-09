@@ -42,7 +42,7 @@ std::vector<receipt_list_item> receipt_service::get_receipts() {
 }
 
 models::receipt_detail receipt_service::get_receipt(const guid_t &receipt_id) {
-  auto receipt = try_get_receipt(receipt_id);
+  auto receipt = get_receipt_by_id(receipt_id);
   auto receipt_items = m_repository->select<receipt_item>(
           "select * from receipt_items ri "
           "join receipts r on r.id = ri.receipt_id "
@@ -73,20 +73,61 @@ models::receipt_detail receipt_service::get_receipt(const guid_t &receipt_id) {
 }
 
 models::file receipt_service::get_receipt_file(const guid_t &receipt_id) {
-  auto receipt = try_get_receipt(receipt_id);
-  return m_file_service->get_download_file_url(receipt->file_name);
+  auto rf = m_repository->select<receipt_file>(
+          "select * from receipt_files where receipt_id = ?")
+      .with_param(receipt_id)
+      .first_or_default();
+  if (!rf) {
+    throw rest::api_exception(not_found, "Receipt file not found");
+  }
+
+  return m_file_service->get_download_file_url(rf->file_name);
 }
 
-std::shared_ptr<receipt> receipt_service::try_get_receipt(const guid_t &receipt_id) {
-  auto r = m_repository->select<receipt>(
+void receipt_service::put_receipt(const receipt_detail &rd) {
+  receipt r;
+  r.id = rd.id;
+  r.user_id = m_identity.user_id;
+  r.date = rd.date;
+  r.total_amount = rd.total_amount;
+  r.currency = rd.currency;
+  r.store_name = rd.store_name;
+  r.category = rd.category;
+
+  auto existing_receipt = try_get_receipt(rd.id);
+  if (!existing_receipt) {
+    m_repository->create(r);
+  } else {
+    m_repository->update(r);
+    m_repository->execute("delete from receipt_items where receipt_id = ?").with_param(r.id).go();
+  }
+
+  for (int i = 0; i < rd.items.size(); i++) {
+    const auto &ri = rd.items[i];
+    receipt_item rii;
+    rii.id = ri.id;
+    rii.receipt_id = r.id;
+    rii.description = ri.description;
+    rii.amount = ri.amount;
+    rii.category = ri.category;
+    rii.sort_order = i;
+    m_repository->create(rii);
+  }
+}
+
+std::shared_ptr<receipt> receipt_service::get_receipt_by_id(const guid_t &receipt_id) {
+  auto receipt = try_get_receipt(receipt_id);
+  if (!receipt) {
+    throw rest::api_exception(not_found, "Receipt not found");
+  }
+  return receipt;
+}
+
+std::shared_ptr<repository::models::receipt> receipt_service::try_get_receipt(const guid_t &receipt_id) {
+  return m_repository->select<receipt>(
           "select * from receipts where id = ?")
       .with_param(receipt_id)
       .first_or_default();
-
-  if (!r) {
-    throw rest::api_exception(not_found, "Receipt not found");
-  }
-  return r;
 }
 
 }

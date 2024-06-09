@@ -60,6 +60,7 @@ api_root api::create_api() {
           return di<receipt_service>::get()->get_receipt_file(receipt_id);
         });
       });
+      receipts.put<receipt_detail>("/")([](const auto &request) { return di<receipt_service>::get()->put_receipt(request); });
     });
   });
 
