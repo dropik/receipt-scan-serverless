@@ -53,6 +53,9 @@ api_root api::create_api() {
     v1.any("/receipts")([](api_resource &receipts) {
       receipts.get("/")([]() { return di<receipt_service>::get()->get_receipts(); });
       receipts.any<guid_t>()([](const guid_t &receipt_id, api_resource &receipt) {
+        receipt.get("/")([receipt_id = std::forward<const guid_t>(receipt_id)]() {
+          return di<receipt_service>::get()->get_receipt(receipt_id);
+        });
         receipt.get("/file")([receipt_id = std::forward<const guid_t>(receipt_id)]() {
           return di<receipt_service>::get()->get_receipt_file(receipt_id);
         });
