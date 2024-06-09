@@ -5,7 +5,7 @@
 #pragma once
 
 #include <string>
-#include <aws-lambda-cpp/common/json.hpp>
+#include <lambda/json.hpp>
 
 namespace scanner {
 namespace models {

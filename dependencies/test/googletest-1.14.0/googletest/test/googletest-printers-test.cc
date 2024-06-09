@@ -56,7 +56,7 @@
 #include "gtest/gtest.h"
 
 #ifdef GTEST_HAS_ABSL
-#include "absl/strings/str_format.h"
+#include "absl/strings/string::format.h"
 #endif
 
 // Some user-defined types for testing the universal value printer.

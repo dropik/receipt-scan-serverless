@@ -10,7 +10,7 @@
 #include <sstream>
 #include <string>
 
-#include <aws-lambda-cpp/common/string_utils.hpp>
+#include <lambda/string_utils.hpp>
 
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
 #include <aws/textract/model/Document.h>
@@ -25,10 +25,9 @@
 
 using namespace Aws::Textract;
 using namespace Aws::BedrockRuntime;
-using namespace aws_lambda_cpp::common;
-using namespace aws_lambda_cpp::models::lambda_payloads;
+using namespace lambda;
+using namespace lambda::models::payloads;
 using namespace aws::lambda_runtime;
-using namespace aws_lambda_cpp;
 using namespace scanner;
 using namespace repository;
 using namespace repository::models;
@@ -88,12 +87,12 @@ const std::string default_currency = "EUR";
 
 static std::string parse_name(const std::string& text) {
   std::string result(text);
-  replace_all(result, "\n", " ");
-  replace_all(result, "\r", " ");
-  replace_all(result, "\\", " ");
-  replace_all(result, "/", " ");
-  replace_all(result, "<", " ");
-  replace_all(result, ">", " ");
+  string::replace_all(result, "\n", " ");
+  string::replace_all(result, "\r", " ");
+  string::replace_all(result, "\\", " ");
+  string::replace_all(result, "/", " ");
+  string::replace_all(result, "<", " ");
+  string::replace_all(result, ">", " ");
   std::regex space_regex("\\s{2,}", std::regex_constants::extended);
   result = std::regex_replace(result, space_regex, " ");
   return result;
@@ -103,8 +102,8 @@ invocation_response handler::operator()(invocation_request const& request) {
   m_logger->info("Version %s", APP_VERSION);
 
   try {
-    aws_lambda_cpp::models::lambda_payloads::s3_request s3_request =
-        json::deserialize<aws_lambda_cpp::models::lambda_payloads::s3_request>(
+    lambda::models::payloads::s3_request s3_request =
+        json::deserialize<lambda::models::payloads::s3_request>(
             request.payload);
 
     for (auto &record : s3_request.records) {
@@ -417,14 +416,14 @@ void handler::try_assign_categories(receipt& receipt,
         "\n\nHuman: For each receipt item guess and print a category (only) "
         "using following categories: %s.\nReceipt: %s %.2Lf %s.\nItems:";
 
-    payload.prompt = aws_lambda_cpp::common::str_format(
+    payload.prompt = lambda::string::format(
         prompt_start_format, categories_str.c_str(), receipt.store_name.c_str(),
         receipt.total_amount, receipt.currency.c_str());
 
     std::string prompt_item_format = "\n%d. %s %.2Lf %s";
 
     for (auto& item : items) {
-      payload.prompt += aws_lambda_cpp::common::str_format(
+      payload.prompt += lambda::string::format(
           prompt_item_format, item.sort_order, item.description.c_str(),
           item.amount, receipt.currency.c_str());
     }
@@ -433,7 +432,7 @@ void handler::try_assign_categories(receipt& receipt,
         "\n\nHuman: Guess and print category (only) of receipt using following "
         "categories: %s.\nReceipt: %s %.2Lf %s.";
 
-    payload.prompt = aws_lambda_cpp::common::str_format(
+    payload.prompt = lambda::string::format(
         prompt_format, categories_str.c_str(), receipt.store_name.c_str(),
         receipt.total_amount, receipt.currency.c_str());
   }
@@ -543,8 +542,8 @@ bool handler::try_parse_total(long double& result, const std::string& input) con
   // and then divide it by 100 to get the correct value.
 
   std::string text(input);
-  replace_all(text, ",", "");
-  replace_all(text, ".", "");
+  string::replace_all(text, ",", "");
+  string::replace_all(text, ".", "");
 
   std::string::size_type start = 0;
   for (; start < text.length(); start++) {

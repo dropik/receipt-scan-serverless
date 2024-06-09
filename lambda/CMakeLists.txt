@@ -1,7 +1,7 @@
 
 add_library(lambda STATIC
-    "include/lambda/runtime.hpp"
-    "src/runtime.cpp"
+    "include/lambda/lambda.hpp"
+    "src/lambda.cpp"
 )
 
 target_include_directories(lambda PUBLIC

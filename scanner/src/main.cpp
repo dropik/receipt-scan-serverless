@@ -7,13 +7,13 @@
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
-#include <aws-lambda-cpp/common/logger.hpp>
+#include <lambda/logger.hpp>
 
 #include <repository/client.hpp>
-#include <lambda/runtime.hpp>
+#include <lambda/lambda.hpp>
 
 #ifdef DEBUG
-#include <aws-lambda-cpp/common/runtime.hpp>
+#include <lambda/runtime.hpp>
 #include <config.h>
 #else
 #include <aws/lambda-runtime/runtime.h>
@@ -27,8 +27,6 @@ using namespace Aws::Utils::Logging;
 using namespace Aws::Utils::Json;
 using namespace Aws::Textract;
 using namespace Aws::BedrockRuntime;
-using namespace aws_lambda_cpp;
-using namespace aws_lambda_cpp::common;
 using namespace scanner;
 
 static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
@@ -47,13 +45,13 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<sql::Connection> db_connection;
 
 #ifdef DEBUG
-  aws_lambda_cpp::runtime::set_debug(argc, argv);
-  aws_lambda_cpp::runtime::load_payload(argc, argv);
+  lambda::runtime::set_debug(argc, argv);
+  lambda::runtime::load_payload(argc, argv);
 #endif  // DEBUG
 
   InitAPI(options);
   {
-    std::shared_ptr<logger> l = std::make_shared<logger>("Scanner");
+    std::shared_ptr<lambda::logger> l = std::make_shared<lambda::logger>("Scanner");
 
     Aws::Client::ClientConfiguration config;
 #ifdef DEBUG
@@ -74,7 +72,7 @@ int main(int argc, char* argv[]) {
 
       handler h(repo, textract_client, bedrock_client, l);
 #ifdef DEBUG
-      aws_lambda_cpp::runtime::run_debug(h);
+      lambda::runtime::run_debug(h);
 #else
       run_handler(h);
 #endif  // DEBUG

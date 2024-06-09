@@ -5,8 +5,8 @@
 #include <aws/lambda-runtime/runtime.h>
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
-#include <aws-lambda-cpp/common/logger.hpp>
-#include <aws-lambda-cpp/models/lambda_payloads/s3.hpp>
+#include <lambda/logger.hpp>
+#include <lambda/models/payloads/s3.hpp>
 
 #include <repository/client.hpp>
 
@@ -18,7 +18,7 @@ class handler {
           std::shared_ptr<const Aws::Textract::TextractClient> textract_client,
           std::shared_ptr<const Aws::BedrockRuntime::BedrockRuntimeClient>
               bedrock_client,
-          std::shared_ptr<const aws_lambda_cpp::common::logger> logger);
+          std::shared_ptr<const lambda::logger> logger);
 
   aws::lambda_runtime::invocation_response operator()(
       const aws::lambda_runtime::invocation_request& request);
@@ -28,13 +28,13 @@ class handler {
   std::shared_ptr<const Aws::Textract::TextractClient> m_textract_client;
   std::shared_ptr<const Aws::BedrockRuntime::BedrockRuntimeClient>
       m_bedrock_client;
-  std::shared_ptr<const aws_lambda_cpp::common::logger> m_logger;
+  std::shared_ptr<const lambda::logger> m_logger;
 
   typedef std::vector<Aws::Textract::Model::ExpenseField> expense_fields_t;
   typedef std::vector<Aws::Textract::Model::LineItemGroup> line_item_groups_t;
 
   void process_s3_object(
-      aws_lambda_cpp::models::lambda_payloads::s3_record& record);
+      lambda::models::payloads::s3_record& record);
 
   bool try_parse_document(const Aws::Textract::Model::ExpenseDocument& document,
                           const repository::models::guid& user_id,

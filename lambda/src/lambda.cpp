@@ -2,7 +2,7 @@
 // Created by Daniil Ryzhkov on 04/06/2024.
 //
 
-#include <lambda/runtime.hpp>
+#include <lambda/lambda.hpp>
 
 namespace lambda {
 

@@ -21,7 +21,7 @@ template<typename T>
 inline api_response_t ok(const T &payload) {
   api_response_t response;
   response.status_code = 200;
-  response.set_body(aws_lambda_cpp::json::serialize(payload, true), false);
+  response.set_body(lambda::json::serialize(payload, true), false);
   return response;
 }
 

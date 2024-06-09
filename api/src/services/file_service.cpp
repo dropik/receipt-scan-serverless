@@ -14,7 +14,7 @@ namespace api {
 namespace services {
 
 static std::string get_key(const std::string &user_id, const std::string &name) {
-  return aws_lambda_cpp::common::str_format("users/%s/receipts/%s", user_id.c_str(), name.c_str());
+  return lambda::string::format("users/%s/receipts/%s", user_id.c_str(), name.c_str());
 }
 
 file_service::file_service(std::shared_ptr<Aws::S3::S3Client> s3_client,

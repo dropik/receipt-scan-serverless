@@ -7,7 +7,7 @@
 #include <aws/s3/S3Client.h>
 
 #ifdef DEBUG
-#include <aws-lambda-cpp/common/runtime.hpp>
+#include <lambda/runtime.hpp>
 #endif
 
 #include "rest_api.hpp"
@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
   options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
 
 #ifdef DEBUG
-  aws_lambda_cpp::runtime::set_debug(argc, argv);
-  aws_lambda_cpp::runtime::load_payload(argc, argv);
+  lambda::runtime::set_debug(argc, argv);
+  lambda::runtime::load_payload(argc, argv);
 #endif // DEBUG
 
   InitAPI(options);
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     auto api = create_api();
 
 #ifdef DEBUG
-    aws_lambda_cpp::runtime::run_debug(api);
+    lambda::runtime::run_debug(api);
 #else
     run_handler(api);
 #endif // DEBUG

@@ -5,7 +5,7 @@
 #pragma once
 
 #include <utility>
-#include <aws-lambda-cpp/common/json.hpp>
+#include <lambda/json.hpp>
 
 namespace rest {
 

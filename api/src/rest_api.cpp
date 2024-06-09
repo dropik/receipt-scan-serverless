@@ -29,11 +29,11 @@ api_root api::create_api() {
     return next(request);
   });
 
-  api.use_logging(di<aws_lambda_cpp::common::logger>::get());
+  api.use_logging(di<lambda::logger>::get());
 
   // Version
   api.use([](const auto &request, const auto &next) {
-    di<aws_lambda_cpp::common::logger>::get()->info("App Version: %s", APP_VERSION);
+    di<lambda::logger>::get()->info("App Version: %s", APP_VERSION);
     return next(request);
   });
 

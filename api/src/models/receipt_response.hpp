@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <aws-lambda-cpp/common/json.hpp>
+#include <lambda/json.hpp>
 
 #include "model_types.hpp"
 

@@ -46,7 +46,7 @@ class api_resource {
         }
         TBody body;
         try {
-          body = aws_lambda_cpp::json::deserialize<TBody>(request.get_body());
+          body = lambda::json::deserialize<TBody>(request.get_body());
         } catch (std::exception &e) {
           return rest::bad_request();
         }
@@ -89,7 +89,7 @@ class api_resource {
         }
         TBody body;
         try {
-          body = aws_lambda_cpp::json::deserialize<TBody>(request.get_body());
+          body = lambda::json::deserialize<TBody>(request.get_body());
         } catch (std::exception &e) {
           return bad_request();
         }
@@ -114,7 +114,7 @@ class api_resource {
         }
         TBody body;
         try {
-          body = aws_lambda_cpp::json::deserialize<TBody>(request.get_body());
+          body = lambda::json::deserialize<TBody>(request.get_body());
         } catch (std::exception &e) {
           return bad_request();
         }

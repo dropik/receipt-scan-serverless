@@ -5,15 +5,15 @@
 #include <mariadb/conncpp/DriverManager.hpp>
 #include <aws/ssm/SSMClient.h>
 
-#include <aws-lambda-cpp/common/string_utils.hpp>
+#include <lambda/string_utils.hpp>
 #include <aws/ssm/model/GetParameterRequest.h>
 
 using namespace repository;
-using namespace aws_lambda_cpp::common;
+using namespace lambda;
 
 client::client(
     const std::string& connection_string,
-    std::shared_ptr<aws_lambda_cpp::common::logger> logger)
+    std::shared_ptr<lambda::logger> logger)
     : m_logger(std::move(logger)) {
   try {
     m_logger->info("Establishing connection with the database...");
@@ -64,17 +64,17 @@ std::string repository::get_connection_string(const std::string &stage, const Aw
     return conn_env;
   }
 
-  std::string ssmPrefix = str_format("/receipt-scan/%s", stage.c_str());
+  std::string ssmPrefix = string::format("/receipt-scan/%s", stage.c_str());
   Aws::SSM::SSMClient ssmClient(config);
   Aws::SSM::Model::GetParameterRequest connStrReq;
   connStrReq
-      .WithName(str_format("%s/db-connection-string", ssmPrefix.c_str()))
+      .WithName(string::format("%s/db-connection-string", ssmPrefix.c_str()))
       .WithWithDecryption(true);
   Aws::SSM::Model::GetParameterOutcome outcome =
       ssmClient.GetParameter(connStrReq);
   if (!outcome.IsSuccess()) {
     throw std::runtime_error(
-        str_format("Error occurred while obtaining parameter from ssm: %s",
+        string::format("Error occurred while obtaining parameter from ssm: %s",
                    outcome.GetError().GetMessage().c_str()));
   }
   return outcome.GetResult().GetParameter().GetValue();

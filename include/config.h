@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aws-lambda-cpp/common/macros.h>
+#include <lambda/macros.h>
 
 #define APP_VERSION "1.0.0"
 

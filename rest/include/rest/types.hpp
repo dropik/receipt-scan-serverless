@@ -6,13 +6,13 @@
 
 #include <type_traits>
 
-#include <aws-lambda-cpp/models/lambda_payloads/gateway_proxy.hpp>
-#include <aws-lambda-cpp/models/lambda_responses/gateway_proxy.hpp>
+#include <lambda/models/payloads/gateway_proxy.hpp>
+#include <lambda/models/responses/gateway_proxy.hpp>
 
 namespace rest {
 
-typedef aws_lambda_cpp::models::lambda_payloads::base_gateway_proxy_request api_request_t;
-typedef aws_lambda_cpp::models::lambda_responses::base_gateway_proxy_response api_response_t;
+typedef lambda::models::payloads::base_gateway_proxy_request api_request_t;
+typedef lambda::models::responses::base_gateway_proxy_response api_response_t;
 
 template<typename T, class Enabled = void>
 struct has_id {

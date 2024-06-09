@@ -23,7 +23,7 @@ api_response_t bad_request() {
 api_response_t bad_request(const api_exception &e) {
   api_response_t response;
   response.status_code = 400;
-  response.set_body(aws_lambda_cpp::json::serialize(e, true), false);
+  response.set_body(lambda::json::serialize(e, true), false);
   return response;
 }
 

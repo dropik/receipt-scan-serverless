@@ -8,7 +8,7 @@
 #include <mariadb/conncpp/Connection.hpp>
 #include <mariadb/conncpp/PreparedStatement.hpp>
 
-#include <aws-lambda-cpp/common/logger.hpp>
+#include <lambda/logger.hpp>
 
 #include <aws/core/client/ClientConfiguration.h>
 
@@ -28,7 +28,7 @@ std::string get_connection_string(const std::string& stage, const Aws::Client::C
 class client {
  public:
   client(const std::string& connection_string,
-         std::shared_ptr<aws_lambda_cpp::common::logger> logger);
+         std::shared_ptr<lambda::logger> logger);
   ~client();
 
   template <typename T>
@@ -132,7 +132,7 @@ class client {
   }
 
   std::shared_ptr<sql::Connection> m_connection;
-  std::shared_ptr<aws_lambda_cpp::common::logger> m_logger;
+  std::shared_ptr<lambda::logger> m_logger;
 };
 
 }  // namespace client
