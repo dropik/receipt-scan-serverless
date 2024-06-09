@@ -14,6 +14,7 @@
 #include "services/file_service.hpp"
 #include "services/user_service.hpp"
 #include "services/receipt_service.hpp"
+#include "services/category_service.hpp"
 
 namespace api {
 
@@ -58,6 +59,11 @@ struct di<services::user_service> {
 template<>
 struct di<services::receipt_service> {
   static std::unique_ptr<services::receipt_service> get();
+};
+
+template<>
+struct di<services::category_service> {
+  static std::unique_ptr<services::category_service> get();
 };
 
 }

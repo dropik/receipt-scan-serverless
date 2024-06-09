@@ -6,8 +6,6 @@
 #include "rest_api.hpp"
 #include "di.hpp"
 
-#include "services/file_service.hpp"
-
 using namespace api;
 using namespace rest;
 using namespace services;
@@ -69,6 +67,18 @@ api_root api::create_api() {
       });
       receipts.del<guid_t>()([](const guid_t &receipt_id) {
         return di<receipt_service>::get()->delete_receipt(receipt_id);
+      });
+    });
+
+    v1.any("/categories")([](api_resource &categories) {
+      categories.get("/")([]() {
+        return di<category_service>::get()->get_categories();
+      });
+      categories.put<category>("/")([](const auto &request) {
+        return di<category_service>::get()->put_category(request);
+      });
+      categories.del<guid_t>()([](const guid_t &category_id) {
+        return di<category_service>::get()->delete_category(category_id);
       });
     });
   });
