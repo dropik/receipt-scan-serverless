@@ -130,10 +130,10 @@ void handler::process_s3_object(s3_record& record) {
     return;
   }
 
-  std::regex file_regex("users/" GUID_REGEX "/receipts/" GUID_REGEX,
+  std::regex file_regex("users/" GUID_REGEX "/receipts/.*",
                         std::regex_constants::extended);
   if (!std::regex_match(key, file_regex)) {
-    m_logger->error("The key %s does not conform receipt file path structure.",
+    m_logger->info("The key %s does not conform receipt file path structure.",
                     key.c_str());
     return;
   }
@@ -142,9 +142,9 @@ void handler::process_s3_object(s3_record& record) {
   auto users_delimiter = key_parted.find('/');
   guid user_id = key_parted.substr(0, users_delimiter);
   key_parted.erase(0, users_delimiter + 10);
-  guid request_id = key_parted;
+  std::string file_name = key_parted;
 
-  m_logger->info("Processing request %s of user %s", request_id.c_str(),
+  m_logger->info("Processing request %s of user %s", file_name.c_str(),
                  user_id.c_str());
 
   Aws::Textract::Model::S3Object s3_object;
@@ -166,7 +166,7 @@ void handler::process_s3_object(s3_record& record) {
   auto &expense_documents = expense_result.GetExpenseDocuments();
   int extracted_documents = 0;
   for (auto &doc : expense_documents) {
-    if (try_parse_document(doc, user_id, request_id)) {
+    if (try_parse_document(doc, user_id, file_name)) {
       extracted_documents++;
     }
   }
@@ -177,11 +177,11 @@ void handler::process_s3_object(s3_record& record) {
 
 bool handler::try_parse_document(
     const Aws::Textract::Model::ExpenseDocument& document,
-    const guid& user_id, const guid& request_id) {
+    const guid& user_id, const guid& file_name) {
   receipt receipt;
   receipt.id = utils::gen_uuid();
   receipt.user_id = user_id;
-  receipt.request_id = request_id;
+  receipt.file_name = file_name;
   receipt.doc_number = document.GetExpenseIndex();
 
   auto& summary_fields = document.GetSummaryFields();
@@ -253,8 +253,8 @@ bool handler::try_parse_summary_fields(const expense_fields_t& summary_fields,
         m_repository
             ->select<repository::models::receipt>(
                 "select * from receipts r "
-                "where r.request_id = ? and r.doc_number = ?")
-            .with_param(receipt.request_id)
+                "where r.file_name = ? and r.doc_number = ?")
+            .with_param(receipt.file_name)
             .with_param(receipt.doc_number)
             .first_or_default();
 

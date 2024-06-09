@@ -52,7 +52,7 @@ std::vector<receipt_response> receipt_service::get_receipts() {
       }
     }
 
-    rr.file_url = m_file_service->get_download_file_url(r->request_id).url;
+    rr.file_url = m_file_service->get_download_file_url(r->file_name).url;
 
     response.push_back(rr);
   }

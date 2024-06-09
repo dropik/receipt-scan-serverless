@@ -129,47 +129,12 @@ after total_amount;
 alter table receipt_items 
 drop column currency;
 
+# 2024-06-09: convert receipt request_id into file_name
+alter table receipts
+change column request_id file_name varchar(100) not null;
 
+alter table receipts
+drop index ix_request_id_doc_number;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+alter table receipts
+add unique index ix_file_name_doc_number (file_name, doc_number);

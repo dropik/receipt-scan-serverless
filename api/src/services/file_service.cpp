@@ -47,9 +47,9 @@ models::file_response file_service::get_download_file_url(const std::string &nam
 
   auto key = get_key(m_identity.user_id, name);
 
-  std::string presignedUrl = m_s3_client->GeneratePresignedUrlWithSSES3(m_bucket,
-                                                                        key,
-                                                                        Aws::Http::HttpMethod::HTTP_GET);
+  std::string presignedUrl = m_s3_client->GeneratePresignedUrl(m_bucket,
+                                                               key,
+                                                               Aws::Http::HttpMethod::HTTP_GET);
 
   return file_response{presignedUrl};
 }

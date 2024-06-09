@@ -38,7 +38,7 @@ class handler {
 
   bool try_parse_document(const Aws::Textract::Model::ExpenseDocument& document,
                           const repository::models::guid& user_id,
-                          const repository::models::guid& request_id);
+                          const repository::models::guid& file_name);
 
   bool try_parse_summary_fields(const expense_fields_t& summary_fields,
                                 repository::models::receipt& receipt);

@@ -1,8 +1,8 @@
 {
   "body": "{\"name\": \"sadfsdafsa\"}",
   "resource": "/{proxy+}",
-  "path": "/v1/receipts",
-  "httpMethod": "GET",
+  "path": "/v1/user",
+  "httpMethod": "POST",
   "isBase64Encoded": false,
   "pathParameters": {
     "proxy": "/file"
@@ -36,7 +36,7 @@
     },
     "authorizer": {
       "claims": {
-        "sub": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef"
+        "sub": "d394a832-4011-7023-c519-afe3adaf0233"
       }
     },
     "path": "/prod/path/to/resource",

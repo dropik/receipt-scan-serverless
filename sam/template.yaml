@@ -141,6 +141,7 @@ Resources:
               Effect: Allow
               Action:
                 - "s3:PutObject"
+                - "s3:GetObject"
               Resource:
                 - !Sub "arn:aws:s3:::${ImagesBucket}"
                 - !Sub "arn:aws:s3:::${ImagesBucket}/*"
