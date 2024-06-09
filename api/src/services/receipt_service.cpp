@@ -73,15 +73,11 @@ models::receipt_detail receipt_service::get_receipt(const guid_t &receipt_id) {
 }
 
 models::file receipt_service::get_receipt_file(const guid_t &receipt_id) {
-  auto rf = m_repository->select<receipt_file>(
-          "select * from receipt_files where receipt_id = ?")
-      .with_param(receipt_id)
-      .first_or_default();
-  if (!rf) {
+  auto file = try_get_receipt_file(receipt_id);
+  if (!file) {
     throw rest::api_exception(not_found, "Receipt file not found");
   }
-
-  return m_file_service->get_download_file_url(rf->file_name);
+  return m_file_service->get_download_file_url(file->file_name);
 }
 
 void receipt_service::put_receipt(const receipt_detail &rd) {
@@ -115,6 +111,15 @@ void receipt_service::put_receipt(const receipt_detail &rd) {
   }
 }
 
+void receipt_service::delete_receipt(const guid_t &receipt_id) {
+  auto receipt = get_receipt_by_id(receipt_id);
+  auto file = try_get_receipt_file(receipt_id);
+  m_repository->drop(receipt);
+  if (file) {
+    m_file_service->delete_file(file->file_name);
+  }
+}
+
 std::shared_ptr<receipt> receipt_service::get_receipt_by_id(const guid_t &receipt_id) {
   auto receipt = try_get_receipt(receipt_id);
   if (!receipt) {
@@ -128,6 +133,14 @@ std::shared_ptr<repository::models::receipt> receipt_service::try_get_receipt(co
           "select * from receipts where id = ?")
       .with_param(receipt_id)
       .first_or_default();
+}
+
+std::shared_ptr<repository::models::receipt_file> receipt_service::try_get_receipt_file(const guid_t &receipt_id) {
+  auto rf = m_repository->select<receipt_file>(
+          "select * from receipt_files where receipt_id = ?")
+      .with_param(receipt_id)
+      .first_or_default();
+  return rf;
 }
 
 }

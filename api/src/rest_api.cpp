@@ -42,7 +42,9 @@ api_root api::create_api() {
   // Routes
 
   api.any("/v1")([](api_resource &v1) {
-    v1.post("/user")([]() { return di<user_service>::get()->init_user(); });
+    v1.post("/user")([]() {
+      return di<user_service>::get()->init_user();
+    });
 
     v1.any("/files")([](api_resource &files) {
       files.post<upload_file_params>("/")([](const auto &request) {
@@ -51,7 +53,9 @@ api_root api::create_api() {
     });
 
     v1.any("/receipts")([](api_resource &receipts) {
-      receipts.get("/")([]() { return di<receipt_service>::get()->get_receipts(); });
+      receipts.get("/")([]() {
+        return di<receipt_service>::get()->get_receipts();
+      });
       receipts.any<guid_t>()([](const guid_t &receipt_id, api_resource &receipt) {
         receipt.get("/")([receipt_id = std::forward<const guid_t>(receipt_id)]() {
           return di<receipt_service>::get()->get_receipt(receipt_id);
@@ -60,7 +64,12 @@ api_root api::create_api() {
           return di<receipt_service>::get()->get_receipt_file(receipt_id);
         });
       });
-      receipts.put<receipt_detail>("/")([](const auto &request) { return di<receipt_service>::get()->put_receipt(request); });
+      receipts.put<receipt_detail>("/")([](const auto &request) {
+        return di<receipt_service>::get()->put_receipt(request);
+      });
+      receipts.del<guid_t>()([](const guid_t &receipt_id) {
+        return di<receipt_service>::get()->delete_receipt(receipt_id);
+      });
     });
   });
 

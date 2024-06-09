@@ -26,6 +26,7 @@ class receipt_service {
   models::receipt_detail get_receipt(const models::guid_t &receipt_id);
   models::file get_receipt_file(const models::guid_t &receipt_id);
   void put_receipt(const models::receipt_detail &receipt);
+  void delete_receipt(const models::guid_t &receipt_id);
 
  private:
   std::shared_ptr<repository::client> m_repository;
@@ -34,6 +35,7 @@ class receipt_service {
 
   std::shared_ptr<repository::models::receipt> try_get_receipt(const models::guid_t &receipt_id);
   std::shared_ptr<repository::models::receipt> get_receipt_by_id(const models::guid_t &receipt_id);
+  std::shared_ptr<repository::models::receipt_file> try_get_receipt_file(const models::guid_t &receipt_id);
 };
 
 }

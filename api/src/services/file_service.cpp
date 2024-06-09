@@ -2,6 +2,8 @@
 // Created by Daniil Ryzhkov on 04/06/2024.
 //
 
+#include <aws/s3/model/DeleteObjectRequest.h>
+
 #include "file_service.hpp"
 #include "rest/api_exception.hpp"
 #include "../api_errors.h"
@@ -52,6 +54,22 @@ models::file file_service::get_download_file_url(const std::string &name) {
                                                                Aws::Http::HttpMethod::HTTP_GET);
 
   return file{presignedUrl};
+}
+
+void file_service::delete_file(const std::string &name) {
+  if (name.empty()) {
+    throw rest::api_exception(invalid_argument, "Name is required");
+  }
+
+  auto key = get_key(m_identity.user_id, name);
+
+  Aws::S3::Model::DeleteObjectRequest request;
+  request.WithBucket(m_bucket.c_str()).WithKey(key.c_str());
+
+  auto outcome = m_s3_client->DeleteObject(request);
+  if (!outcome.IsSuccess()) {
+    throw std::runtime_error(outcome.GetError().GetMessage());
+  }
 }
 
 }

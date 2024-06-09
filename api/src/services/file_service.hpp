@@ -23,6 +23,7 @@ class file_service {
 
   models::file get_upload_file_url(const models::upload_file_params &request);
   models::file get_download_file_url(const std::string &name);
+  void delete_file(const std::string &name);
 
  private:
   std::shared_ptr<Aws::S3::S3Client> m_s3_client;

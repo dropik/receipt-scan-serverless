@@ -105,6 +105,11 @@ class client {
   }
 
   template<typename T>
+  void drop(const std::shared_ptr<T> &entity) {
+    drop<T>(entity->id);
+  }
+
+  template<typename T>
   selector<T> select(const std::string &query) {
     auto &configuration = get_configuration<T>();
     m_logger->info("Executing query: %s", query.c_str());
