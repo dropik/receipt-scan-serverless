@@ -7,7 +7,7 @@
 #include <aws/s3/S3Client.h>
 #include "repository/client.hpp"
 #include "../models/identity.hpp"
-#include "../models/receipt_response.hpp"
+#include "../models/receipt_detail.hpp"
 #include "file_service.hpp"
 
 namespace api {
@@ -19,7 +19,8 @@ class receipt_service {
                   models::identity identity,
                   std::shared_ptr<file_service> file_service);
 
-  std::vector<models::receipt_response> get_receipts();
+  std::vector<models::receipt_detail> get_receipts();
+  models::file get_receipt_file(const models::guid_t &receipt_id);
 
  private:
   std::shared_ptr<repository::client> m_repository;

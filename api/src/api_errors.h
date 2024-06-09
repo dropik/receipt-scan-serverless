@@ -4,5 +4,5 @@
 
 #pragma once
 
-extern const int invalid_argument = 1;
-extern const int not_found = 2;
+constexpr int invalid_argument = 1;
+constexpr int not_found = 2;

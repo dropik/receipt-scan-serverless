@@ -26,7 +26,7 @@ file_service::file_service(std::shared_ptr<Aws::S3::S3Client> s3_client,
     m_repository(std::move(repository)),
     m_identity(identity) {}
 
-file_response file_service::get_upload_file_url(const upload_file_params &params) {
+file file_service::get_upload_file_url(const upload_file_params &params) {
   if (params.name.empty()) {
     throw rest::api_exception(invalid_argument, "Name is required");
   }
@@ -37,10 +37,10 @@ file_response file_service::get_upload_file_url(const upload_file_params &params
                                                                         key,
                                                                         Aws::Http::HttpMethod::HTTP_PUT);
 
-  return file_response{presignedUrl};
+  return file{presignedUrl};
 }
 
-models::file_response file_service::get_download_file_url(const std::string &name) {
+models::file file_service::get_download_file_url(const std::string &name) {
   if (name.empty()) {
     throw rest::api_exception(invalid_argument, "Name is required");
   }
@@ -51,7 +51,7 @@ models::file_response file_service::get_download_file_url(const std::string &nam
                                                                key,
                                                                Aws::Http::HttpMethod::HTTP_GET);
 
-  return file_response{presignedUrl};
+  return file{presignedUrl};
 }
 
 }
