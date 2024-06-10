@@ -26,6 +26,14 @@ std::vector<receipt_list_item> receipt_service::get_receipts() {
       .with_param(m_identity.user_id)
       .all();
 
+  auto receipt_items = m_repository->select<receipt_item>(
+          "select * from receipt_items ri "
+          "join receipts r on r.id = ri.receipt_id "
+          "where r.user_id = ? "
+          "order by r.date desc, ri.sort_order asc, ri.amount desc")
+      .with_param(m_identity.user_id)
+      .all();
+
   std::vector<receipt_list_item> response;
   for (const auto &r : *receipts) {
     receipt_list_item item;
@@ -34,7 +42,23 @@ std::vector<receipt_list_item> receipt_service::get_receipts() {
     item.total_amount = r->total_amount;
     item.currency = r->currency;
     item.store_name = r->store_name;
+
     item.category = r->category;
+    if (item.category.empty()) {
+      std::set<std::string> categories;
+      for (const auto &ri : *receipt_items) {
+        if (ri->receipt_id == r->id) {
+          categories.insert(ri->category);
+        }
+      }
+      for (const auto &c : categories) {
+        if (!item.category.empty()) {
+          item.category += ", ";
+        }
+        item.category += c;
+      }
+    }
+
     item.state = r->state;
     response.push_back(item);
   }
@@ -59,7 +83,21 @@ models::receipt_detail receipt_service::get_receipt(const guid_t &receipt_id) {
   rr.total_amount = receipt->total_amount;
   rr.currency = receipt->currency;
   rr.store_name = receipt->store_name;
+
   rr.category = receipt->category;
+  if (rr.category.empty()) {
+    std::set<std::string> categories;
+    for (const auto &ri : *receipt_items) {
+      categories.insert(ri->category);
+    }
+    for (const auto &c : categories) {
+      if (!rr.category.empty()) {
+        rr.category += ", ";
+      }
+      rr.category += c;
+    }
+  }
+
   rr.state = receipt->state;
 
   for (const auto &ri : *receipt_items) {
@@ -90,7 +128,12 @@ void receipt_service::put_receipt(const receipt_put_params &params) {
   r.total_amount = params.total_amount;
   r.currency = params.currency;
   r.store_name = params.store_name;
+
   r.category = params.category;
+  if (!params.items.empty() && !params.category.empty()) {
+    throw rest::api_exception(invalid_argument, "Category should be empty if items are provided");
+  }
+
   r.state = receipt_state::done;
 
   auto existing_receipt = try_get_receipt(params.id);
