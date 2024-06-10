@@ -10,6 +10,7 @@
 #include "../models/identity.hpp"
 #include "../models/receipt_detail.hpp"
 #include "../models/receipt_list_item.hpp"
+#include "../models/receipt_put_params.hpp"
 
 #include "file_service.hpp"
 
@@ -25,7 +26,7 @@ class receipt_service {
   std::vector<models::receipt_list_item> get_receipts();
   models::receipt_detail get_receipt(const models::guid_t &receipt_id);
   models::file get_receipt_file(const models::guid_t &receipt_id);
-  void put_receipt(const models::receipt_detail &receipt);
+  void put_receipt(const models::receipt_put_params &params);
   void delete_receipt(const models::guid_t &receipt_id);
 
  private:

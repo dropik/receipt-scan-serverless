@@ -35,6 +35,7 @@ struct receipt_detail {
   std::string currency;
   std::string store_name;
   std::string category;
+  std::string state;
   std::vector<receipt_item_detail> items;
 
   JSON_BEGIN_SERIALIZER(receipt_detail)
@@ -44,6 +45,7 @@ struct receipt_detail {
       JSON_PROPERTY("currency", currency)
       JSON_PROPERTY("storeName", store_name)
       JSON_PROPERTY("category", category)
+      JSON_PROPERTY("state", state)
       JSON_PROPERTY("items", items)
   JSON_END_SERIALIZER()
 };

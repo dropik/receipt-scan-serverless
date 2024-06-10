@@ -164,3 +164,7 @@ create table receipt_files (
 
   constraint ch_file_name_not_empty check(file_name is null or length(file_name) > 0)
 );
+
+# 2024-06-10: add state to receipts
+alter table receipts
+add column state enum('processing', 'done') not null default 'processing';

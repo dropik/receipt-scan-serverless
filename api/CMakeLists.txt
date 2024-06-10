@@ -28,6 +28,7 @@ add_executable(${FUNCTION_NAME}
     src/services/category_service.cpp
     src/services/category_service.hpp
     src/models/category.hpp
+    src/models/receipt_put_params.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

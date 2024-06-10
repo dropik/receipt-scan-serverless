@@ -35,6 +35,7 @@ std::vector<receipt_list_item> receipt_service::get_receipts() {
     item.currency = r->currency;
     item.store_name = r->store_name;
     item.category = r->category;
+    item.state = r->state;
     response.push_back(item);
   }
 
@@ -59,6 +60,7 @@ models::receipt_detail receipt_service::get_receipt(const guid_t &receipt_id) {
   rr.currency = receipt->currency;
   rr.store_name = receipt->store_name;
   rr.category = receipt->category;
+  rr.state = receipt->state;
 
   for (const auto &ri : *receipt_items) {
     receipt_item_detail rir;
@@ -80,26 +82,30 @@ models::file receipt_service::get_receipt_file(const guid_t &receipt_id) {
   return m_file_service->get_download_file_url(file->file_name);
 }
 
-void receipt_service::put_receipt(const receipt_detail &rd) {
+void receipt_service::put_receipt(const receipt_put_params &params) {
   receipt r;
-  r.id = rd.id;
+  r.id = params.id;
   r.user_id = m_identity.user_id;
-  r.date = rd.date;
-  r.total_amount = rd.total_amount;
-  r.currency = rd.currency;
-  r.store_name = rd.store_name;
-  r.category = rd.category;
+  r.date = params.date;
+  r.total_amount = params.total_amount;
+  r.currency = params.currency;
+  r.store_name = params.store_name;
+  r.category = params.category;
+  r.state = receipt_state::done;
 
-  auto existing_receipt = try_get_receipt(rd.id);
+  auto existing_receipt = try_get_receipt(params.id);
   if (!existing_receipt) {
     m_repository->create(r);
   } else {
+    if (existing_receipt->state == receipt_state::processing) {
+      throw rest::api_exception(forbidden, "Receipt is being processed");
+    }
     m_repository->update(r);
     m_repository->execute("delete from receipt_items where receipt_id = ?").with_param(r.id).go();
   }
 
-  for (int i = 0; i < rd.items.size(); i++) {
-    const auto &ri = rd.items[i];
+  for (int i = 0; i < params.items.size(); i++) {
+    const auto &ri = params.items[i];
     receipt_item rii;
     rii.id = ri.id;
     rii.receipt_id = r.id;

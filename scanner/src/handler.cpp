@@ -181,17 +181,20 @@ bool handler::try_parse_document(
   receipt receipt;
   receipt.id = utils::gen_uuid();
   receipt.user_id = user_id;
+  receipt.state = receipt_state::processing;
 
-  auto& summary_fields = document.GetSummaryFields();
+  auto &summary_fields = document.GetSummaryFields();
   if (!try_parse_summary_fields(summary_fields, receipt, file_name, document.GetExpenseIndex())) {
     return false;
   }
 
-  auto& item_groups = document.GetLineItemGroups();
+  auto &item_groups = document.GetLineItemGroups();
   std::vector<receipt_item> receipt_items;
   try_parse_items(item_groups, receipt.id, receipt_items);
 
   try_assign_categories(receipt, receipt_items);
+
+  mark_as_done(receipt);
 
   return true;
 }
@@ -493,6 +496,16 @@ void handler::try_assign_categories(receipt& receipt,
   }
 }
 
+void handler::mark_as_done(receipt &receipt) {
+  receipt.state = receipt_state::done;
+  try {
+    m_repository->update(receipt);
+  } catch (std::exception &e) {
+    m_logger->error("Error occurred while marking receipt as done: %s",
+                    e.what());
+  }
+}
+
 bool handler::try_parse_date(std::string& result, const std::string& input) {
   bool parsed = false;
   std::time_t now = std::time(nullptr);
@@ -586,3 +599,4 @@ const std::string & handler::try_get_currency(const Aws::Textract::Model::Expens
     return default_currency;
   }
 }
+

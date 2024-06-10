@@ -54,6 +54,7 @@ class handler {
   const std::string &try_get_currency(const Aws::Textract::Model::ExpenseField &field) const;
   void try_assign_categories(repository::models::receipt &receipt,
                              std::vector<repository::models::receipt_item> &items);
+  void mark_as_done(repository::models::receipt &receipt);
 };
 
 }  // namespace scanner

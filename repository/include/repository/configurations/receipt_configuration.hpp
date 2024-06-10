@@ -23,6 +23,7 @@ class repository_configuration<models::receipt>
     HAS_STRING(currency) WITH_COLUMN("currency");
     HAS_STRING(store_name) WITH_COLUMN("store_name");
     HAS_STRING(category) WITH_COLUMN("category");
+    HAS_STRING(state) WITH_COLUMN("state");
   }
 };
 

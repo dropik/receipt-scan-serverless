@@ -62,7 +62,7 @@ api_root api::create_api() {
           return di<receipt_service>::get()->get_receipt_file(receipt_id);
         });
       });
-      receipts.put<receipt_detail>("/")([](const auto &request) {
+      receipts.put<receipt_put_params>("/")([](const auto &request) {
         return di<receipt_service>::get()->put_receipt(request);
       });
       receipts.del<guid_t>()([](const guid_t &receipt_id) {
