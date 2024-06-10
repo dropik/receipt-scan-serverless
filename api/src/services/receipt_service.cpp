@@ -2,13 +2,15 @@
 // Created by Daniil Ryzhkov on 08/06/2024.
 //
 
+#include <utility>
+#include <lambda/string_utils.hpp>
+
 #include "receipt_service.hpp"
 #include "rest/api_exception.hpp"
 #include "../api_errors.h"
 
-#include <utility>
-
 using namespace api::models;
+using namespace lambda;
 using namespace repository::models;
 
 namespace api {
@@ -51,12 +53,7 @@ std::vector<receipt_list_item> receipt_service::get_receipts() {
           categories.insert(ri->category);
         }
       }
-      for (const auto &c : categories) {
-        if (!item.category.empty()) {
-          item.category += ", ";
-        }
-        item.category += c;
-      }
+      item.category = string::join(", ", categories);
     }
 
     item.state = r->state;
@@ -90,12 +87,7 @@ models::receipt_detail receipt_service::get_receipt(const guid_t &receipt_id) {
     for (const auto &ri : *receipt_items) {
       categories.insert(ri->category);
     }
-    for (const auto &c : categories) {
-      if (!rr.category.empty()) {
-        rr.category += ", ";
-      }
-      rr.category += c;
-    }
+    rr.category = string::join(", ", categories);
   }
 
   rr.state = receipt->state;
