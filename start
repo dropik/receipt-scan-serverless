@@ -1,4 +1,0 @@
-#!/bin/bash
-set -e
-sam build
-sudo sam local start-api --host 0.0.0.0

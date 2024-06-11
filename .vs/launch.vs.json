@@ -1,0 +1,62 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "cppdbg",
+      "name": "api",
+      "project": "CMakeLists.txt",
+      "projectTarget": "api",
+      "program": "out\\build\\Linux-GCC-Debug\\api",
+      "MIMode": "gdb",
+      "externalConsole": true,
+      "remoteMachineName": "${defaultRemoteMachineName}",
+      "pipeTransport": {
+        "disable": true
+      },
+      "launchCompleteCommand": "None",
+      "miDebuggerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\gdb\\gdb-multiarch\\gdb-multiarch.exe",
+      "miDebuggerServerAddress": "127.0.0.1:1234",
+      "setupCommands": [
+        {
+          "text": "set architecture aarch64"
+        },
+        {
+          "text": "set sysroot /usr/sysroots/amazonlinux2-arm64"
+        },
+        {
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "type": "cppdbg",
+      "name": "scanner",
+      "project": "CMakeLists.txt",
+      "projectTarget": "scanner",
+      "program": "out\\build\\Linux-GCC-Debug\\scanner",
+      "MIMode": "gdb",
+      "externalConsole": true,
+      "remoteMachineName": "${defaultRemoteMachineName}",
+      "pipeTransport": {
+        "disable": true
+      },
+      "launchCompleteCommand": "None",
+      "miDebuggerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\VC\\Linux\\bin\\gdb\\gdb-multiarch\\gdb-multiarch.exe",
+      "miDebuggerServerAddress": "127.0.0.1:1234",
+      "setupCommands": [
+        {
+          "text": "set architecture aarch64"
+        },
+        {
+          "text": "set sysroot /usr/sysroots/amazonlinux2-arm64"
+        },
+        {
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
