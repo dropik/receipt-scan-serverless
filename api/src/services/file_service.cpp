@@ -6,7 +6,7 @@
 
 #include "file_service.hpp"
 #include "rest/api_exception.hpp"
-#include "../api_errors.h"
+#include "../api_errors.hpp"
 
 #include <utility>
 
