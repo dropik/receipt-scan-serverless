@@ -15,7 +15,7 @@ add_executable(${FUNCTION_NAME}
     src/rest_api.cpp
     src/services/file_service.cpp
     src/services/file_service.hpp
-    src/api_errors.h
+    src/api_errors.hpp
     src/models/identity.hpp
     src/models/identity.cpp
     src/services/user_service.cpp

@@ -3,7 +3,7 @@
 //
 
 #include "category_service.hpp"
-#include "../api_errors.h"
+#include "../api_errors.hpp"
 #include "rest/api_exception.hpp"
 
 using namespace api::models;
@@ -41,6 +41,9 @@ void category_service::put_category(const models::category &category) {
   auto existing = try_get_category(c.id);
 
   if (existing) {
+    if (existing->user_id != m_identity.user_id) {
+      throw rest::api_exception(forbidden, "Access denied");
+    }
     m_repository->update(c);
   } else {
     m_repository->create(c);
