@@ -7,7 +7,7 @@
 
 #include "receipt_service.hpp"
 #include "rest/api_exception.hpp"
-#include "../api_errors.h"
+#include "../api_errors.hpp"
 
 using namespace api::models;
 using namespace lambda;
@@ -132,6 +132,9 @@ void receipt_service::put_receipt(const receipt_put_params &params) {
   if (!existing_receipt) {
     m_repository->create(r);
   } else {
+    if (existing_receipt->user_id != m_identity.user_id) {
+      throw rest::api_exception(forbidden, "Access denied");
+    }
     if (existing_receipt->state == receipt_state::processing) {
       throw rest::api_exception(forbidden, "Receipt is being processed");
     }
@@ -163,7 +166,7 @@ void receipt_service::delete_receipt(const guid_t &receipt_id) {
 
 std::shared_ptr<receipt> receipt_service::get_receipt_by_id(const guid_t &receipt_id) {
   auto receipt = try_get_receipt(receipt_id);
-  if (!receipt) {
+  if (!receipt || receipt->user_id != m_identity.user_id) {
     throw rest::api_exception(not_found, "Receipt not found");
   }
   return receipt;

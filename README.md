@@ -15,35 +15,37 @@ This is a serverless application that uses AWS Lambda, S3, and Textract to scan 
 Even though deployment uses SAM CLI, the build process is managed by CMake. So you first build the project using CMake which generates deployment template and artifacts and then deploy the project using SAM CLI.
 1. Make sure you have CMake, AWS CLI and SAM CLI installed.
 2. Make sure you have a valid toolchain for compiling against AWS ARM64 Lambda runtime.
-3. Create a build directory
+3. Make sure you have MySQL database setup.
+4. Make sure you have Cognito User Pool setup.
+5. Create a build directory
 ```bash
 mkdir out
 cd out
 ```
-4. Run CMake, replace `<path-to-aws-toolchain-file>` with the path to the toolchain file.
+6. Run CMake, replace `<path-to-aws-toolchain-file>` with the path to the toolchain file.
 ```bash
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=<path-to-aws-toolchain-file>
 ```
-5. Build the project
+7. Build the project
 ```bash
 cmake --build .
 ```
-6. Deploy the project, replace `<stage>` with the stage you want to deploy to.
+8. Deploy the project, replace `<stage>` with the stage you want to deploy to. Provide cognito user pool arn to connect API gateway to cognito.
 ```bash
-./deploy <stage>
+./deploy <stage> --parameter-overrides CognitoUserPool=<cognito-user-pool-arn>
 ```
-7. Setup database. Execute all the scripts in `database` directory in MySQL database.
-8. Bedrock model does not make part of cloudformation stack. You need to deploy it manually. This project uses `Claude Instant 1.2` model.
-9. Configure connection to MySQL database in Systems Manager Parameter Store. Create a parameter with name `/receipt-scan/<stage>/db-connection-string` and value as connection string to MySQL database.
+9. Setup database. Execute all the scripts in `database` directory in MySQL database.
+10. Bedrock model does not make part of cloudformation stack. You need to deploy it manually. This project uses `Claude Instant 1.2` model.
+11. Configure connection to MySQL database in Systems Manager Parameter Store. Create a parameter with name `/receipt-scan/<stage>/db-connection-string` and value as connection string to MySQL database.
 
 ## Authenticating with API
-1. Navigate to the created Cognito User Pool in AWS Console.
+1. Navigate to your Cognito User Pool in AWS Console.
 2. Create a new user.
 3. Go to `App Integration`.
 4. Find your `Cognito domain`. This is the domain you will use to authenticate with the API.
 5. Navigate to `App clients` and find the `Client id` of `receipt-scan-<stage>-user-pool-client`. This is the default user pool client created by the project.
-6. Browse url `https://<cognito-domain>/login?response_type=code&client_id=<client-id>&redirect_uri=https://localhost:4200`. Replace `<cognito-domain>` and `<client-id>` with your values. After successful login you will be redirected to the indicated page with a `code` in the url.
-7. With postman or curl or any other tool, make a POST request to `https://<cognito-domain>/oauth2/token` with `x-www-form-urlencoded` body providing values `grant_type=authorization_code`, `client_id=<client-id>`, `code=<code>` and `redirect_uri=https://localhost:4200`. Replace `<client-id>` and `<code>` with your values. The endpoint will exchange the code for an `access_token`.
+6. Browse url `https://<cognito-domain>/login?response_type=code&client_id=<client-id>&redirect_uri=<your-redirect-uri>`. Replace `<cognito-domain>`, `<client-id>` and <redirect-uri> with your values. After successful login you will be redirected to the indicated page with a `code` in the url.
+7. With postman or curl or any other tool, make a POST request to `https://<cognito-domain>/oauth2/token` with `x-www-form-urlencoded` body providing values `grant_type=authorization_code`, `client_id=<client-id>`, `code=<code>` and `redirect_uri=<redirect-uri>`. Replace `<client-id>`, `<code>` and <redirect-uri> with your values. The endpoint will exchange the code for an `access_token`.
 8. Now to make requests to the application API you need to provide the `access_token` in the `Authorization` header (without `Bearer`).
 
 ## API
