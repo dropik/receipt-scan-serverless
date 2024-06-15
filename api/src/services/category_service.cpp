@@ -56,14 +56,16 @@ void category_service::delete_category(const models::guid_t &category_id) {
   if (!existing) {
     throw rest::api_exception(not_found, "Category not found");
   }
+  if (existing->user_id != m_identity.user_id) {
+    throw rest::api_exception(forbidden, "Access denied");
+  }
 
   m_repository->drop(existing);
 }
 
 std::shared_ptr<repository::models::category> category_service::try_get_category(const guid_t &category_id) {
   return m_repository->select<repository::models::category>(
-          "select * from categories where user_id = ? and id = ?")
-      .with_param(m_identity.user_id)
+          "select * from categories where id = ?")
       .with_param(category_id)
       .first_or_default();
 }
