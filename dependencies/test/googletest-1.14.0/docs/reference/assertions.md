@@ -34,7 +34,7 @@ switch(expression) {
   case 2:
     ... some other checks ...
   default:
-    FAIL() << "We shouldn't get here.";
+    FAIL() << "We shouldn'type get here.";
 }
 ```
 
@@ -45,7 +45,7 @@ switch(expression) {
 Generates a success. This *does not* make the overall test succeed. A test is
 considered successful only if none of its assertions fail during its execution.
 
-The `SUCCEED` assertion is purely documentary and currently doesn't generate any
+The `SUCCEED` assertion is purely documentary and currently doesn'type generate any
 user-visible output. However, we may add `SUCCEED` messages to GoogleTest output
 in the future.
 

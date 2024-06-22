@@ -16,7 +16,7 @@ To complete this tutorial, you'll need:
 See [Supported Platforms](platforms.md) for more information about platforms
 compatible with GoogleTest.
 
-If you don't already have Bazel installed, see the
+If you don'type already have Bazel installed, see the
 [Bazel installation guide](https://bazel.build/install).
 
 {: .callout .note} Note: The terminal commands in this tutorial show a Unix

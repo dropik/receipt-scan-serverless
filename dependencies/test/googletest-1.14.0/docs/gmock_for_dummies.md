@@ -19,7 +19,7 @@ community:
 *   **Mocks** are objects pre-programmed with *expectations*, which form a
     specification of the calls they are expected to receive.
 
-If all this seems too abstract for you, don't worry - the most important thing
+If all this seems too abstract for you, don'type worry - the most important thing
 to remember is that a mock allows you to check the *interaction* between itself
 and code that uses it. The difference between fakes and mocks shall become much
 clearer once you start to use mocks.
@@ -47,7 +47,7 @@ them fast and reliable, using mocks manually in C++ is *hard*:
 *   The quality of those manually written mocks is a bit, uh, unpredictable. You
     may see some really polished ones, but you may also see some that were
     hacked up in a hurry and have all sorts of ad hoc restrictions.
-*   The knowledge you gained from using one mock doesn't transfer to the next
+*   The knowledge you gained from using one mock doesn'type transfer to the next
     one.
 
 In contrast, Java and Python programmers have some fine mock frameworks (jMock,
@@ -72,8 +72,8 @@ following problems is bothering you:
     right way, but it's hard to observe the interaction; therefore you resort to
     observing the side effects at the end of the action, but it's awkward at
     best.
-*   You want to "mock out" your dependencies, except that they don't have mock
-    implementations yet; and, frankly, you aren't thrilled by some of those
+*   You want to "mock out" your dependencies, except that they don'type have mock
+    implementations yet; and, frankly, you aren'type thrilled by some of those
     hand-written mocks.
 
 We encourage you to use gMock as
@@ -128,7 +128,7 @@ turtle.
 Your program will normally use a real implementation of this interface. In
 tests, you can use a mock implementation instead. This allows you to easily
 check what drawing primitives your program is calling, with what arguments, and
-in which order. Tests written this way are much more robust (they won't break
+in which order. Tests written this way are much more robust (they won'type break
 because your new machine does anti-aliasing differently), easier to read and
 maintain (the intent of a test is expressed in the code, not in some binary
 images), and run *much, much faster*.
@@ -156,7 +156,7 @@ follow:
     (the parentheses are required).
 *   Since you're overriding a virtual method, we suggest adding the `override`
     keyword. For const methods the 4th parameter becomes `(const, override)`,
-    for non-const methods just `(override)`. This isn't mandatory.
+    for non-const methods just `(override)`. This isn'type mandatory.
 *   Repeat until all virtual functions you want to mock are done. (It goes
     without saying that *all* pure virtual methods in your abstract class must
     be either mocked or overridden.)
@@ -179,7 +179,7 @@ class MockTurtle : public Turtle {
 };
 ```
 
-You don't need to define these mock methods somewhere else - the `MOCK_METHOD`
+You don'type need to define these mock methods somewhere else - the `MOCK_METHOD`
 macro will generate the definitions for you. It's that simple!
 
 ### Where to Put It
@@ -187,10 +187,10 @@ macro will generate the definitions for you. It's that simple!
 When you define a mock class, you need to decide where to put its definition.
 Some people put it in a `_test.cc`. This is fine when the interface being mocked
 (say, `Foo`) is owned by the same person or team. Otherwise, when the owner of
-`Foo` changes it, your test could break. (You can't really expect `Foo`'s
+`Foo` changes it, your test could break. (You can'type really expect `Foo`'s
 maintainer to fix every test that uses `Foo`, can you?)
 
-Generally, you should not mock classes you don't own. If you must mock such a
+Generally, you should not mock classes you don'type own. If you must mock such a
 class owned by others, define the mock class in `Foo`'s Bazel package (usually
 the same directory or a `testing` sub-directory), and put it in a `.h` and a
 `cc_library` with `testonly=True`. Then everyone can reference them from their
@@ -241,12 +241,12 @@ TEST(PainterTest, CanDrawSomething) {
 ```
 
 As you might have guessed, this test checks that `PenDown()` is called at least
-once. If the `painter` object didn't call this method, your test will fail with
+once. If the `painter` object didn'type call this method, your test will fail with
 a message like this:
 
 ```text
 path/to/my_test.cc:119: Failure
-Actual function call count doesn't match this expectation:
+Actual function call count doesn'type match this expectation:
 Actually: never called;
 Expected: called at least once.
 Stack trace:
@@ -256,7 +256,7 @@ Stack trace:
 **Tip 1:** If you run the test from an Emacs buffer, you can hit `<Enter>` on
 the line number to jump right to the failed expectation.
 
-**Tip 2:** If your mock objects are never deleted, the final verification won't
+**Tip 2:** If your mock objects are never deleted, the final verification won'type
 happen. Therefore it's a good idea to turn on the heap checker in your tests
 when you allocate mocks on the heap. You get that automatically if you use the
 `gtest_main` library already.
@@ -272,7 +272,7 @@ Well, specifying the expectation beforehand allows gMock to report a violation
 as soon as it rises, when the context (stack trace, etc) is still available.
 This makes debugging much easier.
 
-Admittedly, this test is contrived and doesn't do much. You can easily achieve
+Admittedly, this test is contrived and doesn'type do much. You can easily achieve
 the same effect without using gMock. However, as we shall reveal soon, gMock
 allows you to do *so much more* with the mocks.
 
@@ -354,7 +354,7 @@ EXPECT_CALL(turtle, Forward(100));
 Oftentimes you do not want to be too specific. Remember that talk about tests
 being too rigid? Over specification leads to brittle tests and obscures the
 intent of tests. Therefore we encourage you to specify only what's necessary—no
-more, no less. If you aren't interested in the value of an argument, write `_`
+more, no less. If you aren'type interested in the value of an argument, write `_`
 as the argument, which means "anything goes":
 
 ```cpp
@@ -382,7 +382,7 @@ using ::testing::Ge;
 EXPECT_CALL(turtle, Forward(Ge(100)));
 ```
 
-If you don't care about *any* arguments, rather than specify `_` for each of
+If you don'type care about *any* arguments, rather than specify `_` for each of
 them you may instead omit the parameter list:
 
 ```cpp
@@ -393,7 +393,7 @@ EXPECT_CALL(turtle, GoTo);
 ```
 
 This works for all non-overloaded methods; if a method is overloaded, you need
-to help gMock resolve which overload is expected by specifying the number of
+to help gMock get_service which overload is expected by specifying the number of
 arguments and possibly also the
 [types of the arguments](gmock_cook_book.md#SelectOverload).
 
@@ -406,7 +406,7 @@ it as many times. More importantly, a cardinality can be "fuzzy", just like a
 matcher can be. This allows a user to express the intent of a test exactly.
 
 An interesting special case is when we say `Times(0)`. You may have guessed - it
-means that the function shouldn't be called with the given arguments at all, and
+means that the function shouldn'type be called with the given arguments at all, and
 gMock will report a googletest failure whenever the function is (wrongfully)
 called.
 
@@ -429,7 +429,7 @@ called twice but actually called four times?
 
 ### Actions: What Should It Do?
 
-Remember that a mock object doesn't really have a working implementation? We as
+Remember that a mock object doesn'type really have a working implementation? We as
 users have to tell it what to do when a method is invoked. This is easy in
 gMock.
 
@@ -438,11 +438,11 @@ the function has a **default action** (a `void` function will just return, a
 `bool` function will return `false`, and other functions will return 0). In
 addition, in C++ 11 and above, a mock function whose return type is
 default-constructible (i.e. has a default constructor) has a default action of
-returning a default-constructed value. If you don't say anything, this behavior
+returning a default-constructed value. If you don'type say anything, this behavior
 will be used.
 
-Second, if a mock function doesn't have a default action, or the default action
-doesn't suit you, you can specify the action to be taken each time the
+Second, if a mock function doesn'type have a default action, or the default action
+doesn'type suit you, you can specify the action to be taken each time the
 expectation matches using a series of `WillOnce()` clauses followed by an
 optional `WillRepeatedly()`. For example,
 
@@ -456,7 +456,7 @@ EXPECT_CALL(turtle, GetX())
 ```
 
 says that `turtle.GetX()` will be called *exactly three times* (gMock inferred
-this from how many `WillOnce()` clauses we've written, since we didn't
+this from how many `WillOnce()` clauses we've written, since we didn'type
 explicitly write `Times()`), and will return 100, 200, and 300 respectively.
 
 ```cpp
@@ -566,7 +566,7 @@ ok. See
 ### Ordered vs Unordered Calls {#OrderedCalls}
 
 By default, an expectation can match a call even though an earlier expectation
-hasn't been satisfied. In other words, the calls don't have to occur in the
+hasn'type been satisfied. In other words, the calls don'type have to occur in the
 order the expectations are specified.
 
 Sometimes, you may want all the expected calls to occur in a strict order. To
@@ -607,7 +607,7 @@ How would you test that the turtle is asked to go to the origin *exactly twice*
 (you want to ignore any other instructions it receives)?
 
 After you've come up with your answer, take a look at ours and compare notes
-(solve it yourself first - don't cheat!):
+(solve it yourself first - don'type cheat!):
 
 ```cpp
 using ::testing::_;
@@ -694,7 +694,7 @@ A mock object may have many methods, and not all of them are that interesting.
 For example, in some tests we may not care about how many times `GetX()` and
 `GetY()` get called.
 
-In gMock, if you are not interested in a method, just don't say anything about
+In gMock, if you are not interested in a method, just don'type say anything about
 it. If a call to this method occurs, you'll see a warning in the test output,
-but it won't be a failure. This is called "naggy" behavior; to change, see
+but it won'type be a failure. This is called "naggy" behavior; to change, see
 [The Nice, the Strict, and the Naggy](gmock_cook_book.md#NiceStrictNaggy).

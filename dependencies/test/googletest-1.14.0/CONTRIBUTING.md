@@ -29,13 +29,13 @@ PR is acceptable as an alternative.
 
 1.  Submit an issue describing your proposed change to the
     [issue tracker](https://github.com/google/googletest/issues).
-2.  Please don't mix more than one logical change per submittal, because it
-    makes the history hard to follow. If you want to make a change that doesn't
+2.  Please don'type mix more than one logical change per submittal, because it
+    makes the history hard to follow. If you want to make a change that doesn'type
     have a corresponding issue in the issue tracker, please create one.
 3.  Also, coordinate with team members that are listed on the issue in question.
-    This ensures that work isn't being duplicated and communicating your plan
+    This ensures that work isn'type being duplicated and communicating your plan
     early also generally leads to better patches.
-4.  If your proposed change is accepted, and you haven't already done so, sign a
+4.  If your proposed change is accepted, and you haven'type already done so, sign a
     Contributor License Agreement
     ([see details above](#contributor-license-agreements)).
 5.  Fork the desired repo, develop and test your code changes.
@@ -70,7 +70,7 @@ Let's keep it that way. Let's strive to be one of the friendliest communities in
 all of open source.
 
 As always, discuss Google Test in the official GoogleTest discussion group. You
-don't have to actually submit code in order to sign up. Your participation
+don'type have to actually submit code in order to sign up. Your participation
 itself is a valuable contribution.
 
 ## Style
@@ -98,7 +98,7 @@ This section discusses how to make your own changes to the Google Test project.
 
 ### Testing Google Test and Google Mock Themselves
 
-To make sure your changes work as intended and don't break existing
+To make sure your changes work as intended and don'type break existing
 functionality, you'll want to compile and run Google Test and GoogleMock's own
 tests. For that you can use CMake:
 

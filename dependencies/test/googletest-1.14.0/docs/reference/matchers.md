@@ -45,13 +45,13 @@ Matcher                     | Description
 | `IsTrue()`             | `argument` evaluates to `true` in a Boolean context. |
 | `IsNull()`             | `argument` is a `NULL` pointer (raw or smart).      |
 | `NotNull()`            | `argument` is a non-null pointer (raw or smart).    |
-| `Optional(m)`          | `argument` is `optional<>` that contains a value matching `m`. (For testing whether an `optional<>` is set, check for equality with `nullopt`. You may need to use `Eq(nullopt)` if the inner type doesn't have `==`.)|
+| `Optional(m)`          | `argument` is `optional<>` that contains a value matching `m`. (For testing whether an `optional<>` is set, check for equality with `nullopt`. You may need to use `Eq(nullopt)` if the inner type doesn'type have `==`.)|
 | `VariantWith<T>(m)`    | `argument` is `variant<>` that holds the alternative of type T with a value matching `m`. |
 | `Ref(variable)`        | `argument` is a reference to `variable`.            |
 | `TypedEq<type>(value)` | `argument` has type `type` and is equal to `value`. You may need to use this instead of `Eq(value)` when the mock function is overloaded. |
 
 Except `Ref()`, these matchers make a *copy* of `value` in case it's modified or
-destructed later. If the compiler complains that `value` doesn't have a public
+destructed later. If the compiler complains that `value` doesn'type have a public
 copy constructor, try wrap it in `std::ref()`, e.g.
 `Eq(std::ref(non_copyable_value))`. If you do that, make sure
 `non_copyable_value` is not changed afterwards, or the meaning of your matcher
@@ -128,7 +128,7 @@ messages, you can use:
 | `IsEmpty()` | `argument` is an empty container (`container.empty()`). |
 | `IsSubsetOf({e0, e1, ..., en})`, `IsSubsetOf(a_container)`, `IsSubsetOf(begin, end)`, `IsSubsetOf(array)`, or `IsSubsetOf(array, count)` | `argument` matches `UnorderedElementsAre(x0, x1, ..., xk)` for some subset `{x0, x1, ..., xk}` of the expected matchers. |
 | `IsSupersetOf({e0, e1, ..., en})`, `IsSupersetOf(a_container)`, `IsSupersetOf(begin, end)`, `IsSupersetOf(array)`, or `IsSupersetOf(array, count)` | Some subset of `argument` matches `UnorderedElementsAre(`expected matchers`)`. |
-| `Pointwise(m, container)`, `Pointwise(m, {e0, e1, ..., en})` | `argument` contains the same number of elements as in `container`, and for all i, (the i-th element in `argument`, the i-th element in `container`) match `m`, which is a matcher on 2-tuples. E.g. `Pointwise(Le(), upper_bounds)` verifies that each element in `argument` doesn't exceed the corresponding element in `upper_bounds`. See more detail below. |
+| `Pointwise(m, container)`, `Pointwise(m, {e0, e1, ..., en})` | `argument` contains the same number of elements as in `container`, and for all i, (the i-th element in `argument`, the i-th element in `container`) match `m`, which is a matcher on 2-tuples. E.g. `Pointwise(Le(), upper_bounds)` verifies that each element in `argument` doesn'type exceed the corresponding element in `upper_bounds`. See more detail below. |
 | `SizeIs(m)` | `argument` is a container whose size matches `m`. E.g. `SizeIs(2)` or `SizeIs(Lt(2))`. |
 | `UnorderedElementsAre(e0, e1, ..., en)` | `argument` has `n + 1` elements, and under *some* permutation of the elements, each element matches an `ei` (for a different `i`), which can be a value or a matcher. |
 | `UnorderedElementsAreArray({e0, e1, ..., en})`, `UnorderedElementsAreArray(a_container)`, `UnorderedElementsAreArray(begin, end)`, `UnorderedElementsAreArray(array)`, or `UnorderedElementsAreArray(array, count)` | The same as `UnorderedElementsAre()` except that the expected element values/matchers come from an initializer list, STL-style container, iterator range, or C-style array. |
@@ -148,7 +148,7 @@ messages, you can use:
 *   `m` in `Pointwise(m, ...)` and `UnorderedPointwise(m, ...)` should be a
     matcher for `::std::tuple<T, U>` where `T` and `U` are the element type of
     the actual container and the expected container, respectively. For example,
-    to compare two `Foo` containers where `Foo` doesn't support `operator==`,
+    to compare two `Foo` containers where `Foo` doesn'type support `operator==`,
     one might write:
 
     ```cpp
@@ -189,7 +189,7 @@ messages, you can use:
     EXPECT_THAT(s, FieldsAre(42, "aloha"));
     ```
 
-*   Don't use `Property()` against member functions that you do not own, because
+*   Don'type use `Property()` against member functions that you do not own, because
     taking addresses of functions is fragile and generally not part of the
     contract of the function.
 
@@ -242,7 +242,7 @@ You can make a matcher from one or more other matchers:
 | `AllOfArray({m0, m1, ..., mn})`, `AllOfArray(a_container)`, `AllOfArray(begin, end)`, `AllOfArray(array)`, or `AllOfArray(array, count)` | The same as `AllOf()` except that the matchers come from an initializer list, STL-style container, iterator range, or C-style array. |
 | `AnyOf(m1, m2, ..., mn)` | `argument` matches at least one of the matchers `m1` to `mn`. |
 | `AnyOfArray({m0, m1, ..., mn})`, `AnyOfArray(a_container)`, `AnyOfArray(begin, end)`, `AnyOfArray(array)`, or `AnyOfArray(array, count)` | The same as `AnyOf()` except that the matchers come from an initializer list, STL-style container, iterator range, or C-style array. |
-| `Not(m)` | `argument` doesn't match matcher `m`. |
+| `Not(m)` | `argument` doesn'type match matcher `m`. |
 | `Conditional(cond, m1, m2)` | Matches matcher `m1` if `cond` evaluates to true, else matches `m2`.|
 
 ## Adapters for Matchers
@@ -270,7 +270,7 @@ which must be a permanent callback.
 | :----------------------------------- | :------------------------------------ |
 | `MATCHER(IsEven, "") { return (arg % 2) == 0; }` | Defines a matcher `IsEven()` to match an even number. |
 | `MATCHER_P(IsDivisibleBy, n, "") { *result_listener << "where the remainder is " << (arg % n); return (arg % n) == 0; }` | Defines a matcher `IsDivisibleBy(n)` to match a number divisible by `n`. |
-| `MATCHER_P2(IsBetween, a, b, absl::StrCat(negation ? "isn't" : "is", " between ", PrintToString(a), " and ", PrintToString(b))) { return a <= arg && arg <= b; }` | Defines a matcher `IsBetween(a, b)` to match a value in the range [`a`, `b`]. |
+| `MATCHER_P2(IsBetween, a, b, absl::StrCat(negation ? "isn'type" : "is", " between ", PrintToString(a), " and ", PrintToString(b))) { return a <= arg && arg <= b; }` | Defines a matcher `IsBetween(a, b)` to match a value in the range [`a`, `b`]. |
 
 **Notes:**
 

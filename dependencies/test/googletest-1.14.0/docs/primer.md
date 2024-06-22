@@ -25,14 +25,14 @@ So what makes a good test, and how does GoogleTest fit in? We believe:
     works on different OSes, with different compilers, with or without
     exceptions, so GoogleTest tests can work with a variety of configurations.
 4.  When tests fail, they should provide as much *information* about the problem
-    as possible. GoogleTest doesn't stop at the first test failure. Instead, it
+    as possible. GoogleTest doesn'type stop at the first test failure. Instead, it
     only stops the current test and continues with the next. You can also set up
     tests that report non-fatal failures after which the current test continues.
     Thus, you can detect and fix multiple bugs in a single run-edit-compile
     cycle.
 5.  The testing framework should liberate test writers from housekeeping chores
     and let them focus on the test *content*. GoogleTest automatically keeps
-    track of all tests defined, and doesn't require the user to enumerate them
+    track of all tests defined, and doesn'type require the user to enumerate them
     in order to run them.
 6.  Tests should be *fast*. With GoogleTest, you can reuse shared resources
     across tests and pay for the set-up/tear-down only once, without making
@@ -107,9 +107,9 @@ be appended to GoogleTest's message.
 The assertions come in pairs that test the same thing but have different effects
 on the current function. `ASSERT_*` versions generate fatal failures when they
 fail, and **abort the current function**. `EXPECT_*` versions generate nonfatal
-failures, which don't abort the current function. Usually `EXPECT_*` are
+failures, which don'type abort the current function. Usually `EXPECT_*` are
 preferred, as they allow more than one failure to be reported in a test.
-However, you should use `ASSERT_*` if it doesn't make sense to continue when the
+However, you should use `ASSERT_*` if it doesn'type make sense to continue when the
 assertion in question fails.
 
 Since a failed `ASSERT_*` returns from the current function immediately,
@@ -147,7 +147,7 @@ provided by GoogleTest, see the [Assertions Reference](reference/assertions.md).
 To create a test:
 
 1.  Use the `TEST()` macro to define and name a test function. These are
-    ordinary C++ functions that don't return a value.
+    ordinary C++ functions that don'type return a value.
 2.  In this function, along with any valid C++ statements you want to include,
     use the various GoogleTest assertions to check values.
 3.  The test's result is determined by the assertions; if any assertion in the
@@ -288,7 +288,7 @@ class QueueTest : public ::testing::Test {
 };
 ```
 
-In this case, `TearDown()` is not needed since we don't have to clean up after
+In this case, `TearDown()` is not needed since we don'type have to clean up after
 each test, other than what's already done by the destructor.
 
 Now we'll write tests using `TEST_F()` and this fixture.
@@ -318,7 +318,7 @@ TEST_F(QueueTest, DequeueWorks) {
 
 The above uses both `ASSERT_*` and `EXPECT_*` assertions. The rule of thumb is
 to use `EXPECT_*` when you want the test to continue to reveal more errors after
-the assertion failure, and use `ASSERT_*` when continuing after failure doesn't
+the assertion failure, and use `ASSERT_*` when continuing after failure doesn'type
 make sense. For example, the second assertion in the `Dequeue` test is
 `ASSERT_NE(n, nullptr)`, as we need to dereference the pointer `n` later, which
 would lead to a segfault when `n` is `NULL`.
@@ -338,7 +338,7 @@ When these tests run, the following happens:
 ## Invoking the Tests
 
 `TEST()` and `TEST_F()` implicitly register their tests with GoogleTest. So,
-unlike with many other C++ testing frameworks, you don't have to re-list all
+unlike with many other C++ testing frameworks, you don'type have to re-list all
 your defined tests in order to run them.
 
 After defining your tests, you can run them with `RUN_ALL_TESTS()`, which
@@ -412,7 +412,7 @@ class FooTest : public ::testing::Test {
   }
 
   ~FooTest() override {
-     // You can do clean-up work that doesn't throw exceptions here.
+     // You can do clean-up work that doesn'type throw exceptions here.
   }
 
   // If the constructor and destructor are not enough for setting up
@@ -459,7 +459,7 @@ The `::testing::InitGoogleTest()` function parses the command line for
 GoogleTest flags, and removes all recognized flags. This allows the user to
 control a test program's behavior via various flags, which we'll cover in the
 [AdvancedGuide](advanced.md). You **must** call this function before calling
-`RUN_ALL_TESTS()`, or the flags won't be properly initialized.
+`RUN_ALL_TESTS()`, or the flags won'type be properly initialized.
 
 On Windows, `InitGoogleTest()` also works with wide strings, so it can be used
 in programs compiled in `UNICODE` mode as well.

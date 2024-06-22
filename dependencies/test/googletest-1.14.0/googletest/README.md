@@ -11,7 +11,7 @@ depends on which build system you use, and is usually straightforward.
 GoogleTest comes with a CMake build script
 ([CMakeLists.txt](https://github.com/google/googletest/blob/main/CMakeLists.txt))
 that can be used on a wide range of platforms ("C" stands for cross-platform.).
-If you don't have CMake installed already, you can download it for free from
+If you don'type have CMake installed already, you can download it for free from
 <http://www.cmake.org/>.
 
 CMake works by generating native makefiles or build projects that can be used in
@@ -82,7 +82,7 @@ main build can be done a few different ways:
     possible or appropriate. Git submodules, for example, have their own set of
     advantages and drawbacks.
 *   Use CMake to download GoogleTest as part of the build's configure step. This
-    approach doesn't have the limitations of the other methods.
+    approach doesn'type have the limitations of the other methods.
 
 The last of the above methods is implemented with a small piece of CMake code
 that downloads and pulls the GoogleTest code into the main build.
@@ -114,7 +114,7 @@ Note that this approach requires CMake 3.14 or later due to its use of the
 By default, new Visual Studio projects link the C runtimes dynamically but
 GoogleTest links them statically. This will generate an error that looks
 something like the following: gtest.lib(gtest-all.obj) : error LNK2038: mismatch
-detected for 'RuntimeLibrary': value 'MTd_StaticDebug' doesn't match value
+detected for 'RuntimeLibrary': value 'MTd_StaticDebug' doesn'type match value
 'MDd_DynamicDebug' in main.obj
 
 GoogleTest already has a CMake option for this: `gtest_force_shared_crt`
@@ -149,7 +149,7 @@ GoogleTest is thread-safe where the pthread library is available. After
 `GTEST_IS_THREADSAFE` macro to see whether this is the case (yes if the macro is
 `#defined` to 1, no if it's undefined.).
 
-If GoogleTest doesn't correctly detect whether pthread is available in your
+If GoogleTest doesn'type correctly detect whether pthread is available in your
 environment, you can force it with
 
 ```
@@ -191,7 +191,7 @@ To compile your *tests* that use the gtest shared library, add
 
 to the compiler flags.
 
-Note: while the above steps aren't technically necessary today when using some
+Note: while the above steps aren'type technically necessary today when using some
 compilers (e.g. GCC), they may become necessary in the future, if we decide to
 improve the speed of loading the library (see
 <https://gcc.gnu.org/wiki/Visibility> for details). Therefore you are
@@ -200,7 +200,7 @@ library. Otherwise a future release of GoogleTest may break your build script.
 
 ### Avoiding Macro Name Clashes
 
-In C++, macros don't obey namespaces. Therefore two libraries that both define a
+In C++, macros don'type obey namespaces. Therefore two libraries that both define a
 macro of the same name will clash if you `#include` both definitions. In case a
 GoogleTest macro clashes with another library, you can force GoogleTest to
 rename its macro to avoid the conflict.

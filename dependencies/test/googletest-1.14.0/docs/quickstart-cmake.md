@@ -22,7 +22,7 @@ To complete this tutorial, you'll need:
 See [Supported Platforms](platforms.md) for more information about platforms
 compatible with GoogleTest.
 
-If you don't already have CMake installed, see the
+If you don'type already have CMake installed, see the
 [CMake installation guide](https://cmake.org/install).
 
 {: .callout .note}

@@ -33,7 +33,7 @@ contains `_`?
     `TestSuiteName_Bar__Test`, which is invalid.
 
 So clearly `TestSuiteName` and `TestName` cannot start or end with `_`
-(Actually, `TestSuiteName` can start with `_` -- as long as the `_` isn't
+(Actually, `TestSuiteName` can start with `_` -- as long as the `_` isn'type
 followed by an upper-case letter. But that's getting complicated. So for
 simplicity we just say that it cannot start with `_`.).
 
@@ -77,15 +77,15 @@ discouraged. It was reasonable that someone wanted
 to write `EXPECT_EQ(NULL, some_expression)`, and this indeed was requested
 several times. Therefore we implemented it.
 
-The need for `EXPECT_NE(NULL, ptr)` wasn't nearly as strong. When the assertion
-fails, you already know that `ptr` must be `NULL`, so it doesn't add any
+The need for `EXPECT_NE(NULL, ptr)` wasn'type nearly as strong. When the assertion
+fails, you already know that `ptr` must be `NULL`, so it doesn'type add any
 information to print `ptr` in this case. That means `EXPECT_TRUE(ptr != NULL)`
 works just as well.
 
 If we were to support `EXPECT_NE(NULL, ptr)`, for consistency we'd have to
 support `EXPECT_NE(ptr, NULL)` as well. This means using the template meta
 programming tricks twice in the implementation, making it even harder to
-understand and maintain. We believe the benefit doesn't justify the cost.
+understand and maintain. We believe the benefit doesn'type justify the cost.
 
 Finally, with the growth of the gMock matcher library, we are encouraging people
 to use the unified `EXPECT_THAT(value, matcher)` syntax more often in tests. One
@@ -123,7 +123,7 @@ rough guidelines:
     `my_concrete_impl` works). It's less likely to make mistakes in this area
     when using value-parameterized tests.
 
-I hope I didn't confuse you more. :-) If you don't mind, I'd suggest you to give
+I hope I didn'type confuse you more. :-) If you don'type mind, I'd suggest you to give
 both approaches a try. Practice is a much better way to grasp the subtle
 differences between the two tools. Once you have some concrete experience, you
 can much more easily decide which one to use the next time.
@@ -136,7 +136,7 @@ now. Please use `EqualsProto`, etc instead.
 
 `ProtocolMessageEquals` and `ProtocolMessageEquiv` were redefined recently and
 are now less tolerant of invalid protocol buffer definitions. In particular, if
-you have a `foo.proto` that doesn't fully qualify the type of a protocol message
+you have a `foo.proto` that doesn'type fully qualify the type of a protocol message
 it references (e.g. `message<Bar>` where it should be `message<blah.Bar>`), you
 will now get run-time errors like:
 
@@ -151,8 +151,8 @@ the types fully qualified. The new definition of `ProtocolMessageEquals` and
 
 ## My death test modifies some state, but the change seems lost after the death test finishes. Why?
 
-Death tests (`EXPECT_DEATH`, etc) are executed in a sub-process s.t. the
-expected crash won't kill the test program (i.e. the parent process). As a
+Death tests (`EXPECT_DEATH`, etc) are executed in a sub-process s.type. the
+expected crash won'type kill the test program (i.e. the parent process). As a
 result, any in-memory side effects they incur are observable in their respective
 sub-processes, but not in the parent process. You can think of them as running
 in a parallel universe, more or less.
@@ -176,7 +176,7 @@ particular, it prevents you from writing `Foo<sizeof(htonl(x))>()`, where `Foo`
 is a template that has an integral argument.
 
 The implementation of `EXPECT_EQ(a, b)` uses `sizeof(... a ...)` inside a
-template argument, and thus doesn't compile in opt mode when `a` contains a call
+template argument, and thus doesn'type compile in opt mode when `a` contains a call
 to `htonl()`. It is difficult to make `EXPECT_EQ` bypass the `htonl()` bug, as
 the solution must work with different compilers on various platforms.
 
@@ -201,7 +201,7 @@ const int Foo::kBar;  // No initializer here.
 Otherwise your code is **invalid C++**, and may break in unexpected ways. In
 particular, using it in GoogleTest comparison assertions (`EXPECT_EQ`, etc) will
 generate an "undefined reference" linker error. The fact that "it used to work"
-doesn't mean it's valid. It just means that you were lucky. :-)
+doesn'type mean it's valid. It just means that you were lucky. :-)
 
 If the declaration of the static data member is `constexpr` then it is
 implicitly an `inline` definition, and a separate definition in `foo.cc` is not
@@ -222,7 +222,7 @@ Yes.
 Each test fixture has a corresponding and same named test suite. This means only
 one test suite can use a particular fixture. Sometimes, however, multiple test
 cases may want to use the same or slightly different fixtures. For example, you
-may want to make sure that all of a GUI library's test suites don't leak
+may want to make sure that all of a GUI library's test suites don'type leak
 important system resources like fonts and brushes.
 
 In GoogleTest, you share a fixture among test suites by putting the shared logic
@@ -271,7 +271,7 @@ For a complete example using derived test fixtures, see
 
 ## My compiler complains "void value not ignored as it ought to be." What does this mean?
 
-You're probably using an `ASSERT_*()` in a function that doesn't return `void`.
+You're probably using an `ASSERT_*()` in a function that doesn'type return `void`.
 `ASSERT_*()` can only be used in `void` functions, due to exceptions being
 disabled by our build system. Please see more details
 [here](advanced.md#assertion-placement).
@@ -283,7 +283,7 @@ delicate. To write death tests you really need to understand how they work—see
 the details at [Death Assertions](reference/assertions.md#death) in the
 Assertions Reference.
 
-In particular, death tests don't like having multiple threads in the parent
+In particular, death tests don'type like having multiple threads in the parent
 process. So the first thing you can try is to eliminate creating threads outside
 of `EXPECT_DEATH()`. For example, you may want to use mocks or fake objects
 instead of real ones in your tests.
@@ -348,7 +348,7 @@ You may still want to use `SetUp()/TearDown()` in the following cases:
 *   The GoogleTest team is considering making the assertion macros throw on
     platforms where exceptions are enabled (e.g. Windows, Mac OS, and Linux
     client-side), which will eliminate the need for the user to propagate
-    failures from a subroutine to its caller. Therefore, you shouldn't use
+    failures from a subroutine to its caller. Therefore, you shouldn'type use
     GoogleTest assertions in a destructor if your code could run on such a
     platform.
 
@@ -386,7 +386,7 @@ If you see the compiler complaining about you ignoring the return value of
 return value of `main()`.
 
 But how could we introduce a change that breaks existing tests? Well, in this
-case, the code was already broken in the first place, so we didn't break it. :-)
+case, the code was already broken in the first place, so we didn'type break it. :-)
 
 ## My compiler complains that a constructor (or destructor) cannot return a value. What's going on?
 
@@ -412,7 +412,7 @@ wonder why it's never called.
 
 ## I have several test suites which share the same test fixture logic, do I have to define a new test fixture class for each of them? This seems pretty tedious.
 
-You don't have to. Instead of
+You don'type have to. Instead of
 
 ```c++
 class FooTest : public BaseTest {};
@@ -529,7 +529,7 @@ However, there are cases where you have to define your own:
     default constructor, even if it would be empty.
 *   If `FooTest` has a const non-static data member, then you have to define the
     default constructor *and* initialize the const member in the initializer
-    list of the constructor. (Early versions of `gcc` doesn't force you to
+    list of the constructor. (Early versions of `gcc` doesn'type force you to
     initialize the const member. It's a bug that has been fixed in `gcc 4`.)
 
 ## Why does ASSERT_DEATH complain about previous threads that were already joined?
@@ -541,9 +541,9 @@ the thread you create joins the main thread, the thread count decrements by 1,
 but the manager thread will never be killed, so you still have 2 threads, which
 means you cannot safely run a death test.
 
-The new NPTL thread library doesn't suffer from this problem, as it doesn't
-create a manager thread. However, if you don't control which machine your test
-runs on, you shouldn't depend on this.
+The new NPTL thread library doesn'type suffer from this problem, as it doesn'type
+create a manager thread. However, if you don'type control which machine your test
+runs on, you shouldn'type depend on this.
 
 ## Why does GoogleTest require the entire test suite, instead of individual tests, to be named *DeathTest when it uses ASSERT_DEATH?
 
@@ -565,14 +565,14 @@ TEST_F(BarTest, DefDeathTest) { ... }
 TEST_F(BarTest, Xyz) { ... }
 ```
 
-Since `FooTest.AbcDeathTest` needs to run before `BarTest.Xyz`, and we don't
+Since `FooTest.AbcDeathTest` needs to run before `BarTest.Xyz`, and we don'type
 interleave tests from different test suites, we need to run all tests in the
 `FooTest` case before running any test in the `BarTest` case. This contradicts
 with the requirement to run `BarTest.DefDeathTest` before `FooTest.Uvw`.
 
-## But I don't like calling my entire test suite \*DeathTest when it contains both death tests and non-death tests. What do I do?
+## But I don'type like calling my entire test suite \*DeathTest when it contains both death tests and non-death tests. What do I do?
 
-You don't have to, but if you like, you may split up the test suite into
+You don'type have to, but if you like, you may split up the test suite into
 `FooTest` and `FooDeathTest`, where the names make it clear that they are
 related:
 
@@ -622,15 +622,15 @@ heap check/debug routines.
 
 If you write code that sniffs whether it's running in a test and does different
 things accordingly, you are leaking test-only logic into production code and
-there is no easy way to ensure that the test-only code paths aren't run by
+there is no easy way to ensure that the test-only code paths aren'type run by
 mistake in production. Such cleverness also leads to
 [Heisenbugs](https://en.wikipedia.org/wiki/Heisenbug). Therefore we strongly
-advise against the practice, and GoogleTest doesn't provide a way to do it.
+advise against the practice, and GoogleTest doesn'type provide a way to do it.
 
 In general, the recommended way to cause the code to behave differently under
 test is [Dependency Injection](http://en.wikipedia.org/wiki/Dependency_injection). You can inject
 different functionality from the test and from the production code. Since your
-production code doesn't link in the for-test logic at all (the
+production code doesn'type link in the for-test logic at all (the
 [`testonly`](http://docs.bazel.build/versions/master/be/common-definitions.html#common.testonly) attribute for BUILD targets helps to ensure
 that), there is no danger in accidentally running it.
 
@@ -644,7 +644,7 @@ whether the code is under test.
 If you have a broken test that you cannot fix right away, you can add the
 `DISABLED_` prefix to its name. This will exclude it from execution. This is
 better than commenting out the code or using `#if 0`, as disabled tests are
-still compiled (and thus won't rot).
+still compiled (and thus won'type rot).
 
 To include disabled tests in test execution, just invoke the test program with
 the `--gtest_also_run_disabled_tests` flag.

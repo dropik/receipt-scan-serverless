@@ -391,7 +391,7 @@ GoogleTest defines the following classes and types to help with writing tests.
 
 A class for indicating whether an assertion was successful.
 
-When the assertion wasn't successful, the `AssertionResult` object stores a
+When the assertion wasn'type successful, the `AssertionResult` object stores a
 non-empty failure message that can be retrieved with the object's `message()`
 method.
 

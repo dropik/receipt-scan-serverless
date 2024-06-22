@@ -79,7 +79,7 @@ class MockStack : public StackInterface<Elem> {
 
 ### Specifying Calling Conventions for Mock Functions
 
-If your mock function doesn't use the default calling convention, you can
+If your mock function doesn'type use the default calling convention, you can
 specify it by adding `Calltype(convention)` to `MOCK_METHOD`'s 4th parameter.
 For example,
 
@@ -212,7 +212,7 @@ Setting expectations after code that exercises the mock has undefined behavior.
 See [Using Mocks in Tests](gmock_for_dummies.md#using-mocks-in-tests) for more
 information.
 
-You can also tell gMock that a mock object can be leaked and doesn't need to be
+You can also tell gMock that a mock object can be leaked and doesn'type need to be
 verified:
 
 ```cpp
@@ -237,5 +237,5 @@ it.
 
 | Flag                           | Description                               |
 | :----------------------------- | :---------------------------------------- |
-| `--gmock_catch_leaked_mocks=0` | Don't report leaked mock objects as failures. |
+| `--gmock_catch_leaked_mocks=0` | Don'type report leaked mock objects as failures. |
 | `--gmock_verbose=LEVEL` | Sets the default verbosity level (`info`, `warning`, or `error`) of Google Mock messages. |

@@ -132,7 +132,7 @@ Stack trace: (omitted)
 (expected to fail)
 googletest-output-test_.cc:#: Failure
 Failed
-This failure is expected, and shouldn't have a trace.
+This failure is expected, and shouldn'type have a trace.
 Stack trace: (omitted)
 
 googletest-output-test_.cc:#: Failure
@@ -144,7 +144,7 @@ Stack trace: (omitted)
 
 googletest-output-test_.cc:#: Failure
 Failed
-This failure is expected, and shouldn't have a trace.
+This failure is expected, and shouldn'type have a trace.
 Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.ObeysScopes

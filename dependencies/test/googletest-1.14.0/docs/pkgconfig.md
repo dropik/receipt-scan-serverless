@@ -41,7 +41,7 @@ splitting the pkg-config `Cflags` variable into include dirs and macros for
 goes for using `_LDFLAGS` over the more commonplace `_LIBRARIES`, which happens
 to discard `-L` flags and `-pthread`.
 
-### Help! pkg-config can't find GoogleTest!
+### Help! pkg-config can'type find GoogleTest!
 
 Let's say you have a `CMakeLists.txt` along the lines of the one in this
 tutorial and you try to run `cmake`. It is very possible that you get a failure

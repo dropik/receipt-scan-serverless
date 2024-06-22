@@ -66,7 +66,7 @@ callback type instead of a derived one, e.g.
 
 ```cpp
   BlockingClosure* done = new BlockingClosure;
-  ... Invoke(done) ...;  // This won't compile!
+  ... Invoke(done) ...;  // This won'type compile!
 
   Closure* done2 = new BlockingClosure;
   ... Invoke(done2) ...;  // This works.

@@ -175,7 +175,7 @@ Reference.
 ### More String Assertions
 
 (Please read the [previous](#asserting-using-gmock-matchers) section first if
-you haven't.)
+you haven'type.)
 
 You can use the gMock [string matchers](reference/matchers.md#string-matchers)
 with [`EXPECT_THAT`](reference/assertions.md#EXPECT_THAT) to do more string
@@ -237,7 +237,7 @@ to cause a compiler error.
 
 ### Assertion Placement
 
-You can use assertions in any C++ function. In particular, it doesn't have to be
+You can use assertions in any C++ function. In particular, it doesn'type have to be
 a method of the test fixture class. The one constraint is that assertions that
 generate a fatal failure (`FAIL*` and `ASSERT_*`) can only be used in
 void-returning functions. This is a consequence of Google's not using
@@ -286,7 +286,7 @@ For example:
 ```c++
 TEST(SkipTest, DoesSkip) {
   GTEST_SKIP() << "Skipping single test";
-  EXPECT_EQ(0, 1);  // Won't fail; it won't be executed
+  EXPECT_EQ(0, 1);  // Won'type fail; it won'type be executed
 }
 
 class SkipFixture : public ::testing::Test {
@@ -296,9 +296,9 @@ class SkipFixture : public ::testing::Test {
   }
 };
 
-// Tests for SkipFixture won't be executed.
+// Tests for SkipFixture won'type be executed.
 TEST_F(SkipFixture, SkipsOneTest) {
-  EXPECT_EQ(5, 7);  // Won't fail
+  EXPECT_EQ(5, 7);  // Won'type fail
 }
 ```
 
@@ -333,7 +333,7 @@ class Point {  // We want GoogleTest to be able to print instances of this.
   int y;
 };
 
-// If you can't declare the function in the class it's important that the
+// If you can'type declare the function in the class it's important that the
 // AbslStringify overload is defined in the SAME namespace that defines Point.
 // C++'s look-up rules rely on that.
 enum class EnumWithStringify { kMany = 0, kChoices = 1 };
@@ -374,7 +374,7 @@ class Point {
   int y;
 };
 
-// If you can't declare the function in the class it's important that PrintTo()
+// If you can'type declare the function in the class it's important that PrintTo()
 // is defined in the SAME namespace that defines Point.  C++'s look-up rules
 // rely on that.
 void PrintTo(const Point& point, std::ostream* os) {
@@ -419,7 +419,7 @@ Since these precondition checks cause the processes to die, we call such tests
 _death tests_. More generally, any test that checks that a program terminates
 (except by throwing an exception) in an expected fashion is also a death test.
 
-Note that if a piece of code throws an exception, we don't consider it "death"
+Note that if a piece of code throws an exception, we don'type consider it "death"
 for the purpose of death tests, as the caller of the code could catch the
 exception and avoid the crash. If you want to verify exceptions thrown by your
 code, see [Exception Assertions](#ExceptionAssertions).
@@ -474,7 +474,7 @@ Note that a death test only cares about three things:
 3.  does the stderr output match `matcher`?
 
 In particular, if `statement` generates an `ASSERT_*` or `EXPECT_*` failure, it
-will **not** cause the death test to fail, as GoogleTest assertions don't abort
+will **not** cause the death test to fail, as GoogleTest assertions don'type abort
 the process.
 
 ### Death Test Naming
@@ -513,7 +513,7 @@ syntax. To learn about POSIX syntax, you may want to read this
 [Wikipedia entry](http://en.wikipedia.org/wiki/Regular_expression#POSIX_extended).
 
 On Windows, GoogleTest uses its own simple regular expression implementation. It
-lacks many features. For example, we don't support union (`"x|y"`), grouping
+lacks many features. For example, we don'type support union (`"x|y"`), grouping
 (`"(xy)"`), brackets (`"[xy]"`), and repetition count (`"x{5,7}"`), among
 others. Below is what we do support (`A` denotes a literal character, period
 (`.`), or a single `\\ ` escape sequence; `x` and `y` denote regular
@@ -529,10 +529,10 @@ Expression | Meaning
 `\\r`      | matches `\r`
 `\\s`      | matches any ASCII whitespace, including `\n`
 `\\S`      | matches any character that's not a whitespace
-`\\t`      | matches `\t`
+`\\type`      | matches `\type`
 `\\v`      | matches `\v`
 `\\w`      | matches any letter, `_`, or decimal digit
-`\\W`      | matches any character that `\\w` doesn't match
+`\\W`      | matches any character that `\\w` doesn'type match
 `\\c`      | matches any literal character `c`, which must be a punctuation
 `.`        | matches any single character except `\n`
 `A?`       | matches 0 or 1 occurrences of `A`
@@ -557,7 +557,7 @@ Reference.
 
 The reason for the two death test styles has to do with thread safety. Due to
 well-known problems with forking in the presence of threads, death tests should
-be run in a single-threaded context. Sometimes, however, it isn't feasible to
+be run in a single-threaded context. Sometimes, however, it isn'type feasible to
 arrange that kind of environment. For example, statically-initialized modules
 may start threads before main is ever reached. Once threads have been created,
 it may be difficult or impossible to clean them up.
@@ -682,7 +682,7 @@ For example,
 18:                         // every failure in this scope.
 19:     Sub1(1);
 20:   }
-21:   // Now it won't.
+21:   // Now it won'type.
 22:   Sub1(9);
 23: }
 ```
@@ -716,7 +716,7 @@ Some tips on using `SCOPED_TRACE`:
     message in `SCOPED_TRACE` such that you can know which iteration the failure
     is from.
 3.  Sometimes the line number of the trace point is enough for identifying the
-    particular invocation of a sub-routine. In this case, you don't have to
+    particular invocation of a sub-routine. In this case, you don'type have to
     choose a unique message for `SCOPED_TRACE`. You can simply use `""`.
 4.  You can use `SCOPED_TRACE` in an inner scope when there is one in the outer
     scope. In this case, all active trace points will be included in the failure
@@ -735,7 +735,7 @@ void Subroutine() {
   // Generates a fatal failure and aborts the current function.
   ASSERT_EQ(1, 2);
 
-  // The following won't be executed.
+  // The following won'type be executed.
   ...
 }
 
@@ -774,7 +774,7 @@ int main(int argc, char** argv) {
 ```
 
 This listener should be added after other listeners if you have any, otherwise
-they won't see failed `OnTestPartResult`.
+they won'type see failed `OnTestPartResult`.
 
 #### Asserting on Subroutines
 
@@ -787,7 +787,7 @@ GoogleTest offers the following macros:
 
 Fatal assertion                       | Nonfatal assertion                    | Verifies
 ------------------------------------- | ------------------------------------- | --------
-`ASSERT_NO_FATAL_FAILURE(statement);` | `EXPECT_NO_FATAL_FAILURE(statement);` | `statement` doesn't generate any new fatal failures in the current thread.
+`ASSERT_NO_FATAL_FAILURE(statement);` | `EXPECT_NO_FATAL_FAILURE(statement);` | `statement` doesn'type generate any new fatal failures in the current thread.
 
 Only failures in the thread that executes the assertion are checked to determine
 the result of this type of assertions. If `statement` creates new threads,
@@ -829,7 +829,7 @@ TEST(FooTest, Bar) {
   // Aborts if Subroutine() had a fatal failure.
   if (HasFatalFailure()) return;
 
-  // The following won't be executed.
+  // The following won'type be executed.
   ...
 }
 ```
@@ -891,7 +891,7 @@ tests independent and easier to debug. However, sometimes tests use resources
 that are expensive to set up, making the one-copy-per-test model prohibitively
 expensive.
 
-If the tests don't change the resource, there's no harm in their sharing a
+If the tests don'type change the resource, there's no harm in their sharing a
 single resource copy. So, in addition to per-test set-up/tear-down, GoogleTest
 also supports per-test-suite set-up/tear-down. To use it:
 
@@ -910,7 +910,7 @@ That's it! GoogleTest automatically calls `SetUpTestSuite()` before running the
 in it (i.e. after deleting the last `FooTest` object). In between, the tests can
 use the shared resources.
 
-Remember that the test order is undefined, so your code can't depend on a test
+Remember that the test order is undefined, so your code can'type depend on a test
 preceding or following another. Also, the tests must either not modify the state
 of any shared resource, or, if they do modify the state, they must restore the
 state to its original value before passing control to the next test.
@@ -1031,7 +1031,7 @@ However, we strongly recommend you to write your own `main()` and call
 `AddGlobalTestEnvironment()` there, as relying on initialization of global
 variables makes the code harder to read and may cause problems when you register
 multiple environments from different translation units and the environments have
-dependencies among them (remember that the compiler doesn't guarantee the order
+dependencies among them (remember that the compiler doesn'type guarantee the order
 in which global variables from different translation units are initialized).
 
 ## Value-Parameterized Tests
@@ -1268,7 +1268,7 @@ types.
 
 While you can write one `TEST` or `TEST_F` for each type you want to test (and
 you may even factor the test logic into a function template that you invoke from
-the `TEST`), it's tedious and doesn't scale: if you want `m` tests over `n`
+the `TEST`), it's tedious and doesn'type scale: if you want `m` tests over `n`
 types, you'll end up writing `m*n` `TEST`s.
 
 *Typed tests* allow you to repeat the same test logic over a list of types. You
@@ -1332,7 +1332,7 @@ You can see [sample6_unittest.cc] for a complete example.
 
 ## Type-Parameterized Tests
 
-*Type-parameterized tests* are like typed tests, except that they don't require
+*Type-parameterized tests* are like typed tests, except that they don'type require
 you to know the list of types ahead of time. Instead, you can define the test
 logic first and instantiate it with different type lists later. You can even
 instantiate it more than once in the same program.
@@ -1455,7 +1455,7 @@ To test them, we use the following special techniques:
 
     Another way to test private members is to refactor them into an
     implementation class, which is then declared in a `*-internal.h` file. Your
-    clients aren't allowed to include this header but your tests can. Such is
+    clients aren'type allowed to include this header but your tests can. Such is
     called the
     [Pimpl](https://www.gamedev.net/articles/programming/general-and-gameplay-programming/the-c-pimpl-r1794/)
     (Private Implementation) idiom.
@@ -1529,7 +1529,7 @@ your utility. What framework would you use to test it? GoogleTest, of course.
 
 The challenge is to verify that your testing utility reports failures correctly.
 In frameworks that report a failure by throwing an exception, you could catch
-the exception and assert on it. But GoogleTest doesn't use exceptions, so how do
+the exception and assert on it. But GoogleTest doesn'type use exceptions, so how do
 we test that a piece of code generates an expected failure?
 
 `"gtest/gtest-spi.h"` contains some constructs to do this.
@@ -1876,13 +1876,13 @@ the test runner will stop execution as soon as the first test failure is found.
 If you have a broken test that you cannot fix right away, you can add the
 `DISABLED_` prefix to its name. This will exclude it from execution. This is
 better than commenting out the code or using `#if 0`, as disabled tests are
-still compiled (and thus won't rot).
+still compiled (and thus won'type rot).
 
 If you need to disable all tests in a test suite, you can either add `DISABLED_`
 to the front of the name of each test, or alternatively add it to the front of
 the test suite name.
 
-For example, the following tests won't be run by GoogleTest, even though they
+For example, the following tests won'type be run by GoogleTest, even though they
 will still be compiled:
 
 ```c++
@@ -1925,7 +1925,7 @@ a chance to debug. Here's how to use it:
 
 ```none
 $ foo_test --gtest_repeat=1000
-Repeat foo_test 1000 times and don't stop at failures.
+Repeat foo_test 1000 times and don'type stop at failures.
 
 $ foo_test --gtest_repeat=-1
 A negative count means repeating forever.
@@ -1988,7 +1988,7 @@ your test runner (not part of GoogleTest) needs to do the following:
     once.
 1.  Wait for all shards to finish, then collect and report the results.
 
-Your project may have tests that were written without GoogleTest and thus don't
+Your project may have tests that were written without GoogleTest and thus don'type
 understand this protocol. In order for your test runner to figure out which test
 supports sharding, it can set the environment variable `GTEST_SHARD_STATUS_FILE`
 to a non-existent file path. If a test program supports sharding, it will create
@@ -2069,7 +2069,7 @@ set the GTEST_PRINT_TIME environment variable to `0`.
 In case of assertion failures, GoogleTest prints expected and actual values of
 type `string` both as hex-encoded strings as well as in readable UTF-8 text if
 they contain valid non-ASCII UTF-8 characters. If you want to suppress the UTF-8
-text because, for example, you don't have an UTF-8 compatible output medium, run
+text because, for example, you don'type have an UTF-8 compatible output medium, run
 the test program with `--gtest_print_utf8=0` or set the `GTEST_PRINT_UTF8`
 environment variable to `0`.
 

@@ -1,6 +1,6 @@
 # gMock Cookbook
 
-You can find recipes for using gMock here. If you haven't yet, please read
+You can find recipes for using gMock here. If you haven'type yet, please read
 [the dummy guide](gmock_for_dummies.md) first to make sure you understand the
 basics.
 
@@ -48,8 +48,8 @@ Unprotected commas, i.e. commas which are not surrounded by parentheses, prevent
 ```cpp
 class MockFoo {
  public:
-  MOCK_METHOD(std::pair<bool, int>, GetPair, ());  // Won't compile!
-  MOCK_METHOD(bool, CheckMap, (std::map<int, double>, bool));  // Won't compile!
+  MOCK_METHOD(std::pair<bool, int>, GetPair, ());  // Won'type compile!
+  MOCK_METHOD(bool, CheckMap, (std::map<int, double>, bool));  // Won'type compile!
 };
 ```
 
@@ -145,7 +145,7 @@ class MockFoo : public Foo {
 ```
 
 {: .callout .note}
-**Note:** if you don't mock all versions of the overloaded method, the compiler
+**Note:** if you don'type mock all versions of the overloaded method, the compiler
 will give you a warning about some methods in the base class being hidden. To
 fix that, use `using` to bring them in scope:
 
@@ -154,7 +154,7 @@ class MockFoo : public Foo {
   ...
   using Foo::Add;
   MOCK_METHOD(int, Add, (Element x), (override));
-  // We don't want to mock int Add(int times, Element x);
+  // We don'type want to mock int Add(int times, Element x);
   ...
 };
 ```
@@ -189,7 +189,7 @@ gMock can mock non-virtual functions to be used in Hi-perf dependency injection.
 In this case, instead of sharing a common base class with the real class, your
 mock class will be *unrelated* to the real class, but contain methods with the
 same signatures. The syntax for mocking non-virtual methods is the *same* as
-mocking virtual methods (just don't add `override`):
+mocking virtual methods (just don'type add `override`):
 
 ```cpp
 // A simple packet stream class.  None of its members is virtual.
@@ -211,8 +211,8 @@ class MockPacketStream {
 };
 ```
 
-Note that the mock class doesn't define `AppendPacket()`, unlike the real class.
-That's fine as long as the test doesn't need to call it.
+Note that the mock class doesn'type define `AppendPacket()`, unlike the real class.
+That's fine as long as the test doesn'type need to call it.
 
 Next, you need a way to say that you want to use `ConcretePacketStream` in
 production code, and use `MockPacketStream` in tests. Since the functions are
@@ -461,7 +461,7 @@ TEST(...) {
 {: .callout .note}
 NOTE: `NiceMock` and `StrictMock` only affects *uninteresting* calls (calls of
 *methods* with no expectations); they do not affect *unexpected* calls (calls of
-methods with expectations, but they don't match). See
+methods with expectations, but they don'type match). See
 [Understanding Uninteresting vs Unexpected Calls](#uninteresting-vs-unexpected).
 
 There are some caveats though (sadly they are side effects of C++'s
@@ -480,7 +480,7 @@ limitations):
 Finally, you should be **very cautious** about when to use naggy or strict
 mocks, as they tend to make tests more brittle and harder to maintain. When you
 refactor your code without changing its externally visible behavior, ideally you
-shouldn't need to update any tests. If your code interacts with a naggy mock,
+shouldn'type need to update any tests. If your code interacts with a naggy mock,
 however, you may start to get spammed with warnings as the result of your
 change. Worse, if your code interacts with a strict mock, your tests may start
 to fail and you'll be forced to fix them. Our general recommendation is to use
@@ -552,7 +552,7 @@ class MockTurtleFactory : public TurtleFactory {
 };
 ```
 
-This allows tests that don't care which overload was invoked to avoid specifying
+This allows tests that don'type care which overload was invoked to avoid specifying
 argument matchers:
 
 ```cpp
@@ -562,7 +562,7 @@ ON_CALL(factory, DoMakeTurtle)
 
 ### Alternative to Mocking Concrete Classes
 
-Often you may find yourself using classes that don't implement interfaces. In
+Often you may find yourself using classes that don'type implement interfaces. In
 order to test your code that uses such a class (let's call it `Concrete`), you
 may be tempted to make the methods of `Concrete` virtual and then mock it.
 
@@ -599,7 +599,7 @@ testability:
     allows you to write your code (user of the interface) in a more natural way,
     which means it will be more readable, more maintainable, and you'll be more
     productive.
-*   If `Concrete`'s implementation ever has to change, you don't have to rewrite
+*   If `Concrete`'s implementation ever has to change, you don'type have to rewrite
     everywhere it is used. Instead, you can absorb the change in your
     implementation of the interface, and your other code and tests will be
     insulated from this change.
@@ -679,7 +679,7 @@ class MockFoo : public Foo {
 ```
 
 With that, you can use `MockFoo` in your tests as usual. Just remember that if
-you don't explicitly set an action in an `ON_CALL()` or `EXPECT_CALL()`, the
+you don'type explicitly set an action in an `ON_CALL()` or `EXPECT_CALL()`, the
 fake will be called upon to do it.:
 
 ```cpp
@@ -723,9 +723,9 @@ TEST(AbcTest, Xyz) {
     the type of a function pointer to the second `DoThis()` method.).
 
 *   Having to mix a mock and a fake is often a sign of something gone wrong.
-    Perhaps you haven't got used to the interaction-based way of testing yet. Or
+    Perhaps you haven'type got used to the interaction-based way of testing yet. Or
     perhaps your interface is taking on too many roles and should be split up.
-    Therefore, **don't abuse this**. We would only recommend to do it as an
+    Therefore, **don'type abuse this**. We would only recommend to do it as an
     intermediate step when you are refactoring your code.
 
 Regarding the tip on mixing a mock and a fake, here's an example on why it may
@@ -817,8 +817,8 @@ class MockFoo : public Foo {
 
 Sometimes you may want to call `Foo::Concrete()` instead of
 `MockFoo::Concrete()`. Perhaps you want to do it as part of a stub action, or
-perhaps your test doesn't need to mock `Concrete()` at all (but it would be
-oh-so painful to have to define a new mock class whenever you don't need to mock
+perhaps your test doesn'type need to mock `Concrete()` at all (but it would be
+oh-so painful to have to define a new mock class whenever you don'type need to mock
 one of its methods).
 
 You can call `Foo::Concrete()` inside an action by:
@@ -830,7 +830,7 @@ You can call `Foo::Concrete()` inside an action by:
   });
 ```
 
-or tell the mock object that you don't want to mock `Concrete()`:
+or tell the mock object that you don'type want to mock `Concrete()`:
 
 ```cpp
 ...
@@ -839,7 +839,7 @@ or tell the mock object that you don't want to mock `Concrete()`:
   });
 ```
 
-(Why don't we just write `{ return foo.Concrete(str); }`? If you do that,
+(Why don'type we just write `{ return foo.Concrete(str); }`? If you do that,
 `MockFoo::Concrete()` will be called (and cause an infinite recursion) since
 `Foo::Concrete()` is virtual. That's just how C++ works.)
 
@@ -922,7 +922,7 @@ to match a `string` argument). Good for you!
 
 Sometimes, however, you know what you're doing and want the compiler to give you
 some slack. One example is that you have a matcher for `long` and the argument
-you want to match is `int`. While the two types aren't exactly the same, there
+you want to match is `int`. While the two types aren'type exactly the same, there
 is nothing really wrong with using a `Matcher<long>` to match an `int` - after
 all, we can first convert the `int` argument to a `long` losslessly before
 giving it to the matcher.
@@ -939,7 +939,7 @@ casts a matcher `m` to type `Matcher<T>`. To ensure safety, gMock checks that
 3.  When `U` is a reference, `T` must also be a reference (as the underlying
     matcher may be interested in the address of the `U` value).
 
-The code won't compile if any of these conditions isn't met.
+The code won'type compile if any of these conditions isn'type met.
 
 Here's one example:
 
@@ -965,7 +965,7 @@ If you find `SafeMatcherCast<T>(m)` too limiting, you can use a similar function
 `MatcherCast<T>(m)`. The difference is that `MatcherCast` works as long as you
 can `static_cast` type `T` to type `U`.
 
-`MatcherCast` essentially lets you bypass C++'s type system (`static_cast` isn't
+`MatcherCast` essentially lets you bypass C++'s type system (`static_cast` isn'type
 always safe as it could throw away information, for example), so be careful not
 to misuse/abuse it.
 
@@ -1087,7 +1087,7 @@ using ::testing::Lt;
 ```
 
 says that `Blah` will be called with arguments `x`, `y`, and `z` where `x < y <
-z`. Note that in this example, it wasn't necessary to specify the positional
+z`. Note that in this example, it wasn'type necessary to specify the positional
 matchers.
 
 As a convenience and example, gMock provides some matchers for 2-tuples,
@@ -1161,7 +1161,7 @@ int IsEven(int n) { return (n % 2) == 0 ? 1 : 0; }
   EXPECT_CALL(foo, Bar(Truly(IsEven)));
 ```
 
-Note that the predicate function / functor doesn't have to return `bool`. It
+Note that the predicate function / functor doesn'type have to return `bool`. It
 works as long as the return value can be used as the condition in the statement
 `if (condition) ...`.
 
@@ -1169,14 +1169,14 @@ works as long as the return value can be used as the condition in the statement
 
 When you do an `EXPECT_CALL(mock_obj, Foo(bar))`, gMock saves away a copy of
 `bar`. When `Foo()` is called later, gMock compares the argument to `Foo()` with
-the saved copy of `bar`. This way, you don't need to worry about `bar` being
+the saved copy of `bar`. This way, you don'type need to worry about `bar` being
 modified or destroyed after the `EXPECT_CALL()` is executed. The same is true
 when you use matchers like `Eq(bar)`, `Le(bar)`, and so on.
 
 But what if `bar` cannot be copied (i.e. has no copy constructor)? You could
 define your own matcher function or callback and use it with `Truly()`, as the
 previous couple of recipes have shown. Or, you may be able to get away from it
-if you can guarantee that `bar` won't be changed after the `EXPECT_CALL()` is
+if you can guarantee that `bar` won'type be changed after the `EXPECT_CALL()` is
 executed. Just tell gMock that it should save a reference to `bar`, instead of a
 copy of it. Here's how:
 
@@ -1191,7 +1191,7 @@ using ::testing::Lt;
   EXPECT_CALL(mock_obj, Foo(Lt(std::ref(bar))));
 ```
 
-Remember: if you do this, don't change `bar` after the `EXPECT_CALL()`, or the
+Remember: if you do this, don'type change `bar` after the `EXPECT_CALL()`, or the
 result is undefined.
 
 ### Validating a Member of an Object
@@ -1224,7 +1224,7 @@ For example:
 | `Property(&Foo::name,  StartsWith("John "))` | Matches `x` where `x.name()` starts with  `"John "`. |
 
 Note that in `Property(&Foo::baz, ...)`, method `baz()` must take no argument
-and be declared as `const`. Don't use `Property()` against member functions that
+and be declared as `const`. Don'type use `Property()` against member functions that
 you do not own, because taking addresses of functions is fragile and generally
 not part of the contract of the function.
 
@@ -1495,28 +1495,28 @@ mock object and gMock.
 
 There are basically two constructs for defining the behavior of a mock object:
 `ON_CALL` and `EXPECT_CALL`. The difference? `ON_CALL` defines what happens when
-a mock method is called, but <em>doesn't imply any expectation on the method
+a mock method is called, but <em>doesn'type imply any expectation on the method
 being called</em>. `EXPECT_CALL` not only defines the behavior, but also sets an
 expectation that <em>the method will be called with the given arguments, for the
 given number of times</em> (and *in the given order* when you specify the order
 too).
 
-Since `EXPECT_CALL` does more, isn't it better than `ON_CALL`? Not really. Every
+Since `EXPECT_CALL` does more, isn'type it better than `ON_CALL`? Not really. Every
 `EXPECT_CALL` adds a constraint on the behavior of the code under test. Having
 more constraints than necessary is *baaad* - even worse than not having enough
 constraints.
 
 This may be counter-intuitive. How could tests that verify more be worse than
-tests that verify less? Isn't verification the whole point of tests?
+tests that verify less? Isn'type verification the whole point of tests?
 
 The answer lies in *what* a test should verify. **A good test verifies the
-contract of the code.** If a test over-specifies, it doesn't leave enough
+contract of the code.** If a test over-specifies, it doesn'type leave enough
 freedom to the implementation. As a result, changing the implementation without
 breaking the contract (e.g. refactoring and optimization), which should be
 perfectly fine to do, can break such tests. Then you have to spend time fixing
 them, only to see them broken again the next time the implementation is changed.
 
-Keep in mind that one doesn't have to verify more than one property in one test.
+Keep in mind that one doesn'type have to verify more than one property in one test.
 In fact, **it's a good style to verify only one thing in one test.** If you do
 that, a bug will likely break only one or two tests instead of dozens (which
 case would you rather debug?). If you are also in the habit of giving tests
@@ -1542,7 +1542,7 @@ that's a pain to maintain.
 
 ### Ignoring Uninteresting Calls
 
-If you are not interested in how a mock method is called, just don't say
+If you are not interested in how a mock method is called, just don'type say
 anything about it. In this case, if the method is ever called, gMock will
 perform its default action to allow the test program to continue. If you are not
 happy with the default action taken by gMock, you can override it using
@@ -1550,12 +1550,12 @@ happy with the default action taken by gMock, you can override it using
 
 Please note that once you expressed interest in a particular mock method (via
 `EXPECT_CALL()`), all invocations to it must match some expectation. If this
-function is called but the arguments don't match any `EXPECT_CALL()` statement,
+function is called but the arguments don'type match any `EXPECT_CALL()` statement,
 it will be an error.
 
 ### Disallowing Unexpected Calls
 
-If a mock method shouldn't be called at all, explicitly say so:
+If a mock method shouldn'type be called at all, explicitly say so:
 
 ```cpp
 using ::testing::_;
@@ -1576,7 +1576,7 @@ using ::testing::Gt;
       .Times(AnyNumber());
 ```
 
-A call to `foo.Bar()` that doesn't match any of the `EXPECT_CALL()` statements
+A call to `foo.Bar()` that doesn'type match any of the `EXPECT_CALL()` statements
 will be an error.
 
 ### Understanding Uninteresting vs Unexpected Calls {#uninteresting-vs-unexpected}
@@ -1585,17 +1585,17 @@ will be an error.
 *Very* different.
 
 A call `x.Y(...)` is **uninteresting** if there's *not even a single*
-`EXPECT_CALL(x, Y(...))` set. In other words, the test isn't interested in the
-`x.Y()` method at all, as evident in that the test doesn't care to say anything
+`EXPECT_CALL(x, Y(...))` set. In other words, the test isn'type interested in the
+`x.Y()` method at all, as evident in that the test doesn'type care to say anything
 about it.
 
 A call `x.Y(...)` is **unexpected** if there are *some* `EXPECT_CALL(x,
 Y(...))`s set, but none of them matches the call. Put another way, the test is
 interested in the `x.Y()` method (therefore it explicitly sets some
 `EXPECT_CALL` to verify how it's called); however, the verification fails as the
-test doesn't expect this particular call to happen.
+test doesn'type expect this particular call to happen.
 
-**An unexpected call is always an error,** as the code under test doesn't behave
+**An unexpected call is always an error,** as the code under test doesn'type behave
 the way the test expects it to behave.
 
 **By default, an uninteresting call is not an error,** as it violates no
@@ -1609,7 +1609,7 @@ In gMock, `NiceMock` and `StrictMock` can be used to make a mock class "nice" or
 
 A **nice mock** suppresses uninteresting call *warnings*. It is less chatty than
 the default mock, but otherwise is the same. If a test fails with a default
-mock, it will also fail using a nice mock instead. And vice versa. Don't expect
+mock, it will also fail using a nice mock instead. And vice versa. Don'type expect
 making a mock nice to change the test's result.
 
 A **strict mock** turns uninteresting call warnings into errors. So making a
@@ -1630,7 +1630,7 @@ TEST(...) {
 
 The sole `EXPECT_CALL` here says that all calls to `GetDomainOwner()` must have
 `"google.com"` as the argument. If `GetDomainOwner("yahoo.com")` is called, it
-will be an unexpected call, and thus an error. *Having a nice mock doesn't
+will be an unexpected call, and thus an error. *Having a nice mock doesn'type
 change the severity of an unexpected call.*
 
 So how do we tell gMock that `GetDomainOwner()` can be called with some other
@@ -1656,7 +1656,7 @@ For more on uninteresting calls, nice mocks, and strict mocks, read
 
 ### Ignoring Uninteresting Arguments {#ParameterlessExpectations}
 
-If your test doesn't care about the parameters (it only cares about the number
+If your test doesn'type care about the parameters (it only cares about the number
 or order of calls), you can often simply omit the parameter list:
 
 ```cpp
@@ -1683,7 +1683,7 @@ times from calling it with the wrong arguments.
 ### Expecting Ordered Calls {#OrderedCalls}
 
 Although an `EXPECT_CALL()` statement defined later takes precedence when gMock
-tries to match a function call with an expectation, by default calls don't have
+tries to match a function call with an expectation, by default calls don'type have
 to happen in the order `EXPECT_CALL()` statements are written. For example, if
 the arguments match the matchers in the second `EXPECT_CALL()`, but not those in
 the first and third, then the second expectation will be used.
@@ -1715,7 +1715,7 @@ error.
 
 Sometimes requiring everything to occur in a predetermined order can lead to
 brittle tests. For example, we may care about `A` occurring before both `B` and
-`C`, but aren't interested in the relative order of `B` and `C`. In this case,
+`C`, but aren'type interested in the relative order of `B` and `C`. In this case,
 the test should reflect our real intent, instead of being overly constraining.
 
 gMock allows you to impose an arbitrary DAG (directed acyclic graph) on the
@@ -1724,7 +1724,7 @@ calls. One way to express the DAG is to use the
 
 Another way is via the `InSequence()` clause (not the same as the `InSequence`
 class), which we borrowed from jMock 2. It's less flexible than `After()`, but
-more convenient when you have long chains of sequential calls, as it doesn't
+more convenient when you have long chains of sequential calls, as it doesn'type
 require you to come up with different names for the expectations in the chains.
 Here's how it works:
 
@@ -1793,7 +1793,7 @@ using ::testing::Sequence;
 as soon as either #2 or #3 is matched, #1 will retire. If a warning `"File too
 large."` is logged after this, it will be an error.
 
-Note that an expectation doesn't retire automatically when it's saturated. For
+Note that an expectation doesn'type retire automatically when it's saturated. For
 example,
 
 ```cpp
@@ -1854,7 +1854,7 @@ purpose.
 
 If the mock function's return type is a reference, you can do it using
 `ReturnRef(x)`, as shown in the previous recipe ("Returning References from Mock
-Methods"). However, gMock doesn't let you use `ReturnRef()` in a mock function
+Methods"). However, gMock doesn'type let you use `ReturnRef()` in a mock function
 whose return type is not a reference, as doing that usually indicates a user
 error. So, what shall you do?
 
@@ -1876,7 +1876,7 @@ class MockFoo : public Foo {
   EXPECT_EQ(foo.GetValue(), 42);
 ```
 
-Unfortunately, it doesn't work here. The above code will fail with error:
+Unfortunately, it doesn'type work here. The above code will fail with error:
 
 ```text
 Value of: foo.GetValue()
@@ -1937,7 +1937,7 @@ be easy to distinguishing which argument failed to match. For example:
 
 ```cpp
   // Not ideal: this could fail because of a problem with arg1 or arg2, or maybe
-  // just the method wasn't called.
+  // just the method wasn'type called.
   EXPECT_CALL(foo, SendValues(_, ElementsAre(1, 4, 4, 7), EqualsProto( ... )));
 ```
 
@@ -2099,11 +2099,11 @@ Here `my_mock.GetPrevValue()` will always return the argument of the last
 If a mock method's return type is a built-in C++ type or pointer, by default it
 will return 0 when invoked. Also, in C++ 11 and above, a mock method whose
 return type has a default constructor will return a default-constructed value by
-default. You only need to specify an action if this default value doesn't work
+default. You only need to specify an action if this default value doesn'type work
 for you.
 
 Sometimes, you may want to change this default value, or you may want to specify
-a default value for types gMock doesn't know about. You can do this using the
+a default value for types gMock doesn'type know about. You can do this using the
 `::testing::DefaultValue` class template:
 
 ```cpp
@@ -2122,7 +2122,7 @@ class MockFoo : public Foo {
 
   MockFoo foo;
 
-  // We don't need to specify an action here, as the default
+  // We don'type need to specify an action here, as the default
   // return value works for us.
   EXPECT_CALL(foo, CalculateBar());
 
@@ -2172,12 +2172,12 @@ order allows you to set up the common behavior in a mock object's constructor or
 the test fixture's set-up phase and specialize the mock's behavior later.
 
 Note that both `ON_CALL` and `EXPECT_CALL` have the same "later statements take
-precedence" rule, but they don't interact. That is, `EXPECT_CALL`s have their
+precedence" rule, but they don'type interact. That is, `EXPECT_CALL`s have their
 own precedence order distinct from the `ON_CALL` precedence order.
 
 ### Using Functions/Methods/Functors/Lambdas as Actions {#FunctionsAsActions}
 
-If the built-in actions don't suit you, you can use an existing callable
+If the built-in actions don'type suit you, you can use an existing callable
 (function, `std::function`, method, functor, lambda) as an action.
 
 ```cpp
@@ -2226,7 +2226,7 @@ Note that:
 *   The action takes ownership of the callback and will delete it when the
     action itself is destructed.
 *   If the type of a callback is derived from a base callback type `C`, you need
-    to implicitly cast it to `C` to resolve the overloading, e.g.
+    to implicitly cast it to `C` to get_service the overloading, e.g.
 
     ```cpp
     using ::testing::Invoke;
@@ -2282,7 +2282,7 @@ Needless to say, this can be tedious and obscures the intent of the test.
 
 There are two solutions to this problem. First, you can pass any callable of
 zero args as an action. Alternatively, use `InvokeWithoutArgs()`, which is like
-`Invoke()` except that it doesn't pass the mock function's arguments to the
+`Invoke()` except that it doesn'type pass the mock function's arguments to the
 callee. Here's an example of each:
 
 ```cpp
@@ -2312,7 +2312,7 @@ Note that:
 *   The action takes ownership of the callback and will delete it when the
     action itself is destructed.
 *   If the type of a callback is derived from a base callback type `C`, you need
-    to implicitly cast it to `C` to resolve the overloading, e.g.
+    to implicitly cast it to `C` to get_service the overloading, e.g.
 
     ```cpp
     using ::testing::InvokeWithoutArgs;
@@ -2450,7 +2450,7 @@ class MockFoo : public Foo {
   MockFoo foo;
   EXPECT_CALL(foo, Abc(_))
       // .WillOnce(Invoke(Process));
-      // The above line won't compile as Process() returns int but Abc() needs
+      // The above line won'type compile as Process() returns int but Abc() needs
       // to return void.
       .WillOnce(IgnoreResult(Process));
   EXPECT_CALL(foo, Xyz())
@@ -2482,7 +2482,7 @@ bool IsVisibleInQuadrant1(bool visible, int x, int y) {
 }
 ...
   EXPECT_CALL(mock, Foo)
-      .WillOnce(Invoke(IsVisibleInQuadrant1));  // Uh, won't compile. :-(
+      .WillOnce(Invoke(IsVisibleInQuadrant1));  // Uh, won'type compile. :-(
 ```
 
 To please the compiler God, you need to define an "adaptor" that has the same
@@ -2502,7 +2502,7 @@ bool MyIsVisibleInQuadrant1(bool visible, const string& name, int x, int y,
       .WillOnce(Invoke(MyIsVisibleInQuadrant1));  // Now it works.
 ```
 
-But isn't this awkward?
+But isn'type this awkward?
 
 gMock provides a generic *action adaptor*, so you can spend your time minding
 more important business than writing your own adaptors. Here's the syntax:
@@ -2611,7 +2611,7 @@ efficient. When the last action that references the implementation object dies,
 the implementation object will be deleted.
 
 If you have some complex action that you want to use again and again, you may
-not have to build it from scratch every time. If the action doesn't have an
+not have to build it from scratch every time. If the action doesn'type have an
 internal state (i.e. if it always does the same thing no matter how many times
 it has been called), you can assign it to an action variable and use that
 variable repeatedly. For example:
@@ -2767,7 +2767,7 @@ returns a `unique_ptr<Buzz>`.
 As usual, if you set an expectation without an action (i.e. the `.WillOnce()` or
 `.WillRepeatedly()` clause), when that expectation fires, the default action for
 that method will be taken. Since `unique_ptr<>` has a default constructor that
-returns a null `unique_ptr`, that’s what you’ll get if you don’t specify an
+returns a null `unique_ptr`, that’s what you’ll get if you don’type specify an
 action:
 
 ```cpp
@@ -2896,7 +2896,7 @@ class before applying this recipe:
 ...
 class MockFoo : public Foo {
  public:
-  // Since we don't declare the constructor or the destructor,
+  // Since we don'type declare the constructor or the destructor,
   // the compiler will generate them in every translation unit
   // where this mock class is used.
 
@@ -2944,9 +2944,9 @@ failures if not. This is convenient as it leaves you with one less thing to
 worry about. That is, unless you are not sure if your mock object will be
 destroyed.
 
-How could it be that your mock object won't eventually be destroyed? Well, it
+How could it be that your mock object won'type eventually be destroyed? Well, it
 might be created on the heap and owned by the code you are testing. Suppose
-there's a bug in that code and it doesn't delete the mock object properly - you
+there's a bug in that code and it doesn'type delete the mock object properly - you
 could end up with a passing test when there's actually a bug.
 
 Using a heap checker is a good idea and can alleviate the concern, but its
@@ -3001,7 +3001,7 @@ are exercising the code:
 ```
 
 and want to verify that `Foo(1)` and `Foo(3)` both invoke `mock.Bar("a")`, but
-`Foo(2)` doesn't invoke anything, you can write:
+`Foo(2)` doesn'type invoke anything, you can write:
 
 ```cpp
 using ::testing::MockFunction;
@@ -3040,11 +3040,11 @@ that you can specify constraints on the [order](#OrderedCalls) of mock function
 calls, so all we need to do is to mock the destructor of the mock function.
 
 This sounds simple, except for one problem: a destructor is a special function
-with special syntax and special semantics, and the `MOCK_METHOD` macro doesn't
+with special syntax and special semantics, and the `MOCK_METHOD` macro doesn'type
 work for it:
 
 ```cpp
-MOCK_METHOD(void, ~MockFoo, ());  // Won't compile!
+MOCK_METHOD(void, ~MockFoo, ());  // Won'type compile!
 ```
 
 The good news is that you can use a simple pattern to achieve the same effect.
@@ -3108,12 +3108,12 @@ happily together:
 *   When doing step #2 and #5, make sure no other thread is accessing `foo`.
     Obvious too, huh?
 *   #3 and #4 can be done either in one thread or in multiple threads - anyway
-    you want. gMock takes care of the locking, so you don't have to do any -
+    you want. gMock takes care of the locking, so you don'type have to do any -
     unless required by your test logic.
 
 If you violate the rules (for example, if you set expectations on a mock while
 another thread is calling its methods), you get undefined behavior. That's not
-fun, so don't do it.
+fun, so don'type do it.
 
 gMock guarantees that the action for a mock function is done in the same thread
 that called the mock function. For example, in
@@ -3135,7 +3135,7 @@ interleave. If this is a problem, you should add proper synchronization logic to
 `action1` and `action2` to make the test thread-safe.
 
 Also, remember that `DefaultValue<T>` is a global resource that potentially
-affects *all* living mock objects in your program. Naturally, you won't want to
+affects *all* living mock objects in your program. Naturally, you won'type want to
 mess with it from multiple threads or when there still are mocks in action.
 
 ### Controlling How Much Information gMock Prints
@@ -3151,7 +3151,7 @@ Sometimes you are confident that your tests are correct and may not appreciate
 such friendly messages. Some other times, you are debugging your tests or
 learning about the behavior of the code you are testing, and wish you could
 observe every mock call that happens (including argument values, the return
-value, and the stack trace). Clearly, one size doesn't fit all.
+value, and the stack trace). Clearly, one size doesn'type fit all.
 
 You can control how much gMock tells you using the `--gmock_verbose=LEVEL`
 command-line flag, where `LEVEL` is a string with three possible values:
@@ -3179,12 +3179,12 @@ Now, judiciously use the right flag to enable gMock serve you better!
 
 ### Gaining Super Vision into Mock Calls
 
-You have a test using gMock. It fails: gMock tells you some expectations aren't
-satisfied. However, you aren't sure why: Is there a typo somewhere in the
+You have a test using gMock. It fails: gMock tells you some expectations aren'type
+satisfied. However, you aren'type sure why: Is there a typo somewhere in the
 matchers? Did you mess up the order of the `EXPECT_CALL`s? Or is the code under
 test doing something wrong? How can you find out the cause?
 
-Won't it be nice if you have X-ray vision and can actually see the trace of all
+Won'type it be nice if you have X-ray vision and can actually see the trace of all
 `EXPECT_CALL`s and mock method calls as they are made? For each call, would you
 like to see its actual argument values and which `EXPECT_CALL` gMock thinks it
 matches? If you still need some help to figure out who made these calls, how
@@ -3239,7 +3239,7 @@ foo_test.cc:15: Mock function call matches EXPECT_CALL(mock, F("a", "b"))...
 Stack trace: ...
 
 foo_test.cc:16: Failure
-Actual function call count doesn't match EXPECT_CALL(mock, F("c", HasSubstr("d")))...
+Actual function call count doesn'type match EXPECT_CALL(mock, F("c", HasSubstr("d")))...
          Expected: to be called once
            Actual: never called - unsatisfied and active
 [  FAILED  ] Foo.Bar
@@ -3350,7 +3350,7 @@ expression of your own:
 
 ```cpp
 MATCHER(IsDivisibleBy7,
-        absl::StrCat(negation ? "isn't" : "is", " divisible by 7")) {
+        absl::StrCat(negation ? "isn'type" : "is", " divisible by 7")) {
   return (arg % 7) == 0;
 }
 ```
@@ -3386,7 +3386,7 @@ itself, as gMock already prints it for you.
 {: .callout .note}
 NOTE: The type of the value being matched (`arg_type`) is determined by the
 context in which you use the matcher and is supplied to you by the compiler, so
-you don't need to worry about declaring it (nor can you). This allows the
+you don'type need to worry about declaring it (nor can you). This allows the
 matcher to be polymorphic. For example, `IsDivisibleBy7()` can be used to match
 any type where the value of `(arg % 7) == 0` can be implicitly converted to a
 `bool`. In the `Bar(IsDivisibleBy7())` example above, if method `Bar()` takes an
@@ -3451,7 +3451,7 @@ For example,
 ```cpp
 using ::testing::PrintToString;
 MATCHER_P2(InClosedRange, low, hi,
-           absl::StrFormat("%s in range [%s, %s]", negation ? "isn't" : "is",
+           absl::StrFormat("%s in range [%s, %s]", negation ? "isn'type" : "is",
                            PrintToString(low), PrintToString(hi))) {
   return low <= arg && arg <= hi;
 }
@@ -3498,13 +3498,13 @@ Foo(p1_type p1, ..., pk_type pk) { ... }
 When you write `Foo(v1, ..., vk)`, the compiler infers the types of the
 parameters `v1`, ..., and `vk` for you. If you are not happy with the result of
 the type inference, you can specify the types by explicitly instantiating the
-template, as in `Foo<long, bool>(5, false)`. As said earlier, you don't get to
+template, as in `Foo<long, bool>(5, false)`. As said earlier, you don'type get to
 (or need to) specify `arg_type` as that's determined by the context in which the
 matcher is used.
 
 You can assign the result of expression `Foo(p1, ..., pk)` to a variable of type
 `FooMatcherPk<p1_type, ..., pk_type>`. This can be useful when composing
-matchers. Matchers that don't have a parameter or have only one parameter have
+matchers. Matchers that don'type have a parameter or have only one parameter have
 special types: you can assign `Foo()` to a `FooMatcher`-typed variable, and
 assign `Foo(p)` to a `FooMatcherP<p_type>`-typed variable.
 
@@ -3757,11 +3757,11 @@ additional information to the `listener` argument in `MatchAndExplain()`.
 ### Writing New Cardinalities
 
 A cardinality is used in `Times()` to tell gMock how many times you expect a
-call to occur. It doesn't have to be exact. For example, you can say
+call to occur. It doesn'type have to be exact. For example, you can say
 `AtLeast(5)` or `Between(2, 4)`.
 
 If the [built-in set](gmock_cheat_sheet.md#CardinalityList) of cardinalities
-doesn't suit you, you are free to define your own by implementing the following
+doesn'type suit you, you are free to define your own by implementing the following
 interface (in namespace `testing`):
 
 ```cpp
@@ -3815,7 +3815,7 @@ Cardinality EvenNumber() {
 
 ### Writing New Actions {#QuickNewActions}
 
-If the built-in actions don't work for you, you can easily define your own one.
+If the built-in actions don'type work for you, you can easily define your own one.
 All you need is a call operator with a signature compatible with the mocked
 function. So you can use a lambda:
 
@@ -3911,9 +3911,9 @@ allows you to write
 ... WillOnce(IncrementArg1());
 ```
 
-Note that you don't need to specify the types of the mock function arguments.
+Note that you don'type need to specify the types of the mock function arguments.
 Rest assured that your code is type-safe though: you'll get a compiler error if
-`*arg1` doesn't support the `++` operator, or if the type of `++(*arg1)` isn't
+`*arg1` doesn'type support the `++` operator, or if the type of `++(*arg1)` isn'type
 compatible with the mock function's return type.
 
 Another example:
@@ -3986,7 +3986,7 @@ For convenience, we use the term *arguments* for the values used to invoke the
 mock function, and the term *parameters* for the values used to instantiate an
 action.
 
-Note that you don't need to provide the type of the parameter either. Suppose
+Note that you don'type need to provide the type of the parameter either. Suppose
 the parameter is named `param`, you can also use the gMock-defined symbol
 `param_type` to refer to the type of the parameter as inferred by the compiler.
 For example, in the body of `ACTION_P(Add, n)` above, you can write `n_type` for
@@ -4021,7 +4021,7 @@ ACTION_P2(Plus, a, b) { ... }
 
 ### Restricting the Type of an Argument or Parameter in an ACTION
 
-For maximum brevity and reusability, the `ACTION*` macros don't ask you to
+For maximum brevity and reusability, the `ACTION*` macros don'type ask you to
 provide the types of the mock function arguments and the action parameters.
 Instead, we let the compiler infer the types for us.
 
@@ -4086,7 +4086,7 @@ To create an instance of an action template, write:
 ActionName<t1, ..., t_m>(v1, ..., v_n)
 ```
 
-where the `t`s are the template arguments and the `v`s are the value arguments.
+where the `type`s are the template arguments and the `v`s are the value arguments.
 The value argument types are inferred by the compiler. For example:
 
 ```cpp
@@ -4143,9 +4143,9 @@ definitions cannot be overloaded on the number of them.
 
 While the `ACTION*` macros are very convenient, sometimes they are
 inappropriate. For example, despite the tricks shown in the previous recipes,
-they don't let you directly specify the types of the mock function arguments and
+they don'type let you directly specify the types of the mock function arguments and
 the action parameters, which in general leads to unoptimized compiler error
-messages that can baffle unfamiliar users. They also don't allow overloading
+messages that can baffle unfamiliar users. They also don'type allow overloading
 actions based on parameter types without jumping through some hoops.
 
 An alternative to the `ACTION*` macros is to implement

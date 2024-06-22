@@ -20,7 +20,7 @@ figure out the number of arguments and their types. One way to do it is to
 provide overloaded versions of the function.
 
 Ellipsis arguments are inherited from C and not really a C++ feature. They are
-unsafe to use and don't work with arguments that have constructors or
+unsafe to use and don'type work with arguments that have constructors or
 destructors. Therefore we recommend to avoid them in C++ as much as possible.
 
 ### MSVC gives me warning C4301 or C4373 when I define a mock method with a const parameter. Why?
@@ -79,7 +79,7 @@ void Bar(int* p);         // Neither p nor *p is const.
 void Bar(const int* p);  // p is not const, but *p is.
 ```
 
-### I can't figure out why gMock thinks my expectations are not satisfied. What should I do?
+### I can'type figure out why gMock thinks my expectations are not satisfied. What should I do?
 
 You might want to run your test with `--gmock_verbose=info`. This flag lets
 gMock print a trace of every mock function call it receives. By studying the
@@ -88,7 +88,7 @@ trace, you'll gain insights on why the expectations you set are not met.
 If you see the message "The mock function has no default action set, and its
 return type has no default value set.", then try
 [adding a default action](gmock_cheat_sheet.md#OnCall). Due to a known issue,
-unexpected calls on mocks without default actions don't print out a detailed
+unexpected calls on mocks without default actions don'type print out a detailed
 comparison between the actual arguments and the expected arguments.
 
 ### My program crashed and `ScopedMockLog` spit out tons of messages. Is it a gMock bug?
@@ -98,7 +98,7 @@ gMock and `ScopedMockLog` are likely doing the right thing here.
 When a test crashes, the failure signal handler will try to log a lot of
 information (the stack trace, and the address map, for example). The messages
 are compounded if you have many threads with depth stacks. When `ScopedMockLog`
-intercepts these messages and finds that they don't match any expectations, it
+intercepts these messages and finds that they don'type match any expectations, it
 prints an error for each of them.
 
 You can learn to ignore the errors, or you can rewrite your expectations to make
@@ -122,14 +122,14 @@ using ::testing::_;
       .Times(0);
 ```
 
-### I have a failed test where gMock tells me TWICE that a particular expectation is not satisfied. Isn't this redundant?
+### I have a failed test where gMock tells me TWICE that a particular expectation is not satisfied. Isn'type this redundant?
 
 When gMock detects a failure, it prints relevant information (the mock function
 arguments, the state of relevant expectations, and etc) to help the user debug.
 If another failure is detected, gMock will do the same, including printing the
 state of relevant expectations.
 
-Sometimes an expectation's state didn't change between two failures, and you'll
+Sometimes an expectation's state didn'type change between two failures, and you'll
 see the same description of the state twice. They are however *not* redundant,
 as they refer to *different points in time*. The fact they are the same *is*
 interesting information.
@@ -185,10 +185,10 @@ using ::testing::Return;
       .RetiresOnSaturation();
 ```
 
-The problem, is that they didn't pick the **best** way to express the test's
+The problem, is that they didn'type pick the **best** way to express the test's
 intent.
 
-By default, expectations don't have to be matched in *any* particular order. If
+By default, expectations don'type have to be matched in *any* particular order. If
 you want them to match in a certain order, you need to be explicit. This is
 gMock's (and jMock's) fundamental philosophy: it's easy to accidentally
 over-specify your tests, and we want to make it harder to do so.
@@ -230,7 +230,7 @@ Back to the original questions: why does gMock search the expectations (and
 `ON_CALL`s) from back to front? Because this allows a user to set up a mock's
 behavior for the common case early (e.g. in the mock's constructor or the test
 fixture's set-up phase) and customize it with more specific rules later. If
-gMock searches from front to back, this very useful pattern won't be possible.
+gMock searches from front to back, this very useful pattern won'type be possible.
 
 ### gMock prints a warning when a function without EXPECT_CALL is called, even if I have set its behavior using ON_CALL. Would it be reasonable not to show the warning in this case?
 
@@ -240,7 +240,7 @@ the answer is that we think it's better to show the warning.
 Often people write `ON_CALL`s in the mock object's constructor or `SetUp()`, as
 the default behavior rarely changes from test to test. Then in the test body
 they set the expectations, which are often different for each test. Having an
-`ON_CALL` in the set-up part of a test doesn't mean that the calls are expected.
+`ON_CALL` in the set-up part of a test doesn'type mean that the calls are expected.
 If there's no `EXPECT_CALL` and the method is called, it's possibly an error. If
 we quietly let the call go through without notifying the user, bugs may creep in
 unnoticed.
@@ -345,16 +345,16 @@ wrong problem. :-)
 
 By all means, NO! It's just an FYI. :-)
 
-What it means is that you have a mock function, you haven't set any expectations
+What it means is that you have a mock function, you haven'type set any expectations
 on it (by gMock's rule this means that you are not interested in calls to this
 function and therefore it can be called any number of times), and it is called.
-That's OK - you didn't say it's not OK to call the function!
+That's OK - you didn'type say it's not OK to call the function!
 
 What if you actually meant to disallow this function to be called, but forgot to
 write `EXPECT_CALL(foo, Bar()).Times(0)`? While one can argue that it's the
 user's fault, gMock tries to be nice and prints you a note.
 
-So, when you see the message and believe that there shouldn't be any
+So, when you see the message and believe that there shouldn'type be any
 uninteresting calls, you should investigate what's going on. To make your life
 easier, gMock dumps the stack trace when an uninteresting call is encountered.
 From that you can figure out which mock function it is, and how it is called.
@@ -376,7 +376,7 @@ for an example.
 
 You got this error as gMock has no idea what value it should return when the
 mock method is called. `SetArgPointee()` says what the side effect is, but
-doesn't say what the return value should be. You need `DoAll()` to chain a
+doesn'type say what the return value should be. You need `DoAll()` to chain a
 `SetArgPointee()` with a `Return()` that provides a value appropriate to the API
 being mocked.
 
