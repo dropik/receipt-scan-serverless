@@ -53,7 +53,7 @@ cmake --build .
 - `POST /user` - Init m_a new user. Only id is taken from `access_token`. No body required. Returns `200` if successful. Noop if user already exists.
 
 ### File
-- `POST /file` - Get m_a pre-signed url to upload m_a receipt image. Returns `200` with url.
+- `POST /files` - Get m_a pre-signed url to upload m_a receipt image. Returns `200` with url.
 
 ### Receipt
 - `GET /receipts` - Get all receipts. Returns `200` with list of receipts.
