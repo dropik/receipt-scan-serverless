@@ -11,6 +11,7 @@
 
 #include <repository/client.hpp>
 #include <lambda/lambda.hpp>
+#include <di/container.hpp>
 
 #ifdef DEBUG
 #include <lambda/runtime.hpp>
@@ -20,6 +21,7 @@
 #endif
 
 #include "handler.hpp"
+#include "factories.hpp"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -28,6 +30,7 @@ using namespace Aws::Utils::Json;
 using namespace Aws::Textract;
 using namespace Aws::BedrockRuntime;
 using namespace scanner;
+using namespace di;
 
 static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
   return [] {
@@ -59,18 +62,21 @@ int main(int argc, char* argv[]) {
 #endif
 
     try {
-      auto stage = lambda::get_stage();
-      auto connection_string = repository::get_connection_string(stage, config);
+      auto h = [](auto req) {
+        container<
+            singleton<Aws::Client::ClientConfiguration>,
+            singleton<repository::connection_settings>,
+            singleton<lambda::logger>,
+            singleton<TextractClient>,
+            singleton<BedrockRuntimeClient>,
 
-      auto repo = std::make_shared<repository::client>(connection_string, l);
+            scoped<repository::t_client, repository::client<>>,
+            transient<t_handler, handler<>>
+        > services;
 
-      std::shared_ptr<TextractClient> textract_client =
-          Aws::MakeShared<TextractClient>("textract_client", config);
+        return services.template get<t_handler>()->operator()(req);
+      };
 
-      std::shared_ptr<BedrockRuntimeClient> bedrock_client =
-          Aws::MakeShared<BedrockRuntimeClient>("bedrock_client", config);
-
-      handler h(repo, textract_client, bedrock_client, l);
 #ifdef DEBUG
       lambda::runtime::run_debug(h);
 #else

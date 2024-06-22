@@ -4,21 +4,12 @@
 
 #pragma once
 
-#include <lambda/logger.hpp>
-#include <lambda/lambda.hpp>
-#include <aws/s3/S3Client.h>
-#include <repository/client.hpp>
-#include <di/container.hpp>
+#include <di/service_factory.hpp>
 #include <lambda/factories.hpp>
 #include <repository/factories.hpp>
 
-#include "models/identity.hpp"
-#include "models/s3_settings.hpp"
-
-#include "services/file_service.hpp"
-#include "services/user_service.hpp"
-#include "services/receipt_service.hpp"
-#include "services/category_service.hpp"
+#include <aws/textract/TextractClient.h>
+#include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
 namespace di {
 
@@ -26,12 +17,12 @@ template<>
 struct service_factory<lambda::logger> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
-    return std::move(factory("Api"));
+    return std::move(factory("Scanner"));
   }
 };
 
 template<>
-struct service_factory<Aws::S3::S3Client> {
+struct service_factory<Aws::Textract::TextractClient> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
     return std::move(factory(*container.template get<Aws::Client::ClientConfiguration>()));
@@ -39,10 +30,10 @@ struct service_factory<Aws::S3::S3Client> {
 };
 
 template<>
-struct service_factory<api::models::s3_settings> {
+struct service_factory<Aws::BedrockRuntime::BedrockRuntimeClient> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
-    return std::move(factory(getenv("IMAGES_BUCKET")));
+    return std::move(factory(*container.template get<Aws::Client::ClientConfiguration>()));
   }
 };
 
