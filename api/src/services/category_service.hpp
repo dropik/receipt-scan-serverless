@@ -11,16 +11,16 @@
 namespace api {
 namespace services {
 
-class i_category_service {};
+class t_category_service {};
 
 template<
-    typename IRepository = repository::i_client,
-    typename IIdentity = const models::identity>
+    typename TRepository = repository::t_client,
+    typename TIdentity = const models::identity>
 class category_service {
  public:
   using category = models::category;
 
-  category_service(IRepository repository, IIdentity identity)
+  category_service(TRepository repository, TIdentity identity)
       : m_repository(std::move(repository)),
         m_identity(std::move(identity)) {}
 
@@ -74,8 +74,8 @@ class category_service {
   }
 
  private:
-  IRepository m_repository;
-  IIdentity m_identity;
+  TRepository m_repository;
+  TIdentity m_identity;
 
   std::shared_ptr<repository::models::category> try_get_category(const models::guid_t &category_id) {
     return m_repository->template select<repository::models::category>(

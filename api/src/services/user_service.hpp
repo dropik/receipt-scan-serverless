@@ -12,16 +12,16 @@
 namespace api {
 namespace services {
 
-class i_user_service {};
+struct t_user_service {};
 
 template<
-    typename IRepository = repository::i_client,
-    typename IIdentity = const models::identity>
+    typename TRepository = repository::t_client,
+    typename TIdentity = const models::identity>
 class user_service {
   using user = repository::models::user;
 
  public:
-  user_service(IRepository repository, IIdentity identity)
+  user_service(TRepository repository, TIdentity identity)
       : m_repository(std::move(repository)), m_identity(std::move(identity)) {}
 
   void init_user() {
@@ -46,8 +46,8 @@ class user_service {
   }
 
  private:
-  IRepository m_repository;
-  IIdentity m_identity;
+  TRepository m_repository;
+  TIdentity m_identity;
 };
 
 }

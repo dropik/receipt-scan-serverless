@@ -17,17 +17,17 @@
 namespace api {
 namespace services {
 
-class i_file_service {};
+class t_file_service {};
 
 template<
-    typename IS3Client = Aws::S3::S3Client,
-    typename IS3Settings = const models::s3_settings,
-    typename IIdentity = const models::identity>
+    typename TS3Client = Aws::S3::S3Client,
+    typename TS3Settings = const models::s3_settings,
+    typename TIdentity = const models::identity>
 class file_service {
  public:
   using file = models::file;
 
-  explicit file_service(IS3Client s3_client, IS3Settings s3_settings, IIdentity identity)
+  explicit file_service(TS3Client s3_client, TS3Settings s3_settings, TIdentity identity)
       : m_s3_client(std::move(s3_client)),
         m_bucket(std::move(s3_settings->bucket)),
         m_identity(std::move(identity)) {}
@@ -77,9 +77,9 @@ class file_service {
   }
 
  private:
-  IS3Client m_s3_client;
+  TS3Client m_s3_client;
   std::string m_bucket;
-  IIdentity m_identity;
+  TIdentity m_identity;
 
   static std::string get_key(const std::string &user_id, const std::string &name) {
     return lambda::string::format("users/%s/receipts/%s", user_id.c_str(), name.c_str());

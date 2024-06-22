@@ -18,12 +18,12 @@
 namespace api {
 namespace services {
 
-class i_receipt_service {};
+class t_receipt_service {};
 
 template<
-    typename IRepository = repository::i_client,
-    typename IIdentity = const models::identity,
-    typename IFileService = i_file_service>
+    typename TRepository = repository::t_client,
+    typename TIdentity = const models::identity,
+    typename TFileService = t_file_service>
 class receipt_service {
  public:
   using receipt = repository::models::receipt;
@@ -33,7 +33,7 @@ class receipt_service {
   using receipt_detail = models::receipt_detail;
   using receipt_item_detail = models::receipt_item_detail;
 
-  receipt_service(IRepository repository, IIdentity identity, IFileService file_service)
+  receipt_service(TRepository repository, TIdentity identity, TFileService file_service)
       : m_repository(std::move(repository)),
         m_identity(std::move(identity)),
         m_file_service(std::move(file_service)) {}
@@ -182,9 +182,9 @@ class receipt_service {
   }
 
  private:
-  IRepository m_repository;
-  IIdentity m_identity;
-  IFileService m_file_service;
+  TRepository m_repository;
+  TIdentity m_identity;
+  TFileService m_file_service;
 
   std::shared_ptr<repository::models::receipt> try_get_receipt(const models::guid_t &receipt_id) {
     return m_repository->template select<receipt>(

@@ -28,14 +28,14 @@ namespace repository {
 
 std::string get_connection_string(const std::string &stage, const Aws::Client::ClientConfiguration &config);
 
-class i_client {};
+struct t_client {};
 
 template<
-    typename ISettings = const connection_settings,
-    typename ILogger = const lambda::logger>
+    typename TSettings = const connection_settings,
+    typename TLogger = const lambda::logger>
 class client {
  public:
-  client(ISettings settings, ILogger logger) : m_logger(logger) {
+  client(TSettings settings, TLogger logger) : m_logger(logger) {
     try {
       m_logger->info("Establishing connection with the database...");
 
@@ -183,7 +183,7 @@ class client {
   }
 
   std::shared_ptr<sql::Connection> m_connection;
-  ILogger m_logger;
+  TLogger m_logger;
 };
 
 } // namespace client

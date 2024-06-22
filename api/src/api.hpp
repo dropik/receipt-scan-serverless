@@ -56,44 +56,44 @@ api_root create_api(TServiceContainer &c) {
 
   api.any("/v1")([&c](api_resource &v1) {
     v1.post("/user")([&c]() {
-      return c.template get<services::i_user_service>()->init_user();
+      return c.template get<services::t_user_service>()->init_user();
     });
 
     v1.any("/files")([&c](api_resource &files) {
       files.post<models::upload_file_params>("/")([&c](const auto &request) {
-        return c.template get<services::i_file_service>()->get_upload_file_url(request);
+        return c.template get<services::t_file_service>()->get_upload_file_url(request);
       });
     });
 
     v1.any("/receipts")([&c](api_resource &receipts) {
       receipts.get("/")([&c]() {
-        return c.template get<services::i_receipt_service>()->get_receipts();
+        return c.template get<services::t_receipt_service>()->get_receipts();
       });
       receipts.any<guid_t>()([&c](const guid_t &receipt_id, api_resource &receipt) {
         receipt.get("/")([&c, &receipt_id]() {
-          return c.template get<services::i_receipt_service>()->get_receipt(receipt_id);
+          return c.template get<services::t_receipt_service>()->get_receipt(receipt_id);
         });
         receipt.get("/file")([&c, &receipt_id]() {
-          return c.template get<services::i_receipt_service>()->get_receipt_file(receipt_id);
+          return c.template get<services::t_receipt_service>()->get_receipt_file(receipt_id);
         });
       });
       receipts.put<models::receipt_put_params>("/")([&c](const auto &request) {
-        return c.template get<services::i_receipt_service>()->put_receipt(request);
+        return c.template get<services::t_receipt_service>()->put_receipt(request);
       });
       receipts.del<guid_t>()([&c](const guid_t &receipt_id) {
-        return c.template get<services::i_receipt_service>()->delete_receipt(receipt_id);
+        return c.template get<services::t_receipt_service>()->delete_receipt(receipt_id);
       });
     });
 
     v1.any("/categories")([&c](api_resource &categories) {
       categories.get("/")([&c]() {
-        return c.template get<services::i_category_service>()->get_categories();
+        return c.template get<services::t_category_service>()->get_categories();
       });
       categories.put<models::category>("/")([&c](const auto &request) {
-        return c.template get<services::i_category_service>()->put_category(request);
+        return c.template get<services::t_category_service>()->put_category(request);
       });
       categories.del<guid_t>()([&c](const guid_t &category_id) {
-        return c.template get<services::i_category_service>()->delete_category(category_id);
+        return c.template get<services::t_category_service>()->delete_category(category_id);
       });
     });
   });

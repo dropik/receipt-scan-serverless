@@ -50,12 +50,12 @@ int main(int argc, char** argv) {
           singleton<Aws::S3::S3Client>,
 
           scoped<models::identity>,
-          scoped<repository::i_client, repository::client<>>,
+          scoped<repository::t_client, repository::client<>>,
 
-          transient<i_user_service, user_service<>>,
-          transient<i_file_service, file_service<>>,
-          transient<i_receipt_service, receipt_service<>>,
-          transient<i_category_service, category_service<>>
+          transient<t_user_service, user_service<>>,
+          transient<t_file_service, file_service<>>,
+          transient<t_receipt_service, receipt_service<>>,
+          transient<t_category_service, category_service<>>
       > services;
 
       auto api = create_api(services);
