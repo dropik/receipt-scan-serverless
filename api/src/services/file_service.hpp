@@ -6,7 +6,6 @@
 
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/DeleteObjectRequest.h>
-#include <repository/client.hpp>
 #include <rest/api_exception.hpp>
 
 #include "../models/file.hpp"
@@ -22,18 +21,16 @@ class i_file_service {};
 
 template<
     typename IS3Client = Aws::S3::S3Client,
-    typename IS3Settings = models::s3_settings,
-    typename IIdentity = const models::identity,
-    typename IRepository = repository::i_client>
+    typename IS3Settings = const models::s3_settings,
+    typename IIdentity = const models::identity>
 class file_service {
  public:
   using file = models::file;
 
-  explicit file_service(IS3Client s3_client, IS3Settings s3_settings, IIdentity identity, IRepository repository)
+  explicit file_service(IS3Client s3_client, IS3Settings s3_settings, IIdentity identity)
       : m_s3_client(std::move(s3_client)),
         m_bucket(std::move(s3_settings->bucket)),
-        m_identity(std::move(identity)),
-        m_repository(std::move(repository)) {}
+        m_identity(std::move(identity)) {}
 
   file get_upload_file_url(const models::upload_file_params &params) {
     if (params.name.empty()) {
@@ -83,7 +80,6 @@ class file_service {
   IS3Client m_s3_client;
   std::string m_bucket;
   IIdentity m_identity;
-  IRepository m_repository;
 
   static std::string get_key(const std::string &user_id, const std::string &name) {
     return lambda::string::format("users/%s/receipts/%s", user_id.c_str(), name.c_str());
