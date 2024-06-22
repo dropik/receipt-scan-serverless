@@ -3,6 +3,8 @@ add_library(lambda STATIC
     include/lambda/lambda.hpp
     src/lambda.cpp
     include/lambda/factories.hpp
+    include/lambda/log.hpp
+    src/log.cpp
 )
 
 target_include_directories(lambda PUBLIC

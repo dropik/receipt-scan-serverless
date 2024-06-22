@@ -9,20 +9,20 @@
 #include <mariadb/conncpp/PreparedStatement.hpp>
 #include <mariadb/conncpp/DriverManager.hpp>
 
-#include <lambda/logger.hpp>
+#include <lambda/log.hpp>
 
 #include <aws/core/client/ClientConfiguration.h>
 
 #include "repository/configurations/repository_configuration.hpp"
 #include "selector.hpp"
 #include "statement.hpp"
+#include "connection_settings.hpp"
 
 #include "repository/configurations/category_configuration.hpp"
 #include "repository/configurations/receipt_configuration.hpp"
 #include "repository/configurations/receipt_item_configuration.hpp"
 #include "repository/configurations/user_configuration.hpp"
 #include "repository/configurations/receipt_file_configuration.hpp"
-#include "connection_settings.hpp"
 
 namespace repository {
 
@@ -31,24 +31,23 @@ std::string get_connection_string(const std::string &stage, const Aws::Client::C
 struct t_client {};
 
 template<
-    typename TSettings = const connection_settings,
-    typename TLogger = const lambda::logger>
+    typename TSettings = const connection_settings>
 class client {
  public:
-  client(TSettings settings, TLogger logger) : m_logger(logger) {
+  explicit client(TSettings settings) {
     try {
-      m_logger->info("Establishing connection with the database...");
+      lambda::log.info("Establishing connection with the database...");
 
       sql::SQLString url(settings->connection_string);
       std::unique_ptr<sql::Connection> conn(
           sql::DriverManager::getConnection(url));
       if (conn == nullptr) {
-        m_logger->error("Unable to establish connection with database!");
+        lambda::log.error("Unable to establish connection with database!");
         throw std::runtime_error("Unable to establish connection with database!");
       }
       m_connection = std::move(conn);
     } catch (std::exception &e) {
-      m_logger->error(
+      lambda::log.error(
           "Error occurred while establishing connection with the database: %s",
           e.what());
       throw;
@@ -57,7 +56,7 @@ class client {
 
   ~client() {
     if (m_connection) {
-      m_logger->info("Closing connection with the database...");
+      lambda::log.info("Closing connection with the database...");
       m_connection->close();
     }
   }
@@ -65,7 +64,7 @@ class client {
   template<typename T>
   void create(const T &entity) {
     auto &configuration = get_configuration<T>();
-    m_logger->info("Inserting in %s...", configuration.get_table_name().c_str());
+    lambda::log.info("Inserting in %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_insert_statement(entity, m_connection);
       if (!stmt) {
@@ -73,7 +72,7 @@ class client {
       }
       stmt->executeUpdate();
     } catch (std::exception &e) {
-      m_logger->error("Error occurred while creating entity in the database: %s",
+      lambda::log.error("Error occurred while creating entity in the database: %s",
                       e.what());
       throw;
     }
@@ -82,7 +81,7 @@ class client {
   template<typename T>
   std::shared_ptr<T> get(const models::guid &id) {
     auto &configuration = get_configuration<T>();
-    m_logger->info("Getting entity from %s...", configuration.get_table_name().c_str());
+    lambda::log.info("Getting entity from %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_select_statement(id, m_connection);
       if (!stmt) {
@@ -94,7 +93,7 @@ class client {
       }
       throw std::runtime_error("Entity not found!");
     } catch (std::exception &e) {
-      m_logger->error(
+      lambda::log.error(
           "Error occurred while getting entity from the database: %s", e.what());
       throw;
     }
@@ -103,7 +102,7 @@ class client {
   template<typename T>
   void update(const T &entity) {
     auto &configuration = get_configuration<T>();
-    m_logger->info("Updating in %s...", configuration.get_table_name().c_str());
+    lambda::log.info("Updating in %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_update_statement(entity, m_connection);
       if (!stmt) {
@@ -111,7 +110,7 @@ class client {
       }
       stmt->executeUpdate();
     } catch (std::exception &e) {
-      m_logger->error("Error occurred while updating entity in the database: %s",
+      lambda::log.error("Error occurred while updating entity in the database: %s",
                       e.what());
       throw;
     }
@@ -120,7 +119,7 @@ class client {
   template<typename T>
   void drop(const models::guid &id) {
     auto &configuration = get_configuration<T>();
-    m_logger->info("Deleting from %s...", configuration.get_table_name().c_str());
+    lambda::log.info("Deleting from %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_delete_statement(id, m_connection);
       if (!stmt) {
@@ -128,7 +127,7 @@ class client {
       }
       stmt->executeUpdate();
     } catch (std::exception &e) {
-      m_logger->error("Error occurred while deleting entity in the database: %s",
+      lambda::log.error("Error occurred while deleting entity in the database: %s",
                       e.what());
       throw;
     }
@@ -142,7 +141,7 @@ class client {
   template<typename T>
   selector<T> select(const std::string &query) {
     auto &configuration = get_configuration<T>();
-    m_logger->info("Executing query: %s", query.c_str());
+    lambda::log.info("Executing query: %s", query.c_str());
     try {
       std::shared_ptr<sql::PreparedStatement> stmt(m_connection->prepareStatement(query));
       stmt->closeOnCompletion();
@@ -151,7 +150,7 @@ class client {
       }
       return selector<T>(stmt, configuration);
     } catch (std::exception &e) {
-      m_logger->error(
+      lambda::log.error(
           "Error occurred while preparing query: %s",
           e.what());
       throw;
@@ -159,7 +158,7 @@ class client {
   }
 
   statement execute(const std::string &query) {
-    m_logger->info("Executing query: %s", query.c_str());
+    lambda::log.info("Executing query: %s", query.c_str());
     try {
       std::shared_ptr<sql::PreparedStatement> stmt(m_connection->prepareStatement(query));
       stmt->closeOnCompletion();
@@ -168,7 +167,7 @@ class client {
       }
       return statement(stmt);
     } catch (std::exception &e) {
-      m_logger->error(
+      lambda::log.error(
           "Error occurred while preparing query: %s",
           e.what());
       throw;
@@ -183,7 +182,6 @@ class client {
   }
 
   std::shared_ptr<sql::Connection> m_connection;
-  TLogger m_logger;
 };
 
 } // namespace client

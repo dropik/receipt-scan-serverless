@@ -62,11 +62,12 @@ int main(int argc, char* argv[]) {
 #endif
 
     try {
+      lambda::log = lambda::logger("Scanner");
+
       auto h = [](auto req) {
         container<
             singleton<Aws::Client::ClientConfiguration>,
             singleton<repository::connection_settings>,
-            singleton<lambda::logger>,
             singleton<TextractClient>,
             singleton<BedrockRuntimeClient>,
 

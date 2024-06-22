@@ -8,6 +8,7 @@
 #include <lambda/runtime.hpp>
 #endif
 
+#include <lambda/log.hpp>
 #include <di/container.hpp>
 
 #include "api.hpp"
@@ -41,12 +42,13 @@ int main(int argc, char** argv) {
 
   InitAPI(options);
   {
+    lambda::log = lambda::logger("Api");
+
     auto function = [](auto req) {
       container<
           singleton<Aws::Client::ClientConfiguration>,
           singleton<repository::connection_settings>,
           singleton<models::s3_settings>,
-          singleton<lambda::logger>,
           singleton<Aws::S3::S3Client>,
 
           scoped<models::identity>,

@@ -42,11 +42,11 @@ api_root create_api(TServiceContainer &c) {
     return next(request);
   });
 
-  api.use_logging(c.template get<lambda::logger>());
+  api.use_logging();
 
   // Version
   api.use([&c](const auto &request, const auto &next) {
-    c.template get<lambda::logger>()->info("App Version: %s", APP_VERSION);
+    lambda::log.info("App Version: %s", APP_VERSION);
     return next(request);
   });
 

@@ -28,22 +28,19 @@ struct t_handler {};
 template<
     typename TRepository = repository::t_client,
     typename TTextractClient = const Aws::Textract::TextractClient,
-    typename TBedrockRuntimeClient = const Aws::BedrockRuntime::BedrockRuntimeClient,
-    typename TLogger = const lambda::logger>
+    typename TBedrockRuntimeClient = const Aws::BedrockRuntime::BedrockRuntimeClient>
 class handler {
  public:
   handler(TRepository repository,
           TTextractClient textract_client,
-          TBedrockRuntimeClient bedrock_client,
-          TLogger logger)
+          TBedrockRuntimeClient bedrock_client)
       : m_repository(std::move(repository)),
         m_textract_client(std::move(textract_client)),
-        m_bedrock_client(std::move(bedrock_client)),
-        m_logger(std::move(logger)) {}
+        m_bedrock_client(std::move(bedrock_client)) {}
 
   aws::lambda_runtime::invocation_response operator()(
       const aws::lambda_runtime::invocation_request &request) {
-    m_logger->info("Version %s", APP_VERSION);
+    lambda::log.info("Version %s", APP_VERSION);
 
     try {
       lambda::models::payloads::s3_request s3_request =
@@ -53,13 +50,13 @@ class handler {
       for (auto &record : s3_request.records) {
         process_s3_object(record);
       }
-      m_logger->info("All files processed.");
+      lambda::log.info("All files processed.");
 
       return aws::lambda_runtime::invocation_response::success("All files processed!",
                                           "application/json");
 
     } catch (const std::exception &e) {
-      m_logger->error(
+      lambda::log.error(
           "Error occurred while processing invocation request: %s", e.what());
       return aws::lambda_runtime::invocation_response::failure("Internal error occurred.",
                                           "application/json");
@@ -70,7 +67,6 @@ class handler {
   TRepository m_repository;
   TTextractClient m_textract_client;
   TBedrockRuntimeClient m_bedrock_client;
-  TLogger m_logger;
 
   using expense_fields = std::vector<Aws::Textract::Model::ExpenseField>;
   using line_item_groups = std::vector<Aws::Textract::Model::LineItemGroup>;
@@ -91,7 +87,7 @@ class handler {
   static constexpr auto item_unit_price = "UNIT_PRICE";
   static constexpr auto default_currency = "EUR";
 
-  std::vector<std::string> date_formats = {
+  std::array<std::string, 24> date_formats = {
       // YMD
       "%Y-%m-%d",
       "%y-%m-%d",
@@ -128,14 +124,14 @@ class handler {
     const auto &key = record.s3.object.key;
 
     if (!record.is_put()) {
-      m_logger->info("Skipping not put request.");
+      lambda::log.info("Skipping not put request.");
       return;
     }
 
     std::regex file_regex("users/" GUID_REGEX "/receipts/.*",
                           std::regex_constants::extended);
     if (!std::regex_match(key, file_regex)) {
-      m_logger->info("The key %s does not conform receipt file path structure.",
+      lambda::log.info("The key %s does not conform receipt file path structure.",
                      key.c_str());
       return;
     }
@@ -146,7 +142,7 @@ class handler {
     key_parted.erase(0, users_delimiter + 10);
     std::string file_name = key_parted;
 
-    m_logger->info("Processing request %s of user %s", file_name.c_str(),
+    lambda::log.info("Processing request %s of user %s", file_name.c_str(),
                    user_id.c_str());
 
     Aws::Textract::Model::S3Object s3_object;
@@ -158,7 +154,7 @@ class handler {
 
     auto outcome = m_textract_client->AnalyzeExpense(expense_request);
     if (!outcome.IsSuccess()) {
-      m_logger->error("Error occurred while analyzing expense: %s",
+      lambda::log.error("Error occurred while analyzing expense: %s",
                       outcome.GetError().GetMessage().c_str());
       return;
     }
@@ -172,7 +168,7 @@ class handler {
         extracted_documents++;
       }
     }
-    m_logger->info("Successfully extracted %d of %d documents from the request.",
+    lambda::log.info("Successfully extracted %d of %d documents from the request.",
                    extracted_documents,
                    expense_documents.size());
   }
@@ -238,7 +234,7 @@ class handler {
           best_date_confidence = confidence;
           receipt.date = found_date;
         } else {
-          m_logger->info("Unable to parse found receipt date string %s.",
+          lambda::log.info("Unable to parse found receipt date string %s.",
                          value.c_str());
           receipt.date = "";
         }
@@ -250,20 +246,20 @@ class handler {
           best_total_confidence = confidence;
           receipt.total_amount = found_total;
         } else {
-          m_logger->info("Unable to parse found total string %s.", value.c_str());
+          lambda::log.info("Unable to parse found total string %s.", value.c_str());
           receipt.total_amount = 0;
         }
       }
     }
 
     if (best_store_name_confidence == 0) {
-      m_logger->info("No store name found on the receipt.");
+      lambda::log.info("No store name found on the receipt.");
     }
     if (best_date_confidence == 0) {
-      m_logger->info("No date found on the receipt.");
+      lambda::log.info("No date found on the receipt.");
     }
     if (best_total_confidence == 0) {
-      m_logger->info("No total found on the receipt.");
+      lambda::log.info("No total found on the receipt.");
     }
 
     try {
@@ -286,7 +282,7 @@ class handler {
       }
 
     } catch (std::exception &e) {
-      m_logger->error("Error occurred while storing receipt in database: %s",
+      lambda::log.error("Error occurred while storing receipt in database: %s",
                       e.what());
       return false;
     }
@@ -341,7 +337,7 @@ class handler {
           best_amount_confidence = confidence;
           receipt_item.amount = found_amount;
         } else {
-          m_logger->info("Unable to parse found amount string %s.",
+          lambda::log.info("Unable to parse found amount string %s.",
                          value.c_str());
           receipt_item.amount = 0;
         }
@@ -352,7 +348,7 @@ class handler {
           best_quantity_confidence = confidence;
           quantity = found_quantity;
         } else {
-          m_logger->info("Unable to parse found quantity string %s.",
+          lambda::log.info("Unable to parse found quantity string %s.",
                          value.c_str());
           quantity = 1;
         }
@@ -363,7 +359,7 @@ class handler {
           best_unit_price_confidence = confidence;
           unit_price = found_unit_price;
         } else {
-          m_logger->info("Unable to parse found unit price string %s.",
+          lambda::log.info("Unable to parse found unit price string %s.",
                          value.c_str());
           unit_price = 0;
         }
@@ -371,12 +367,12 @@ class handler {
     }
 
     if (best_description_confidence == 0) {
-      m_logger->info("No description found for item %d.",
+      lambda::log.info("No description found for item %d.",
                      receipt_item.sort_order);
     }
     if (best_amount_confidence == 0 &&
         (best_quantity_confidence == 0 || best_unit_price_confidence == 0)) {
-      m_logger->info("No amount found for item %s.",
+      lambda::log.info("No amount found for item %s.",
                      receipt_item.description.c_str());
     }
 
@@ -402,7 +398,7 @@ class handler {
       }
       return true;
     } catch (std::exception& e) {
-      m_logger->error("Error occurred while storing receipt item in database: %s",
+      lambda::log.error("Error occurred while storing receipt item in database: %s",
                       e.what());
       return false;
     }
@@ -475,7 +471,7 @@ class handler {
     std::string numeric = text.substr(start, end - start);
 
     if (numeric.empty()) {
-      m_logger->info("No numeric characters found in the total field.");
+      lambda::log.info("No numeric characters found in the total field.");
       result = 0;
       return false;
     }
@@ -484,7 +480,7 @@ class handler {
     long double total;
     ss >> std::get_money(total);
     if (ss.fail()) {
-      m_logger->info("Unable to parse total as currency.");
+      lambda::log.info("Unable to parse total as currency.");
       result = 0;
       return false;
     }
@@ -497,7 +493,7 @@ class handler {
     if (!currency.empty()) {
       return currency;
     } else {
-      m_logger->info("No currency found for receipt. Assuming EUR.");
+      lambda::log.info("No currency found for receipt. Assuming EUR.");
       return default_currency;
     }
   }
@@ -560,7 +556,7 @@ class handler {
     invoke_request.SetBody(ss);
     const auto& outcome = m_bedrock_client->InvokeModel(invoke_request);
     if (!outcome.IsSuccess()) {
-      m_logger->error("Error occurred while invoking bedrock model: %s",
+      lambda::log.error("Error occurred while invoking bedrock model: %s",
                       outcome.GetError().GetMessage().c_str());
       return;
     }
@@ -602,7 +598,7 @@ class handler {
         m_repository->update(item);
       }
     } catch (std::exception& e) {
-      m_logger->error("Error occurred while storing receipt in database: %s",
+      lambda::log.error("Error occurred while storing receipt in database: %s",
                       e.what());
     }
   }
@@ -612,7 +608,7 @@ class handler {
     try {
       m_repository->update(receipt);
     } catch (std::exception &e) {
-      m_logger->error("Error occurred while marking receipt as done: %s",
+      lambda::log.error("Error occurred while marking receipt as done: %s",
                       e.what());
     }
   }

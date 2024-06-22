@@ -27,14 +27,13 @@ class api_root : public api_resource {
     };
   }
   void use_exception_filter();
-  void use_logging(const std::shared_ptr<lambda::logger> &logger);
+  void use_logging();
 
   api_response_t operator()(const api_request_t &request);
   aws::lambda_runtime::invocation_response operator()(const aws::lambda_runtime::invocation_request &request);
 
  private:
   std::function<api_response_t(const api_request_t &)> m_api_entrypoint;
-  std::shared_ptr<lambda::logger> m_logger = nullptr;
 };
 
 }

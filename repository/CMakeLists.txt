@@ -30,10 +30,13 @@ add_library(repository STATIC
 )
 
 target_include_directories(repository PUBLIC
-        "include")
+    "include"
+    "${PROJECT_SOURCE_DIR}/di/include"
+    "${PROJECT_SOURCE_DIR}/lambda/include"
+)
 
 target_link_libraries(repository PUBLIC
-    "${PROJECT_SOURCE_DIR}/di/include"
+    lambda
     ${AWSSDK_LINK_LIBRARIES}
     "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
     "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"

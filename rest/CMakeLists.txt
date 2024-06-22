@@ -21,9 +21,13 @@ add_library(rest STATIC
     src/api_root.cpp
 )
 
-target_include_directories(rest PUBLIC include)
+target_include_directories(rest PUBLIC
+    include
+    "${PROJECT_SOURCE_DIR}/lambda/include"
+)
 
 target_link_libraries(rest PUBLIC
+    lambda
     AWS::aws-lambda-runtime
     ${AWSSDK_LINK_LIBRARIES}
     aws-lambda-cpp-common
