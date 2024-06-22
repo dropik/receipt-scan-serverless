@@ -90,12 +90,13 @@ struct transient {
   template<typename T>
   using ptr = std::unique_ptr<T>;
 
-  template<typename TResolvedType, typename TContainer>
+  template<typename TContainer>
   auto get_or_create(TContainer &container) {
+    using type = typename TContainer::template resolve<TService>::type;
     return service_factory<TService>::create(
         container,
         [](auto ...params) {
-          return std::move(std::make_unique<TResolvedType>(std::move(params)...));
+          return std::move(std::make_unique<type>(std::move(params)...));
         });
   }
 };
@@ -108,14 +109,15 @@ struct singleton {
   template<typename T>
   using ptr = std::shared_ptr<T>;
 
-  template<typename TResolvedType, typename TContainer>
+  template<typename TContainer>
   auto get_or_create(TContainer &container) {
-    static ptr<TResolvedType> instance;
+    using type = typename TContainer::template resolve<TService>::type;
+    static ptr<type> instance;
     if (!instance) {
       instance = service_factory<TService>::create(
           container,
           [](auto ...params) {
-            return std::move(std::make_shared<TResolvedType>(std::move(params)...));
+            return std::move(std::make_shared<type>(std::move(params)...));
           });
     }
     return instance;
@@ -130,20 +132,23 @@ struct scoped {
   template<typename T>
   using ptr = std::shared_ptr<T>;
 
-  template<typename TResolvedType, typename TContainer>
+  template<typename TContainer>
   auto get_or_create(TContainer &container) {
-    if (!m_instance) {
-      m_instance = service_factory<TService>::create(
+    using type = typename TContainer::template resolve<TService>::type;
+    static ptr<type> instance;
+    if (!instance || !m_initialized) {
+      instance = service_factory<TService>::create(
           container,
           [](auto ...params) {
-            return std::move(std::make_shared<TResolvedType>(std::move(params)...));
+            return std::move(std::make_shared<type>(std::move(params)...));
           });
+      m_initialized = true;
     }
-    return std::static_pointer_cast<TResolvedType>(m_instance);
+    return instance;
   }
 
  private:
-  ptr<void> m_instance;
+  bool m_initialized = false;
 };
 
 class a {};
@@ -160,7 +165,7 @@ class b {
 
 struct ic {};
 
-template<typename ib = ib>
+template<typename ib = const ib>
 class c {
  public:
   constexpr explicit c(ib _b) {}
@@ -183,7 +188,7 @@ class service_container {
   auto get() {
     auto service = get_service<typename std::decay<T>::type>(m_services);
     using resolved_type = typename resolve<typename decltype(service)::service>::type;
-    return std::move(resolve_const<resolved_type, std::is_const<T>::value>(service.template get_or_create<resolved_type>(*this)));
+    return std::move(resolve_const<resolved_type, std::is_const<T>::value>(service.template get_or_create(*this)));
   }
 
   template<typename T, bool IsConst>
