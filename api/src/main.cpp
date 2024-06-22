@@ -4,13 +4,13 @@
 #include <aws/core/http/HttpTypes.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 
-#include <aws/s3/S3Client.h>
-
 #ifdef DEBUG
 #include <lambda/runtime.hpp>
 #endif
 
-#include "rest_api.hpp"
+#include "api.hpp"
+#include "di.hpp"
+#include "factories.hpp"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -38,12 +38,31 @@ int main(int argc, char** argv) {
 
   InitAPI(options);
   {
-    auto api = create_api();
+    auto function = [](auto req) {
+      service_container<
+          singleton<Aws::Client::ClientConfiguration>,
+          singleton<repository::connection_settings>,
+          singleton<models::s3_settings>,
+          singleton<lambda::logger>,
+          singleton<Aws::S3::S3Client>,
+
+          scoped<models::identity>,
+          scoped<repository::i_client, repository::client<>>,
+
+          transient<services::i_user_service, services::user_service<>>,
+          transient<services::i_file_service, services::file_service<>>,
+          transient<services::i_receipt_service, services::receipt_service<>>,
+          transient<services::i_category_service, services::category_service<>>
+      > services;
+
+      auto api = create_api(services);
+      return api(req);
+    };
 
 #ifdef DEBUG
-    lambda::runtime::run_debug(api);
+    lambda::runtime::run_debug(function);
 #else
-    run_handler(api);
+    run_handler(function);
 #endif // DEBUG
   }
   ShutdownAPI(options);

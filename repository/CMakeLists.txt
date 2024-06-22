@@ -25,6 +25,7 @@ add_library(repository STATIC
     src/statement.cpp
     include/repository/models/receipt_file.hpp
     include/repository/configurations/receipt_file_configuration.hpp
+    include/repository/connection_settings.hpp
 )
 
 target_include_directories(repository PUBLIC

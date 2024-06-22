@@ -7,6 +7,7 @@
 
 #include <mariadb/conncpp/Connection.hpp>
 #include <mariadb/conncpp/PreparedStatement.hpp>
+#include <mariadb/conncpp/DriverManager.hpp>
 
 #include <lambda/logger.hpp>
 
@@ -21,16 +22,45 @@
 #include "repository/configurations/receipt_item_configuration.hpp"
 #include "repository/configurations/user_configuration.hpp"
 #include "repository/configurations/receipt_file_configuration.hpp"
+#include "connection_settings.hpp"
 
 namespace repository {
 
 std::string get_connection_string(const std::string &stage, const Aws::Client::ClientConfiguration &config);
 
+class i_client {};
+
+template<
+    typename ISettings = const connection_settings,
+    typename ILogger = const lambda::logger>
 class client {
  public:
-  client(const std::string &connection_string,
-         std::shared_ptr<lambda::logger> logger);
-  ~client();
+  client(ISettings settings, ILogger logger) : m_logger(logger) {
+    try {
+      m_logger->info("Establishing connection with the database...");
+
+      sql::SQLString url(settings->connection_string);
+      std::unique_ptr<sql::Connection> conn(
+          sql::DriverManager::getConnection(url));
+      if (conn == nullptr) {
+        m_logger->error("Unable to establish connection with database!");
+        throw std::runtime_error("Unable to establish connection with database!");
+      }
+      m_connection = std::move(conn);
+    } catch (std::exception &e) {
+      m_logger->error(
+          "Error occurred while establishing connection with the database: %s",
+          e.what());
+      throw;
+    }
+  }
+
+  ~client() {
+    if (m_connection) {
+      m_logger->info("Closing connection with the database...");
+      m_connection->close();
+    }
+  }
 
   template<typename T>
   void create(const T &entity) {
@@ -128,7 +158,22 @@ class client {
     }
   }
 
-  statement execute(const std::string &query);
+  statement execute(const std::string &query) {
+    m_logger->info("Executing query: %s", query.c_str());
+    try {
+      std::shared_ptr<sql::PreparedStatement> stmt(m_connection->prepareStatement(query));
+      stmt->closeOnCompletion();
+      if (!stmt) {
+        throw std::runtime_error("Unable to create prepared statement!");
+      }
+      return statement(stmt);
+    } catch (std::exception &e) {
+      m_logger->error(
+          "Error occurred while preparing query: %s",
+          e.what());
+      throw;
+    }
+  }
 
  private:
   template<typename T>
@@ -138,7 +183,7 @@ class client {
   }
 
   std::shared_ptr<sql::Connection> m_connection;
-  std::shared_ptr<lambda::logger> m_logger;
+  ILogger m_logger;
 };
 
 } // namespace client
