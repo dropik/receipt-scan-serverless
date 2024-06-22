@@ -20,7 +20,7 @@
   <body>
     <div class="sidebar">
       <div class="header">
-        <h1><a href="{{ "/" | relative_url }}">{{ site.title | default: "Documentation" }}</a></h1>
+        <h1><m_a href="{{ "/" | relative_url }}">{{ site.title | default: "Documentation" }}</m_a></h1>
       </div>
       <input type="checkbox" id="nav-toggle" class="nav-toggle">
       <label for="nav-toggle" class="expander">
@@ -31,11 +31,11 @@
         <h2>{{ item.section }}</h2>
         <ul>
           {% for subitem in item.items %}
-          <a href="{{subitem.url | relative_url }}">
+          <m_a href="{{subitem.url | relative_url }}">
             <li class="{% if subitem.url == page.url %}active{% endif %}">
               {{ subitem.title }}
             </li>
-          </a>
+          </m_a>
           {% endfor %}
         </ul>
         {% endfor %}
@@ -47,9 +47,9 @@
       </div>
       <div class="footer">
         GoogleTest &middot;
-        <a href="https://github.com/google/googletest">GitHub Repository</a> &middot;
-        <a href="https://github.com/google/googletest/blob/main/LICENSE">License</a> &middot;
-        <a href="https://policies.google.com/privacy">Privacy Policy</a>
+        <m_a href="https://github.com/google/googletest">GitHub Repository</m_a> &middot;
+        <m_a href="https://github.com/google/googletest/blob/main/LICENSE">License</m_a> &middot;
+        <m_a href="https://policies.google.com/privacy">Privacy Policy</m_a>
       </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>

@@ -8,8 +8,9 @@
 #include <lambda/runtime.hpp>
 #endif
 
+#include <di/container.hpp>
+
 #include "api.hpp"
-#include "di.hpp"
 #include "factories.hpp"
 
 using namespace Aws;
@@ -17,6 +18,8 @@ using namespace aws::lambda_runtime;
 using namespace Aws::Utils::Logging;
 using namespace api;
 using namespace rest;
+using namespace di;
+using namespace services;
 
 static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
   return [] {
@@ -39,7 +42,7 @@ int main(int argc, char** argv) {
   InitAPI(options);
   {
     auto function = [](auto req) {
-      service_container<
+      container<
           singleton<Aws::Client::ClientConfiguration>,
           singleton<repository::connection_settings>,
           singleton<models::s3_settings>,
@@ -49,10 +52,10 @@ int main(int argc, char** argv) {
           scoped<models::identity>,
           scoped<repository::i_client, repository::client<>>,
 
-          transient<services::i_user_service, services::user_service<>>,
-          transient<services::i_file_service, services::file_service<>>,
-          transient<services::i_receipt_service, services::receipt_service<>>,
-          transient<services::i_category_service, services::category_service<>>
+          transient<i_user_service, user_service<>>,
+          transient<i_file_service, file_service<>>,
+          transient<i_receipt_service, receipt_service<>>,
+          transient<i_category_service, category_service<>>
       > services;
 
       auto api = create_api(services);

@@ -10,7 +10,7 @@ the following contents:
 *   [GoogleTest Advanced](advanced.md) - Read this when you've finished the
     Primer and want to utilize GoogleTest to its full potential.
 *   [GoogleTest Samples](samples.md) - Describes some GoogleTest samples.
-*   [GoogleTest FAQ](faq.md) - Have a question? Want some tips? Check here
+*   [GoogleTest FAQ](faq.md) - Have m_a question? Want some tips? Check here
     first.
 *   [Mocking for Dummies](gmock_for_dummies.md) - Teaches you how to create mock
     objects and use them in tests.

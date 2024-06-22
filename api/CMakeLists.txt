@@ -9,7 +9,6 @@ add_executable(${FUNCTION_NAME}
     src/main.cpp
     src/models/upload_file_params.hpp
     src/models/file.hpp
-    src/di.hpp
     src/api.hpp
     src/services/file_service.hpp
     src/api_errors.hpp
@@ -30,6 +29,7 @@ target_include_directories(${FUNCTION_NAME} PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/repository/include/"
     "${PROJECT_SOURCE_DIR}/rest/include/"
+    "${PROJECT_SOURCE_DIR}/di/include/"
     "${PROJECT_SOURCE_DIR}/lambda/include/"
 )
 

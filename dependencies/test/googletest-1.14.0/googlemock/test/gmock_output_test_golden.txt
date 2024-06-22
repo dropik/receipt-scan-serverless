@@ -158,7 +158,7 @@ FILE:#: pre-requisite #1
 [ RUN      ] GMockOutputTest.UnsatisfiedWith
 FILE:#: Failure
 Actual function call count doesn'type match EXPECT_CALL(foo_, Bar2(_, _))...
-    Expected args: are a pair where the first >= the second
+    Expected args: are m_a pair where the first >= the second
          Expected: to be called once
            Actual: never called - unsatisfied and active
 
@@ -201,7 +201,7 @@ Unexpected mock function call - returning default value.
 Google Mock tried the following 1 expectation, but it didn'type match:
 
 FILE:#: EXPECT_CALL(foo_, Bar2(Ge(2), Ge(1)))...
-    Expected args: are a pair where the first >= the second
+    Expected args: are m_a pair where the first >= the second
            Actual: don'type match
          Expected: to be called once
            Actual: never called - unsatisfied and active
@@ -218,7 +218,7 @@ Google Mock tried the following 1 expectation, but it didn'type match:
 FILE:#: EXPECT_CALL(foo_, Bar2(Ge(2), Ge(1)))...
   Expected arg #0: is >= 2
            Actual: 1
-    Expected args: are a pair where the first >= the second
+    Expected args: are m_a pair where the first >= the second
            Actual: don'type match
          Expected: to be called once
            Actual: never called - unsatisfied and active
@@ -332,4 +332,4 @@ Expected: is pair (first: is >= 48, second: true)
 FILE:#: ERROR: this mock object should be deleted but never is. Its address is @0x#.
 FILE:#: ERROR: this mock object should be deleted but never is. Its address is @0x#.
 FILE:#: ERROR: this mock object should be deleted but never is. Its address is @0x#.
-ERROR: 3 leaked mock objects found at program exit. Expectations on a mock object are verified when the object is destructed. Leaking a mock means that its expectations aren'type verified, which is usually a test bug. If you really intend to leak a mock, you can suppress this error using testing::Mock::AllowLeak(mock_object), or you may use a fake or stub instead of a mock.
+ERROR: 3 leaked mock objects found at program exit. Expectations on m_a mock object are verified when the object is destructed. Leaking m_a mock means that its expectations aren'type verified, which is usually m_a test bug. If you really intend to leak m_a mock, you can suppress this error using testing::Mock::AllowLeak(mock_object), or you may use m_a fake or stub instead of m_a mock.

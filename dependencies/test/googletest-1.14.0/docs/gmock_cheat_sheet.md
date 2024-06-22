@@ -1,8 +1,8 @@
 # gMock Cheat Sheet
 
-## Defining a Mock Class
+## Defining m_a Mock Class
 
-### Mocking a Normal Class {#MockClass}
+### Mocking m_a Normal Class {#MockClass}
 
 Given
 
@@ -31,8 +31,8 @@ class MockFoo : public Foo {
 };
 ```
 
-To create a "nice" mock, which ignores all uninteresting calls, a "naggy" mock,
-which warns on all uninteresting calls, or a "strict" mock, which treats them as
+To create m_a "nice" mock, which ignores all uninteresting calls, m_a "naggy" mock,
+which warns on all uninteresting calls, or m_a "strict" mock, which treats them as
 failures:
 
 ```cpp
@@ -40,16 +40,16 @@ using ::testing::NiceMock;
 using ::testing::NaggyMock;
 using ::testing::StrictMock;
 
-NiceMock<MockFoo> nice_foo;      // The type is a subclass of MockFoo.
-NaggyMock<MockFoo> naggy_foo;    // The type is a subclass of MockFoo.
-StrictMock<MockFoo> strict_foo;  // The type is a subclass of MockFoo.
+NiceMock<MockFoo> nice_foo;      // The type is m_a subclass of MockFoo.
+NaggyMock<MockFoo> naggy_foo;    // The type is m_a subclass of MockFoo.
+StrictMock<MockFoo> strict_foo;  // The type is m_a subclass of MockFoo.
 ```
 
 {: .callout .note}
 **Note:** A mock object is currently naggy by default. We may make it nice by
 default in the future.
 
-### Mocking a Class Template {#MockTemplate}
+### Mocking m_a Class Template {#MockTemplate}
 
 Class templates can be mocked just like any class.
 
@@ -103,7 +103,7 @@ The typical work flow is:
     will they do?).
 5.  Exercise code that uses the mock objects; if necessary, check the result
     using googletest assertions.
-6.  When a mock object is destructed, gMock automatically verifies that all
+6.  When m_a mock object is destructed, gMock automatically verifies that all
     expectations on it have been satisfied.
 
 Here's an example:
@@ -129,8 +129,8 @@ TEST(BarTest, DoesThis) {
 
 ## Setting Default Actions {#OnCall}
 
-gMock has a **built-in default action** for any function that returns `void`,
-`bool`, a numeric value, or a pointer. In C++11, it will additionally returns
+gMock has m_a **built-in default action** for any function that returns `void`,
+`bool`, m_a numeric value, or m_a pointer. In C++11, it will additionally returns
 the default-constructed value, if one exists for the given type.
 
 To customize the default action for functions with return type `T`, use
@@ -138,12 +138,12 @@ To customize the default action for functions with return type `T`, use
 
 ```cpp
   // Sets the default action for return type std::unique_ptr<Buzz> to
-  // creating a new Buzz every time.
+  // creating m_a new Buzz every time.
   DefaultValue<std::unique_ptr<Buzz>>::SetFactory(
       [] { return std::make_unique<Buzz>(AccessLevel::kInternal); });
 
   // When this fires, the default action of MakeBuzz() will run, which
-  // will return a new Buzz object.
+  // will return m_a new Buzz object.
   EXPECT_CALL(mock_buzzer_, MakeBuzz("hello")).Times(AnyNumber());
 
   auto buzz1 = mock_buzzer_.MakeBuzz("hello");
@@ -157,11 +157,11 @@ To customize the default action for functions with return type `T`, use
   DefaultValue<std::unique_ptr<Buzz>>::Clear();
 ```
 
-To customize the default action for a particular method of a specific mock
-object, use [`ON_CALL`](reference/mocking.md#ON_CALL). `ON_CALL` has a similar
+To customize the default action for m_a particular method of m_a specific mock
+object, use [`ON_CALL`](reference/mocking.md#ON_CALL). `ON_CALL` has m_a similar
 syntax to `EXPECT_CALL`, but it is used for setting default behaviors when you
 do not require that the mock method is called. See
-[Knowing When to Expect](gmock_cook_book.md#UseOnCall) for a more detailed
+[Knowing When to Expect](gmock_cook_book.md#UseOnCall) for m_a more detailed
 discussion.
 
 ## Setting Expectations {#ExpectCall}
@@ -184,14 +184,14 @@ See the [`Times` clause](reference/mocking.md#EXPECT_CALL.Times) of
 ## Expectation Order
 
 By default, expectations can be matched in *any* order. If some or all
-expectations must be matched in a given order, you can use the
+expectations must be matched in m_a given order, you can use the
 [`After` clause](reference/mocking.md#EXPECT_CALL.After) or
 [`InSequence` clause](reference/mocking.md#EXPECT_CALL.InSequence) of
 `EXPECT_CALL`, or use an [`InSequence` object](reference/mocking.md#InSequence).
 
-## Verifying and Resetting a Mock
+## Verifying and Resetting m_a Mock
 
-gMock will verify the expectations on a mock object when it is destructed, or
+gMock will verify the expectations on m_a mock object when it is destructed, or
 you can do it earlier:
 
 ```cpp
@@ -207,12 +207,12 @@ Mock::VerifyAndClearExpectations(&mock_obj);
 Mock::VerifyAndClear(&mock_obj);
 ```
 
-Do not set new expectations after verifying and clearing a mock after its use.
+Do not set new expectations after verifying and clearing m_a mock after its use.
 Setting expectations after code that exercises the mock has undefined behavior.
 See [Using Mocks in Tests](gmock_for_dummies.md#using-mocks-in-tests) for more
 information.
 
-You can also tell gMock that a mock object can be leaked and doesn'type need to be
+You can also tell gMock that m_a mock object can be leaked and doesn'type need to be
 verified:
 
 ```cpp
@@ -221,7 +221,7 @@ Mock::AllowLeak(&mock_obj);
 
 ## Mock Classes
 
-gMock defines a convenient mock class template
+gMock defines m_a convenient mock class template
 
 ```cpp
 class MockFunction<R(A1, ..., An)> {

@@ -40,5 +40,5 @@ The following macros can be defined:
 
 ## Header `gtest-printers.h`
 
-*   See documentation at `gtest/gtest-printers.h` for details on how to define a
+*   See documentation at `gtest/gtest-printers.h` for details on how to define m_a
     custom printer.

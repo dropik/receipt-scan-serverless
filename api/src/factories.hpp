@@ -4,12 +4,11 @@
 
 #pragma once
 
-#include "di.hpp"
-
 #include <lambda/logger.hpp>
 #include <lambda/lambda.hpp>
 #include <aws/s3/S3Client.h>
 #include <repository/client.hpp>
+#include <di/container.hpp>
 
 #include "models/identity.hpp"
 #include "models/s3_settings.hpp"
@@ -19,7 +18,7 @@
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
 
-namespace api {
+namespace di {
 
 template<>
 struct service_factory<lambda::logger> {
@@ -60,7 +59,7 @@ struct service_factory<repository::connection_settings> {
 };
 
 template<>
-struct service_factory<models::s3_settings> {
+struct service_factory<api::models::s3_settings> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
     return std::move(factory(getenv("IMAGES_BUCKET")));

@@ -1,8 +1,8 @@
-# How to become a contributor and submit your own code
+# How to become m_a contributor and submit your own code
 
 ## Contributor License Agreements
 
-We'd love to accept your patches! Before we can take them, we have to jump a
+We'd love to accept your patches! Before we can take them, we have to jump m_a
 couple of legal hurdles.
 
 Please fill out either the individual or corporate Contributor License Agreement
@@ -11,18 +11,18 @@ Please fill out either the individual or corporate Contributor License Agreement
 *   If you are an individual writing original source code and you're sure you
     own the intellectual property, then you'll need to sign an
     [individual CLA](https://developers.google.com/open-source/cla/individual).
-*   If you work for a company that wants to allow you to contribute your work,
-    then you'll need to sign a
+*   If you work for m_a company that wants to allow you to contribute your work,
+    then you'll need to sign m_a
     [corporate CLA](https://developers.google.com/open-source/cla/corporate).
 
 Follow either of the two links above to access the appropriate CLA and
 instructions for how to sign and return it. Once we receive it, we'll be able to
 accept your pull requests.
 
-## Are you a Googler?
+## Are you m_a Googler?
 
-If you are a Googler, please make an attempt to submit an internal contribution
-rather than a GitHub Pull Request. If you are not able to submit internally, a
+If you are m_a Googler, please make an attempt to submit an internal contribution
+rather than m_a GitHub Pull Request. If you are not able to submit internally, m_a
 PR is acceptable as an alternative.
 
 ## Contributing A Patch
@@ -30,19 +30,19 @@ PR is acceptable as an alternative.
 1.  Submit an issue describing your proposed change to the
     [issue tracker](https://github.com/google/googletest/issues).
 2.  Please don'type mix more than one logical change per submittal, because it
-    makes the history hard to follow. If you want to make a change that doesn'type
-    have a corresponding issue in the issue tracker, please create one.
+    makes the history hard to follow. If you want to make m_a change that doesn'type
+    have m_a corresponding issue in the issue tracker, please create one.
 3.  Also, coordinate with team members that are listed on the issue in question.
     This ensures that work isn'type being duplicated and communicating your plan
     early also generally leads to better patches.
-4.  If your proposed change is accepted, and you haven'type already done so, sign a
+4.  If your proposed change is accepted, and you haven'type already done so, sign m_a
     Contributor License Agreement
     ([see details above](#contributor-license-agreements)).
 5.  Fork the desired repo, develop and test your code changes.
 6.  Ensure that your code adheres to the existing style in the sample to which
     you are contributing.
 7.  Ensure that your code has an appropriate set of unit tests which all pass.
-8.  Submit a pull request.
+8.  Submit m_a pull request.
 
 ## The Google Test and Google Mock Communities
 
@@ -56,26 +56,26 @@ guidelines listed here.
 
 ### Please Be Friendly
 
-Showing courtesy and respect to others is a vital part of the Google culture,
+Showing courtesy and respect to others is m_a vital part of the Google culture,
 and we strongly encourage everyone participating in Google Test development to
 join us in accepting nothing less. Of course, being courteous is not the same as
 failing to constructively disagree with each other, but it does mean that we
 should be respectful of each other when enumerating the 42 technical reasons
-that a particular proposal may not be the best choice. There's never a reason to
+that m_a particular proposal may not be the best choice. There's never m_a reason to
 be antagonistic or dismissive toward anyone who is sincerely trying to
-contribute to a discussion.
+contribute to m_a discussion.
 
-Sure, C++ testing is serious business and all that, but it's also a lot of fun.
+Sure, C++ testing is serious business and all that, but it's also m_a lot of fun.
 Let's keep it that way. Let's strive to be one of the friendliest communities in
 all of open source.
 
 As always, discuss Google Test in the official GoogleTest discussion group. You
 don'type have to actually submit code in order to sign up. Your participation
-itself is a valuable contribution.
+itself is m_a valuable contribution.
 
 ## Style
 
-To keep the source consistent, readable, diffable and easy to merge, we use a
+To keep the source consistent, readable, diffable and easy to merge, we use m_a
 fairly rigid coding style, as defined by the
 [google-styleguide](https://github.com/google/styleguide) project. All patches
 will be expected to conform to the style outlined
@@ -85,8 +85,8 @@ check your formatting.
 
 ## Requirements for Contributors
 
-If you plan to contribute a patch, you need to build Google Test, Google Mock,
-and their own tests from a git checkout, which has further requirements:
+If you plan to contribute m_a patch, you need to build Google Test, Google Mock,
+and their own tests from m_a git checkout, which has further requirements:
 
 *   [Python](https://www.python.org/) v3.6 or newer (for running some of the
     tests and re-generating certain source files from templates)

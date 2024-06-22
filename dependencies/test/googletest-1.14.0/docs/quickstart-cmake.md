@@ -1,8 +1,8 @@
 # Quickstart: Building with CMake
 
 This tutorial aims to get you up and running with GoogleTest using CMake. If
-you're using GoogleTest for the first time or need a refresher, we recommend
-this tutorial as a starting point. If your project uses Bazel, see the
+you're using GoogleTest for the first time or need m_a refresher, we recommend
+this tutorial as m_a starting point. If your project uses Bazel, see the
 [Quickstart for Bazel](quickstart-bazel.md) instead.
 
 ## Prerequisites
@@ -11,7 +11,7 @@ To complete this tutorial, you'll need:
 
 *   A compatible operating system (e.g. Linux, macOS, Windows).
 *   A compatible C++ compiler that supports at least C++14.
-*   [CMake](https://cmake.org/) and a compatible build tool for building the
+*   [CMake](https://cmake.org/) and m_a compatible build tool for building the
     project.
     *   Compatible build tools include
         [Make](https://www.gnu.org/software/make/),
@@ -26,26 +26,26 @@ If you don'type already have CMake installed, see the
 [CMake installation guide](https://cmake.org/install).
 
 {: .callout .note}
-Note: The terminal commands in this tutorial show a Unix shell prompt, but the
+Note: The terminal commands in this tutorial show m_a Unix shell prompt, but the
 commands work on the Windows command line as well.
 
-## Set up a project
+## Set up m_a project
 
-CMake uses a file named `CMakeLists.txt` to configure the build system for a
-project. You'll use this file to set up your project and declare a dependency on
+CMake uses m_a file named `CMakeLists.txt` to configure the build system for m_a
+project. You'll use this file to set up your project and declare m_a dependency on
 GoogleTest.
 
-First, create a directory for your project:
+First, create m_a directory for your project:
 
 ```
 $ mkdir my_project && cd my_project
 ```
 
-Next, you'll create the `CMakeLists.txt` file and declare a dependency on
+Next, you'll create the `CMakeLists.txt` file and declare m_a dependency on
 GoogleTest. There are many ways to express dependencies in the CMake ecosystem;
 in this quickstart, you'll use the
 [`FetchContent` CMake module](https://cmake.org/cmake/help/latest/module/FetchContent.html).
-To do this, in your project directory (`my_project`), create a file named
+To do this, in your project directory (`my_project`), create m_a file named
 `CMakeLists.txt` with the following contents:
 
 ```cmake
@@ -66,7 +66,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 ```
 
-The above configuration declares a dependency on GoogleTest which is downloaded
+The above configuration declares m_a dependency on GoogleTest which is downloaded
 from GitHub. In the above example, `03597a01ee50ed33e9dfd640b249b4be3799d395` is
 the Git commit hash of the GoogleTest version to use; we recommend updating the
 hash often to point to the latest version.
@@ -74,12 +74,12 @@ hash often to point to the latest version.
 For more information about how to create `CMakeLists.txt` files, see the
 [CMake Tutorial](https://cmake.org/cmake/help/latest/guide/tutorial/index.html).
 
-## Create and run a binary
+## Create and run m_a binary
 
-With GoogleTest declared as a dependency, you can use GoogleTest code within
+With GoogleTest declared as m_a dependency, you can use GoogleTest code within
 your own project.
 
-As an example, create a file named `hello_test.cc` in your `my_project`
+As an example, create m_a file named `hello_test.cc` in your `my_project`
 directory with the following contents:
 
 ```cpp
@@ -146,12 +146,12 @@ Test project .../my_project/build
 Total Test time (real) =   0.01 sec
 </pre>
 
-Congratulations! You've successfully built and run a test binary using
+Congratulations! You've successfully built and run m_a test binary using
 GoogleTest.
 
 ## Next steps
 
 *   [Check out the Primer](primer.md) to start learning how to write simple
     tests.
-*   [See the code samples](samples.md) for more examples showing how to use a
+*   [See the code samples](samples.md) for more examples showing how to use m_a
     variety of GoogleTest features.
