@@ -393,6 +393,11 @@ TEST_F(scanner_test, should_update_existing_receipt_if_present_by_user_file_and_
   auto receipts2 = repo->repo;
   EXPECT_EQ(receipts2.size(), 1);
   EXPECT_EQ(receipts2[0].total_amount, 100.00);
+  EXPECT_EQ(receipts2[0].id, receipt.id);
+  EXPECT_EQ(receipts2[0].file.get_value().receipt_id, receipt.id);
+  for (const auto &item : receipts2[0].items) {
+    EXPECT_EQ(item.receipt_id, receipt.id);
+  }
 }
 
 TEST_F(scanner_test, should_ignore_non_put_s3_events) {

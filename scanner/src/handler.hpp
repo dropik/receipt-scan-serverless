@@ -58,7 +58,10 @@ class handler {
 
           if (existing_receipt.has_value()) {
             receipt.id = existing_receipt.get_value().id;
-            receipt.file.get_value().id = existing_receipt.get_value().file.get_value().id;
+            receipt.file = existing_receipt.get_value().file;
+            for (auto &item : receipt.items) {
+              item.receipt_id = receipt.id;
+            }
           }
           m_repository->store(receipt);
         }

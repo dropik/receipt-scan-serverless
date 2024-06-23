@@ -127,6 +127,7 @@ TEST_F(receipt_repository_test, should_clear_old_files_if_id_changed) {
   auto repo = services.get<repository::t_client>();
   auto files = repo->select<receipt_file>("select * from receipt_files where receipt_id = ?").with_param(r.id).all();
   ASSERT_EQ(1, files->size());
+  ASSERT_EQ("new_id", files->operator[](0)->id);
 }
 
 TEST_F(receipt_repository_test, should_find_receipt_by_file_name_and_doc_number) {
