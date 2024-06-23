@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
             singleton<repository::connection_settings>,
             singleton<TextractClient>,
             singleton<BedrockRuntimeClient>,
+            singleton<repository::t_client, repository::client<>>,
 
-            scoped<repository::t_client, repository::client<>>,
             transient<t_handler, handler<>>
         > services;
 

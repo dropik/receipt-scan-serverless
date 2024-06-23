@@ -41,9 +41,9 @@ int main(int argc, char** argv) {
           singleton<repository::connection_settings>,
           singleton<models::s3_settings>,
           singleton<Aws::S3::S3Client>,
+          singleton<repository::t_client, repository::client<>>,
 
           scoped<models::identity>,
-          scoped<repository::t_client, repository::client<>>,
 
           transient<t_user_service, user_service<>>,
           transient<t_file_service, file_service<>>,

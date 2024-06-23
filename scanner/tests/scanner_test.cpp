@@ -51,7 +51,7 @@ class scanner_test : public ::testing::Test {
   container<
       singleton<TextractClient, fake_textract_client>,
       singleton<BedrockRuntimeClient, fake_bedrock_runtime_client>,
-      scoped<repository::t_client, fake_repository>,
+      singleton<repository::t_client, fake_repository>,
 
       transient<t_receipt_extractor, receipt_extractor<>>,
       transient<t_receipt_repository, receipt_repository<>>,
