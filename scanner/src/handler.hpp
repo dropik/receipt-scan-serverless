@@ -15,15 +15,42 @@
 #include <lambda/logger.hpp>
 #include <lambda/models/payloads/s3.hpp>
 #include <repository/client.hpp>
+#include <repository/receipt_repository.hpp>
 
 #include "config.h"
 #include "utils.hpp"
 #include "models/bedrock_response.hpp"
 #include "models/bedrock_payload.hpp"
+#include "services/receipt_extractor.hpp"
 
 namespace scanner {
 
 struct t_handler {};
+
+template<
+    typename TReceiptExtractor = const services::t_receipt_extractor,
+    typename TRepository = repository::t_receipt_repository,
+    typename TBedrockRuntimeClient = const Aws::BedrockRuntime::BedrockRuntimeClient>
+class handler_v2 {
+ public:
+  handler_v2(TReceiptExtractor extractor,
+             TRepository repository,
+             TBedrockRuntimeClient bedrock_client)
+      : m_extractor(std::move(extractor)),
+        m_repository(std::move(repository)),
+        m_bedrock_client(std::move(bedrock_client)) {}
+
+  aws::lambda_runtime::invocation_response operator()(
+      const aws::lambda_runtime::invocation_request &request) {
+    return aws::lambda_runtime::invocation_response::success("All files processed!",
+                                                             "application/json");
+  }
+
+ private:
+  TReceiptExtractor m_extractor;
+  TRepository m_repository;
+  TBedrockRuntimeClient m_bedrock_client;
+};
 
 template<
     typename TRepository = repository::t_client,
@@ -53,13 +80,13 @@ class handler {
       lambda::log.info("All files processed.");
 
       return aws::lambda_runtime::invocation_response::success("All files processed!",
-                                          "application/json");
+                                                               "application/json");
 
     } catch (const std::exception &e) {
       lambda::log.error(
           "Error occurred while processing invocation request: %s", e.what());
       return aws::lambda_runtime::invocation_response::failure("Internal error occurred.",
-                                          "application/json");
+                                                               "application/json");
     }
   }
 
@@ -132,7 +159,7 @@ class handler {
                           std::regex_constants::extended);
     if (!std::regex_match(key, file_regex)) {
       lambda::log.info("The key %s does not conform receipt file path structure.",
-                     key.c_str());
+                       key.c_str());
       return;
     }
 
@@ -143,7 +170,7 @@ class handler {
     std::string file_name = key_parted;
 
     lambda::log.info("Processing request %s of user %s", file_name.c_str(),
-                   user_id.c_str());
+                     user_id.c_str());
 
     Aws::Textract::Model::S3Object s3_object;
     s3_object.WithBucket(record.s3.bucket.name).WithName(key);
@@ -155,7 +182,7 @@ class handler {
     auto outcome = m_textract_client->AnalyzeExpense(expense_request);
     if (!outcome.IsSuccess()) {
       lambda::log.error("Error occurred while analyzing expense: %s",
-                      outcome.GetError().GetMessage().c_str());
+                        outcome.GetError().GetMessage().c_str());
       return;
     }
 
@@ -169,8 +196,8 @@ class handler {
       }
     }
     lambda::log.info("Successfully extracted %d of %d documents from the request.",
-                   extracted_documents,
-                   expense_documents.size());
+                     extracted_documents,
+                     expense_documents.size());
   }
 
   bool try_parse_document(const Aws::Textract::Model::ExpenseDocument &document,
@@ -179,7 +206,7 @@ class handler {
     receipt receipt;
     receipt.id = utils::gen_uuid();
     receipt.user_id = user_id;
-    receipt.state = repository::models::receipt_state::processing;
+    receipt.state = receipt::processing;
 
     auto &summary_fields = document.GetSummaryFields();
     if (!try_parse_summary_fields(summary_fields, receipt, file_name, document.GetExpenseIndex())) {
@@ -197,7 +224,7 @@ class handler {
     return true;
   }
 
-  static std::string parse_name(const std::string& text) {
+  static std::string parse_name(const std::string &text) {
     std::string result(text);
     lambda::string::replace_all(result, "\n", " ");
     lambda::string::replace_all(result, "\r", " ");
@@ -235,7 +262,7 @@ class handler {
           receipt.date = found_date;
         } else {
           lambda::log.info("Unable to parse found receipt date string %s.",
-                         value.c_str());
+                           value.c_str());
           receipt.date = "";
         }
       } else if ((field_type == receipt_amount || field_type == receipt_total) &&
@@ -283,7 +310,7 @@ class handler {
 
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while storing receipt in database: %s",
-                      e.what());
+                        e.what());
       return false;
     }
 
@@ -294,9 +321,9 @@ class handler {
                        const repository::models::guid &receipt_id,
                        std::vector<repository::models::receipt_item> &receipt_items) {
     int sort_order = 0;
-    for (auto& group : line_item_groups) {
-      auto& items = group.GetLineItems();
-      for (auto& item : items) {
+    for (auto &group : line_item_groups) {
+      auto &items = group.GetLineItems();
+      for (auto &item : items) {
         receipt_item receipt_item;
         receipt_item.id = utils::gen_uuid();
         receipt_item.receipt_id = receipt_id;
@@ -312,7 +339,7 @@ class handler {
 
   bool try_parse_item(const Aws::Textract::Model::LineItemFields &item,
                       repository::models::receipt_item &receipt_item) {
-    auto& fields = item.GetLineItemExpenseFields();
+    auto &fields = item.GetLineItemExpenseFields();
 
     int quantity = 1;
     long double unit_price = 0;
@@ -322,7 +349,7 @@ class handler {
     double best_quantity_confidence = 0;
     double best_unit_price_confidence = 0;
 
-    for (auto& field : fields) {
+    for (auto &field : fields) {
       std::string field_type = field.GetType().GetText();
       double confidence = field.GetType().GetConfidence();
       std::string value = field.GetValueDetection().GetText();
@@ -338,7 +365,7 @@ class handler {
           receipt_item.amount = found_amount;
         } else {
           lambda::log.info("Unable to parse found amount string %s.",
-                         value.c_str());
+                           value.c_str());
           receipt_item.amount = 0;
         }
       } else if (field_type == item_quantity &&
@@ -349,7 +376,7 @@ class handler {
           quantity = found_quantity;
         } else {
           lambda::log.info("Unable to parse found quantity string %s.",
-                         value.c_str());
+                           value.c_str());
           quantity = 1;
         }
       } else if (field_type == item_unit_price &&
@@ -360,7 +387,7 @@ class handler {
           unit_price = found_unit_price;
         } else {
           lambda::log.info("Unable to parse found unit price string %s.",
-                         value.c_str());
+                           value.c_str());
           unit_price = 0;
         }
       }
@@ -368,12 +395,12 @@ class handler {
 
     if (best_description_confidence == 0) {
       lambda::log.info("No description found for item %d.",
-                     receipt_item.sort_order);
+                       receipt_item.sort_order);
     }
     if (best_amount_confidence == 0 &&
         (best_quantity_confidence == 0 || best_unit_price_confidence == 0)) {
       lambda::log.info("No amount found for item %s.",
-                     receipt_item.description.c_str());
+                       receipt_item.description.c_str());
     }
 
     if (receipt_item.amount == 0) {
@@ -397,9 +424,9 @@ class handler {
         m_repository->update(receipt_item);
       }
       return true;
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
       lambda::log.error("Error occurred while storing receipt item in database: %s",
-                      e.what());
+                        e.what());
       return false;
     }
   }
@@ -409,7 +436,7 @@ class handler {
     std::time_t now = std::time(nullptr);
     double best_diff = std::numeric_limits<double>::max();
 
-    for (const auto& format : date_formats) {
+    for (const auto &format : date_formats) {
       std::tm datetime = {};
       std::istringstream ss(input);
       ss >> std::get_time(&datetime, format.c_str());
@@ -489,7 +516,7 @@ class handler {
   }
 
   std::string try_get_currency(const Aws::Textract::Model::ExpenseField &field) const {
-    const auto& currency = field.GetCurrency().GetCode();
+    const auto &currency = field.GetCurrency().GetCode();
     if (!currency.empty()) {
       return currency;
     } else {
@@ -509,7 +536,7 @@ class handler {
             .all();
 
     std::ostringstream categories_ss;
-    for (auto& category : *categories) {
+    for (auto &category : *categories) {
       categories_ss << category->name << ", ";
     }
     categories_ss << "Altro";  // hard coding special 'other' category
@@ -532,7 +559,7 @@ class handler {
 
       std::string prompt_item_format = "\n%d. %s %.2Lf %s";
 
-      for (auto& item : items) {
+      for (auto &item : items) {
         payload.prompt += lambda::string::format(
             prompt_item_format, item.sort_order, item.description.c_str(),
             item.amount, receipt.currency.c_str());
@@ -554,14 +581,14 @@ class handler {
     auto ss = std::make_shared<std::stringstream>();
     *ss << payload_str;
     invoke_request.SetBody(ss);
-    const auto& outcome = m_bedrock_client->InvokeModel(invoke_request);
+    const auto &outcome = m_bedrock_client->InvokeModel(invoke_request);
     if (!outcome.IsSuccess()) {
       lambda::log.error("Error occurred while invoking bedrock model: %s",
-                      outcome.GetError().GetMessage().c_str());
+                        outcome.GetError().GetMessage().c_str());
       return;
     }
-    const auto& result = outcome.GetResult();
-    auto& body = result.GetBody();
+    const auto &result = outcome.GetResult();
+    auto &body = result.GetBody();
 
     // Parsing categories
     std::stringstream response_ss;
@@ -575,7 +602,7 @@ class handler {
     size_t start = 0;
     if (!items.empty()) {
       size_t end;
-      for (auto & item : items) {
+      for (auto &item : items) {
         end = response.completion.find('\n', start);
         auto category = response.completion.substr(start, end - start);
         utils::ltrim(category);
@@ -594,22 +621,22 @@ class handler {
     // Storing categories
     try {
       m_repository->update(receipt);
-      for (auto& item : items) {
+      for (auto &item : items) {
         m_repository->update(item);
       }
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
       lambda::log.error("Error occurred while storing receipt in database: %s",
-                      e.what());
+                        e.what());
     }
   }
 
   void mark_as_done(repository::models::receipt &receipt) {
-    receipt.state = repository::models::receipt_state::done;
+    receipt.state = receipt::done;
     try {
       m_repository->update(receipt);
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while marking receipt as done: %s",
-                      e.what());
+                        e.what());
     }
   }
 };

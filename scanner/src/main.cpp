@@ -7,8 +7,6 @@
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
-#include <lambda/logger.hpp>
-
 #include <repository/client.hpp>
 #include <lambda/lambda.hpp>
 #include <di/container.hpp>
@@ -31,21 +29,12 @@ using namespace Aws::Textract;
 using namespace Aws::BedrockRuntime;
 using namespace scanner;
 using namespace di;
-
-static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
-  return [] {
-    return Aws::MakeShared<ConsoleLogSystem>(
-      "console_logger",
-      LogLevel::Info);
-  };
-}
+using namespace lambda;
 
 int main(int argc, char* argv[]) {
-
   SDKOptions options;
   options.loggingOptions.logLevel = Utils::Logging::LogLevel::Info;
   options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
-  std::shared_ptr<sql::Connection> db_connection;
 
 #ifdef DEBUG
   lambda::runtime::set_debug(argc, argv);
@@ -54,15 +43,8 @@ int main(int argc, char* argv[]) {
 
   InitAPI(options);
   {
-    std::shared_ptr<lambda::logger> l = std::make_shared<lambda::logger>("Scanner");
-
-    Aws::Client::ClientConfiguration config;
-#ifdef DEBUG
-    config.region = AWS_REGION;
-#endif
-
     try {
-      lambda::log = lambda::logger("Scanner");
+      log = lambda::logger("Scanner");
 
       auto h = [](auto req) {
         container<
@@ -85,7 +67,7 @@ int main(int argc, char* argv[]) {
 #endif  // DEBUG
 
     } catch (std::exception &e) {
-      l->error("Error occurred during execution of the function.");
+      log.error("Error occurred during execution of the function.");
     }
   }
 
@@ -93,4 +75,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-

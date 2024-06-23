@@ -5,6 +5,7 @@
 #pragma once
 
 #include <di/service_factory.hpp>
+#include <lambda/factories.hpp>
 
 #include <lambda/lambda.hpp>
 

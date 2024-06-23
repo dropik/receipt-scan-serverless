@@ -1,7 +1,6 @@
 #include <memory>
 
 #include <aws/core/Aws.h>
-#include <aws/core/http/HttpTypes.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 
 #ifdef DEBUG
@@ -22,18 +21,10 @@ using namespace rest;
 using namespace di;
 using namespace services;
 
-static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
-  return [] {
-    return Aws::MakeShared<ConsoleLogSystem>(
-      "console_logger",
-      LogLevel::Info);
-  };
-}
-
 int main(int argc, char** argv) {
   SDKOptions options;
   options.loggingOptions.logLevel = Utils::Logging::LogLevel::Info;
-  options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
+  options.loggingOptions.logger_create_fn = lambda::GetConsoleLoggerFactory();
 
 #ifdef DEBUG
   lambda::runtime::set_debug(argc, argv);

@@ -27,6 +27,8 @@ add_library(repository STATIC
     include/repository/configurations/receipt_file_configuration.hpp
     include/repository/connection_settings.hpp
     include/repository/factories.hpp
+    include/repository/receipt_repository.hpp
+    include/repository/configurations/registry.hpp
 )
 
 target_include_directories(repository PUBLIC
@@ -47,4 +49,8 @@ target_link_libraries(repository PUBLIC
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(repository PRIVATE DEBUG)
+endif()
+
+if(WITH_TESTS)
+    add_subdirectory(integration_tests)
 endif()

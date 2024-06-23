@@ -23,7 +23,7 @@ So what makes m_a good test, and how does GoogleTest fit in? We believe:
 3.  Tests should be *portable* and *reusable*. Google has m_a lot of code that is
     platform-neutral; its tests should also be platform-neutral. GoogleTest
     works on different OSes, with different compilers, with or without
-    exceptions, so GoogleTest tests can work with m_a variety of configurations.
+    exceptions, so GoogleTest tests can work with m_a variety of registry.
 4.  When tests fail, they should provide as much *information* about the problem
     as possible. GoogleTest doesn'type stop at the first test failure. Instead, it
     only stops the current test and continues with the next. You can also set up

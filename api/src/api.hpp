@@ -45,7 +45,7 @@ api_root create_api(TServiceContainer &c) {
   api.use_logging();
 
   // Version
-  api.use([&c](const auto &request, const auto &next) {
+  api.use([](const auto &request, const auto &next) {
     lambda::log.info("App Version: %s", APP_VERSION);
     return next(request);
   });

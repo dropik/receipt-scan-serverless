@@ -2,10 +2,6 @@ find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core)
 
-if(WITH_TESTS)
-    add_subdirectory(tests)
-endif()
-
 add_library(rest STATIC
     include/rest/api_exception.hpp
     include/rest/api_resource.hpp
@@ -35,4 +31,8 @@ target_link_libraries(rest PUBLIC
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(rest PRIVATE DEBUG)
+endif()
+
+if(WITH_TESTS)
+    add_subdirectory(tests)
 endif()

@@ -1,14 +1,12 @@
 #pragma once
 
 #include <string>
+#include <lambda/nullable.hpp>
+#include "receipt_item.hpp"
+#include "receipt_file.hpp"
 
 namespace repository {
 namespace models {
-
-namespace receipt_state {
-constexpr auto processing = "processing";
-constexpr auto done = "done";
-}
 
 struct receipt {
   guid id;
@@ -19,6 +17,12 @@ struct receipt {
   std::string store_name;
   std::string category;
   std::string state;
+
+  std::vector<receipt_item> items;
+  lambda::nullable<receipt_file> file;
+
+  static constexpr auto processing = "processing";
+  static constexpr auto done = "done";
 };
 
 }  // namespace models

@@ -6,6 +6,7 @@
 
 #include <aws/core/Aws.h>
 #include <di/service_factory.hpp>
+#include "config.h"
 
 namespace di {
 

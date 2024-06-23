@@ -13,16 +13,10 @@
 
 #include <aws/core/client/ClientConfiguration.h>
 
-#include "repository/configurations/repository_configuration.hpp"
+#include "repository/configurations/registry.hpp"
 #include "selector.hpp"
 #include "statement.hpp"
 #include "connection_settings.hpp"
-
-#include "repository/configurations/category_configuration.hpp"
-#include "repository/configurations/receipt_configuration.hpp"
-#include "repository/configurations/receipt_item_configuration.hpp"
-#include "repository/configurations/user_configuration.hpp"
-#include "repository/configurations/receipt_file_configuration.hpp"
 
 namespace repository {
 
@@ -39,8 +33,8 @@ class client {
       lambda::log.info("Establishing connection with the database...");
 
       sql::SQLString url(settings->connection_string);
-      std::unique_ptr<sql::Connection> conn(
-          sql::DriverManager::getConnection(url));
+      auto conn1 = sql::DriverManager::getConnection(url);
+      std::unique_ptr<sql::Connection> conn(conn1);
       if (conn == nullptr) {
         lambda::log.error("Unable to establish connection with database!");
         throw std::runtime_error("Unable to establish connection with database!");
@@ -63,7 +57,7 @@ class client {
 
   template<typename T>
   void create(const T &entity) {
-    auto &configuration = get_configuration<T>();
+    auto &configuration = m_registry.get<T>();
     lambda::log.info("Inserting in %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_insert_statement(entity, m_connection);
@@ -80,16 +74,16 @@ class client {
 
   template<typename T>
   std::shared_ptr<T> get(const models::guid &id) {
-    auto &configuration = get_configuration<T>();
+    auto &configuration = m_registry.get<T>();
     lambda::log.info("Getting entity from %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_select_statement(id, m_connection);
       if (!stmt) {
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      auto result = stmt->executeQuery();
+      std::unique_ptr<sql::ResultSet> result(stmt->executeQuery());
       if (result->next()) {
-        return std::move(configuration.get_entity(result));
+        return std::move(configuration.get_entity(result.get()));
       }
       throw std::runtime_error("Entity not found!");
     } catch (std::exception &e) {
@@ -101,7 +95,7 @@ class client {
 
   template<typename T>
   void update(const T &entity) {
-    auto &configuration = get_configuration<T>();
+    auto &configuration = m_registry.get<T>();
     lambda::log.info("Updating in %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_update_statement(entity, m_connection);
@@ -118,7 +112,7 @@ class client {
 
   template<typename T>
   void drop(const models::guid &id) {
-    auto &configuration = get_configuration<T>();
+    auto &configuration = m_registry.get<T>();
     lambda::log.info("Deleting from %s...", configuration.get_table_name().c_str());
     try {
       auto &stmt = configuration.get_delete_statement(id, m_connection);
@@ -140,7 +134,7 @@ class client {
 
   template<typename T>
   selector<T> select(const std::string &query) {
-    auto &configuration = get_configuration<T>();
+    auto &configuration = m_registry.get<T>();
     lambda::log.info("Executing query: %s", query.c_str());
     try {
       std::shared_ptr<sql::PreparedStatement> stmt(m_connection->prepareStatement(query));
@@ -174,14 +168,13 @@ class client {
     }
   }
 
- private:
-  template<typename T>
-  configurations::repository_configuration<T> &get_configuration() {
-    static configurations::repository_configuration<T> configuration;
-    return configuration;
+  std::shared_ptr<sql::Connection> get_connection() {
+    return m_connection;
   }
 
+ private:
   std::shared_ptr<sql::Connection> m_connection;
+  configurations::registry m_registry;
 };
 
 } // namespace client

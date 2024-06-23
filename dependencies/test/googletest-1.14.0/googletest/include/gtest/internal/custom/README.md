@@ -1,6 +1,6 @@
 # Customization Points
 
-The custom directory is an injection point for custom user configurations.
+The custom directory is an injection point for custom user registry.
 
 ## Header `gtest.h`
 

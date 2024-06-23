@@ -143,7 +143,7 @@ class receipt_service {
       throw rest::api_exception(invalid_argument, "Category should be empty if items are provided");
     }
 
-    r.state = repository::models::receipt_state::done;
+    r.state = receipt::done;
 
     auto existing_receipt = try_get_receipt(params.id);
     if (!existing_receipt) {
@@ -152,7 +152,7 @@ class receipt_service {
       if (existing_receipt->user_id != m_identity->user_id) {
         throw rest::api_exception(forbidden, "Access denied");
       }
-      if (existing_receipt->state == repository::models::receipt_state::processing) {
+      if (existing_receipt->state == receipt::processing) {
         throw rest::api_exception(forbidden, "Receipt is being processed");
       }
       m_repository->update(r);

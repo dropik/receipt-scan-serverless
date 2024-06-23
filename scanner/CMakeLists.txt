@@ -12,7 +12,9 @@ add_executable(${FUNCTION_NAME}
         src/utils.cpp
         src/models/bedrock_payload.hpp
         src/models/bedrock_response.hpp
-    src/factories.hpp)
+    src/factories.hpp
+    src/services/receipt_extractor.hpp
+    src/services/receipt_repository.hpp)
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
@@ -37,3 +39,7 @@ file(WRITE "${PROJECT_BINARY_DIR}/${FUNCTION_NAME}/Makefile"
     "\tmkdir -p $(ARTIFACTS_DIR)/bin\n"
     "\tcp ${FUNCTION_NAME} $(ARTIFACTS_DIR)/bin\n"
     "\tln -sf bin/${FUNCTION_NAME} $(ARTIFACTS_DIR)/bootstrap\n")
+
+if(WITH_TESTS)
+  add_subdirectory(tests)
+endif()
