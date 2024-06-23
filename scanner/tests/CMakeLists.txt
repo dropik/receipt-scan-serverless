@@ -3,6 +3,7 @@ find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime)
 
 add_executable(scanner_tests_run
+    main.cpp
     scanner_test.cpp
     ../src/models/bedrock_payload.hpp
     ../src/models/bedrock_response.hpp
@@ -26,7 +27,6 @@ target_link_libraries(scanner_tests_run
     ${AWSSDK_LINK_LIBRARIES}
     aws-lambda-cpp-common
     gtest
-    gtest_main
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

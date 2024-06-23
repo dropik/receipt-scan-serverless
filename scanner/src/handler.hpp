@@ -42,8 +42,39 @@ class handler_v2 {
 
   aws::lambda_runtime::invocation_response operator()(
       const aws::lambda_runtime::invocation_request &request) {
-    return aws::lambda_runtime::invocation_response::success("All files processed!",
-                                                             "application/json");
+    lambda::log.info("Version %s", APP_VERSION);
+
+    try {
+      lambda::models::payloads::s3_request s3_request =
+          lambda::json::deserialize<lambda::models::payloads::s3_request>(request.payload);
+
+      for (auto &record : s3_request.records) {
+        if (!record.is_put()) {
+          lambda::log.info("Skipping not put request.");
+          continue;
+        }
+
+        auto receipts = m_extractor->extract(record.s3.bucket.name, record.s3.object.key);
+        for (auto &receipt : receipts) {
+          auto existing_receipt = m_repository->get(
+              receipt.user_id,
+              receipt.file.get_value().file_name,
+              receipt.file.get_value().doc_number);
+
+          if (existing_receipt.has_value()) {
+            receipt.id = existing_receipt.get_value().id;
+            receipt.file.get_value().id = existing_receipt.get_value().file.get_value().id;
+          }
+          m_repository->store(receipt);
+        }
+      }
+
+      lambda::log.info("All files processed.");
+      return aws::lambda_runtime::invocation_response::success("All files processed!", "application/json");
+    } catch (const std::exception &e) {
+      lambda::log.error("Error occurred while processing invocation request: %s", e.what());
+      return aws::lambda_runtime::invocation_response::failure("Internal error occurred.", "application/json");
+    }
   }
 
  private:
