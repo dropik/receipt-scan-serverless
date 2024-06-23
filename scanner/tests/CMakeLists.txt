@@ -10,7 +10,6 @@ add_executable(scanner_tests_run
     ../src/utils.hpp
     ../src/utils.cpp
     ../src/services/receipt_extractor.hpp
-    ../src/services/receipt_repository.hpp
 )
 
 target_include_directories(scanner_tests_run PUBLIC
@@ -27,7 +26,8 @@ target_link_libraries(scanner_tests_run
     ${AWSSDK_LINK_LIBRARIES}
     aws-lambda-cpp-common
     gtest
-    gtest_main)
+    gtest_main
+)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(scanner_tests_run PRIVATE DEBUG)

@@ -6,90 +6,20 @@
 #include <di/container.hpp>
 #include <repository/factories.hpp>
 #include <repository/receipt_repository.hpp>
-#include <fstream>
+#include "base_repository_integration_test.hpp"
 
 using namespace di;
 using namespace repository::models;
 
-class receipt_repository_test : public ::testing::Test {
+class receipt_repository_test : public base_repository_integration_test {
  protected:
-  void SetUp() override {
-    auto repo = services.get<repository::t_client>();
-    auto connection = repo->get_connection();
-    std::unique_ptr<sql::Statement>(connection->createStatement())->execute("drop database if exists receipt_scan_test");
-    std::unique_ptr<sql::Statement>(connection->createStatement())->execute("create database receipt_scan_test");
-    std::unique_ptr<sql::Statement>(connection->createStatement())->execute("use receipt_scan_test");
-
-    // get working directory
-    std::string pwd = getenv("PWD");
-    if (pwd.empty()) {
-      throw std::runtime_error("Failed to get working directory");
-    }
-    lambda::log.info("Working directory: %s", pwd.c_str());
-
-    std::ifstream file("database/v1.0.0.sql");
-    if (!file.is_open()) {
-      throw std::runtime_error("Failed to open database migration file");
-    }
-    std::string line;
-    std::string sql;
-    while (std::getline(file, line)) {
-      sql += line + "\n";
-    }
-
-    std::vector<std::string> statements;
-    std::string delimiter = "DELIMITER //";
-    std::string switch_delimiter = "DELIMITER ;";
-    std::string normal_delimiter = ";";
-    std::string alt_delimiter = "//";
-    size_t pos = 0;
-    while ((pos = sql.find(delimiter)) != std::string::npos) {
-      std::string normal_delimiter_sql = sql.substr(0, pos);
-      size_t delimiter_pos = 0;
-      while ((delimiter_pos = normal_delimiter_sql.find(normal_delimiter)) != std::string::npos) {
-          statements.push_back(normal_delimiter_sql.substr(0, delimiter_pos));
-        normal_delimiter_sql.erase(0, delimiter_pos + normal_delimiter.length());
-      }
-      sql.erase(0, pos + delimiter.length());
-
-      size_t switch_pos = sql.find(switch_delimiter);
-      std::string alt_delimiter_sql = sql.substr(0, switch_pos);
-      sql.erase(0, switch_pos + switch_delimiter.length());
-
-      size_t alt_pos = 0;
-      while ((alt_pos = alt_delimiter_sql.find(alt_delimiter)) != std::string::npos) {
-        statements.push_back(alt_delimiter_sql.substr(0, alt_pos));
-        alt_delimiter_sql.erase(0, alt_pos + alt_delimiter.length());
-      }
-    }
-    while((pos = sql.find(normal_delimiter)) != std::string::npos) {
-      statements.push_back(sql.substr(0, pos));
-      sql.erase(0, pos + normal_delimiter.length());
-    }
-
-    for (const auto &statement : statements) {
-      std::unique_ptr<sql::Statement> stmt(connection->createStatement());
-      std::string trimmed_statement = statement;
-      trimmed_statement.erase(0, trimmed_statement.find_first_not_of(" \n\r\t"));
-      trimmed_statement.erase(trimmed_statement.find_last_not_of(" \n\r\t") + 1);
-      stmt->execute(trimmed_statement);
-      while (stmt->getMoreResults()) {
-        // do nothing
-      }
-    }
-
-    std::unique_ptr<sql::Statement>(connection->createStatement())->execute("insert into users (id) values ('user_id')");
-  }
-
-  void TearDown() override {
-    auto repo = services.get<repository::t_client>();
-    auto connection = repo->get_connection();
-    std::unique_ptr<sql::Statement>(connection->createStatement())->execute("drop database if exists receipt_scan_test");
+  std::shared_ptr<sql::Connection> get_connection() override {
+    return services.get<repository::t_client>()->get_connection();
   }
 
   container<
       singleton<Aws::Client::ClientConfiguration>,
-      singleton<repository::connection_settings, repository::connection_settings>,
+      singleton<repository::connection_settings>,
       scoped<repository::t_client, repository::client<>>,
       transient<repository::t_receipt_repository, repository::receipt_repository<>>
   > services;
@@ -98,7 +28,7 @@ class receipt_repository_test : public ::testing::Test {
 static receipt create_receipt() {
   receipt r;
   r.id = "12345";
-  r.user_id = "user_id";
+  r.user_id = DEFAULT_USER_ID;
   r.date = "2024-06-22";
   r.total_amount = 1.0;
   r.currency = "EUR";
@@ -204,7 +134,7 @@ TEST_F(receipt_repository_test, should_find_receipt_by_file_name_and_doc_number)
   auto r = create_receipt();
   r.file = receipt_file{ "file_id", r.id, "file_name", 0 };
   receipt_repository->store(r);
-  auto receipt = receipt_repository->get("user_id", "file_name", 0);
+  auto receipt = receipt_repository->get(DEFAULT_USER_ID, "file_name", 0);
   ASSERT_TRUE(receipt.has_value());
   ASSERT_EQ(r.id, receipt.get_value().id);
 }
@@ -214,6 +144,6 @@ TEST_F(receipt_repository_test, should_not_find_receipt_if_file_name_and_doc_num
   auto r = create_receipt();
   r.file = receipt_file{ "file_id", r.id, "file_name", 0 };
   receipt_repository->store(r);
-  auto receipt = receipt_repository->get("user_id", "file_name", 1);
+  auto receipt = receipt_repository->get(DEFAULT_USER_ID, "file_name", 1);
   ASSERT_FALSE(receipt.has_value());
 }

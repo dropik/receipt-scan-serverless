@@ -4,6 +4,9 @@ find_package(AWSSDK COMPONENTS core ssm)
 add_executable(repository_integration_tests_run
     main.cpp
     receipt_repository_test.cpp
+    base_repository_integration_test.hpp
+    base_repository_integration_test.cpp
+    client_test.cpp
 )
 
 target_include_directories(repository_integration_tests_run PUBLIC

@@ -6,15 +6,15 @@ find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime)
 
 add_executable(${FUNCTION_NAME}
-        src/main.cpp
-        src/handler.hpp
-        src/utils.hpp
-        src/utils.cpp
-        src/models/bedrock_payload.hpp
-        src/models/bedrock_response.hpp
+    src/main.cpp
+    src/handler.hpp
+    src/utils.hpp
+    src/utils.cpp
+    src/models/bedrock_payload.hpp
+    src/models/bedrock_response.hpp
     src/factories.hpp
     src/services/receipt_extractor.hpp
-    src/services/receipt_repository.hpp)
+)
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
