@@ -14,6 +14,7 @@ using namespace di;
 using namespace Aws::Textract;
 using namespace Aws::Textract::Model;
 using namespace Aws::BedrockRuntime;
+using namespace Aws::BedrockRuntime::Model;
 using namespace scanner;
 using namespace scanner::services;
 using namespace repository;
@@ -43,13 +44,14 @@ static aws::lambda_runtime::invocation_request create_request(
 struct fake_textract_client {
   bool should_fail = false;
   bool set_quantity = true;
+  bool add_items = true;
   std::string invoice_date = "2024-06-22";
   std::string amount = "100.00";
   double confidence = 99;
   std::string currency;
   std::string quantity = "1";
 
-  AnalyzeExpenseOutcome AnalyzeExpense(const AnalyzeExpenseRequest &request) {
+  AnalyzeExpenseOutcome AnalyzeExpense(const AnalyzeExpenseRequest &request) const {
     if (should_fail) {
       return {
           TextractError(
@@ -87,41 +89,61 @@ struct fake_textract_client {
             .WithValueDetection(ExpenseDetection().WithText(amount))
             .WithCurrency(ExpenseCurrency().WithCode(currency)));
 
-    document.AddLineItemGroups(
-        LineItemGroup()
-            .WithLineItemGroupIndex(1)
-            .WithLineItems(
-                {
-                    LineItemFields()
-                        .WithLineItemExpenseFields(
-                            {
-                                ExpenseField()
-                                    .WithType(ExpenseType().WithText("ITEM").WithConfidence(confidence))
-                                    .WithValueDetection(ExpenseDetection().WithText("Item 1")),
-                                ExpenseField()
-                                    .WithType(ExpenseType().WithText(set_quantity ? "QUANTITY" : "ASDF").WithConfidence(confidence))
-                                    .WithValueDetection(ExpenseDetection().WithText(quantity)),
-                                ExpenseField()
-                                    .WithType(ExpenseType().WithText("PRICE").WithConfidence(confidence))
-                                    .WithValueDetection(ExpenseDetection().WithText(amount))
-                                    .WithCurrency(ExpenseCurrency().WithCode(currency)),
-                                ExpenseField()
-                                    .WithType(ExpenseType().WithText("UNIT_PRICE").WithConfidence(confidence))
-                                    .WithValueDetection(ExpenseDetection().WithText(amount))
-                                    .WithCurrency(ExpenseCurrency().WithCode(currency)),
-                            })
-                })
-    );
+    if (add_items) {
+      document.AddLineItemGroups(
+          LineItemGroup()
+              .WithLineItemGroupIndex(1)
+              .WithLineItems(
+                  {
+                      LineItemFields()
+                          .WithLineItemExpenseFields(
+                              {
+                                  ExpenseField()
+                                      .WithType(ExpenseType().WithText("ITEM").WithConfidence(confidence))
+                                      .WithValueDetection(ExpenseDetection().WithText("Item 1")),
+                                  ExpenseField()
+                                      .WithType(ExpenseType().WithText(set_quantity ? "QUANTITY"
+                                                                                    : "ASDF").WithConfidence(confidence))
+                                      .WithValueDetection(ExpenseDetection().WithText(quantity)),
+                                  ExpenseField()
+                                      .WithType(ExpenseType().WithText("PRICE").WithConfidence(confidence))
+                                      .WithValueDetection(ExpenseDetection().WithText(amount))
+                                      .WithCurrency(ExpenseCurrency().WithCode(currency)),
+                                  ExpenseField()
+                                      .WithType(ExpenseType().WithText("UNIT_PRICE").WithConfidence(confidence))
+                                      .WithValueDetection(ExpenseDetection().WithText(amount))
+                                      .WithCurrency(ExpenseCurrency().WithCode(currency)),
+                              })
+                  })
+      );
+    }
     result.SetExpenseDocuments({document});
     return {result};
   }
 };
 
 struct fake_bedrock_runtime_client {
+  bool should_fail = false;
+  std::string completion_body = R"({"completion": "Altro\n"})";
 
+  InvokeModelOutcome InvokeModel(const InvokeModelRequest &request) const {
+    if (should_fail) {
+      return {
+          BedrockRuntimeError(
+              Aws::Client::AWSError<Aws::Client::CoreErrors>(
+                  Aws::Client::CoreErrors::INVALID_ACTION,
+                  "Invalid parameter value",
+                  "Invalid parameter value",
+                  false))};
+    }
+
+    InvokeModelOutcome outcome = {InvokeModelResult()};
+    outcome.GetResult().ReplaceBody(new Aws::StringStream(completion_body));
+    return outcome;
+  }
 };
 
-struct fake_repository {
+struct fake_receipt_repository {
   std::vector<receipt> repo;
 
   lambda::nullable<receipt> get(const std::string &user_id, const std::string &file_name, int doc_number) {
@@ -144,6 +166,14 @@ struct fake_repository {
   }
 };
 
+struct fake_category_repository {
+  std::vector<category> get_all(const std::string &user_id) const {
+    return {
+        {"Altro"},
+    };
+  }
+};
+
 class scanner_test : public ::testing::Test {
  protected:
   void SetUp() override {
@@ -156,10 +186,12 @@ class scanner_test : public ::testing::Test {
       scoped<TextractClient, fake_textract_client>,
       scoped<BedrockRuntimeClient, fake_bedrock_runtime_client>,
 
+      scoped<t_receipt_repository, fake_receipt_repository>,
+      scoped<t_category_repository, fake_category_repository>,
       transient<t_receipt_extractor, receipt_extractor<>>,
-      scoped<t_receipt_repository, fake_repository>,
+      transient<t_categorizer, categorizer<>>,
 
-      transient<t_handler, handler_v2<>>
+      transient<t_handler, handler<>>
   > services;
 };
 
@@ -373,4 +405,77 @@ TEST_F(scanner_test, should_ignore_non_put_s3_events) {
   auto repo = services.get<repository::t_receipt_repository>();
   auto receipts = repo->repo;
   EXPECT_EQ(receipts.size(), 0);
+}
+
+TEST_F(scanner_test, should_categorize) {
+  auto handler = services.get<t_handler>();
+  auto request = create_request();
+  auto res = handler->operator()(request);
+
+  EXPECT_TRUE(res.is_success());
+
+  auto repo = services.get<repository::t_receipt_repository>();
+  auto receipts = repo->repo;
+  EXPECT_EQ(receipts.size(), 1);
+  auto receipt = receipts[0];
+
+  EXPECT_EQ(receipt.items.size(), 1);
+  EXPECT_EQ(receipt.items[0].category, "Altro");
+}
+
+TEST_F(scanner_test, should_store_category_if_no_items_present) {
+  auto textract = services.get<TextractClient>();
+  textract->add_items = false;
+
+  auto handler = services.get<t_handler>();
+  auto request = create_request();
+  auto res = handler->operator()(request);
+
+  EXPECT_TRUE(res.is_success());
+
+  auto repo = services.get<repository::t_receipt_repository>();
+  auto receipts = repo->repo;
+  EXPECT_EQ(receipts.size(), 1);
+  auto receipt = receipts[0];
+
+  EXPECT_EQ(receipt.items.size(), 0);
+  EXPECT_EQ(receipt.category, "Altro");
+}
+
+TEST_F(scanner_test, should_ignore_category_if_failed) {
+  auto bedrock = services.get<BedrockRuntimeClient>();
+  bedrock->should_fail = true;
+
+  auto handler = services.get<t_handler>();
+  auto request = create_request();
+  auto res = handler->operator()(request);
+
+  EXPECT_TRUE(res.is_success());
+
+  auto repo = services.get<repository::t_receipt_repository>();
+  auto receipts = repo->repo;
+  EXPECT_EQ(receipts.size(), 1);
+  auto receipt = receipts[0];
+
+  EXPECT_EQ(receipt.items.size(), 1);
+  EXPECT_EQ(receipt.category, "");
+}
+
+TEST_F(scanner_test, should_sanitise_extra_space_in_category) {
+  auto bedrock = services.get<BedrockRuntimeClient>();
+  bedrock->completion_body = R"({"completion": "Altro \n"})";
+
+  auto handler = services.get<t_handler>();
+  auto request = create_request();
+  auto res = handler->operator()(request);
+
+  EXPECT_TRUE(res.is_success());
+
+  auto repo = services.get<repository::t_receipt_repository>();
+  auto receipts = repo->repo;
+  EXPECT_EQ(receipts.size(), 1);
+  auto receipt = receipts[0];
+
+  EXPECT_EQ(receipt.items.size(), 1);
+  EXPECT_EQ(receipt.items[0].category, "Altro");
 }

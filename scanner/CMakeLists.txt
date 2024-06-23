@@ -14,6 +14,7 @@ add_executable(${FUNCTION_NAME}
     src/models/bedrock_response.hpp
     src/factories.hpp
     src/services/receipt_extractor.hpp
+    src/services/categorizer.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

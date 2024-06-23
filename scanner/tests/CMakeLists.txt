@@ -11,6 +11,7 @@ add_executable(scanner_tests_run
     ../src/utils.hpp
     ../src/utils.cpp
     ../src/services/receipt_extractor.hpp
+    ../src/services/categorizer.hpp
 )
 
 target_include_directories(scanner_tests_run PUBLIC

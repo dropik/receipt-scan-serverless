@@ -54,6 +54,12 @@ int main(int argc, char* argv[]) {
             singleton<BedrockRuntimeClient>,
             singleton<repository::t_client, repository::client<>>,
 
+            transient<repository::t_receipt_repository, repository::receipt_repository<>>,
+            transient<repository::t_category_repository, repository::category_repository<>>,
+
+            transient<services::t_receipt_extractor, services::receipt_extractor<>>,
+            transient<services::t_categorizer, services::categorizer<>>,
+
             transient<t_handler, handler<>>
         > services;
 

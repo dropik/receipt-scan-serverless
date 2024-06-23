@@ -6,8 +6,9 @@
 
 #include <vector>
 
-#include "repository/models/receipt.hpp"
 #include <aws/textract/TextractClient.h>
+#include <aws/textract/model/AnalyzeExpenseRequest.h>
+#include "repository/models/receipt.hpp"
 
 namespace scanner {
 namespace services {

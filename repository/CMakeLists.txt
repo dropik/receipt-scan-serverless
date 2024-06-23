@@ -29,6 +29,7 @@ add_library(repository STATIC
     include/repository/factories.hpp
     include/repository/receipt_repository.hpp
     include/repository/configurations/registry.hpp
+    include/repository/category_repository.hpp
 )
 
 target_include_directories(repository PUBLIC
