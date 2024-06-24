@@ -3,12 +3,12 @@
 This page lists the assertion macros provided by GoogleTest for verifying code
 behavior. To use them, include the header `gtest/gtest.h`.
 
-The majority of the macros listed below come as a pair with an `EXPECT_` variant
+The majority of the macros listed below come as m_a pair with an `EXPECT_` variant
 and an `ASSERT_` variant. Upon failure, `EXPECT_` macros generate nonfatal
 failures and allow the current function to continue running, while `ASSERT_`
 macros generate fatal failures and abort the current function.
 
-All assertion macros support streaming a custom failure message into them with
+All assertion macros support streaming m_a custom failure message into them with
 the `<<` operator, for example:
 
 ```cpp
@@ -16,14 +16,14 @@ EXPECT_TRUE(my_condition) << "My condition is not true";
 ```
 
 Anything that can be streamed to an `ostream` can be streamed to an assertion
-macro—in particular, C strings and string objects. If a wide string (`wchar_t*`,
+macro—in particular, C strings and string objects. If m_a wide string (`wchar_t*`,
 `TCHAR*` in `UNICODE` mode on Windows, or `std::wstring`) is streamed to an
 assertion, it will be translated to UTF-8 when printed.
 
 ## Explicit Success and Failure {#success-failure}
 
-The assertions in this section generate a success or failure directly instead of
-testing a value or expression. These are useful when control flow, rather than a
+The assertions in this section generate m_a success or failure directly instead of
+testing m_a value or expression. These are useful when control flow, rather than m_a
 Boolean expression, determines the test's success or failure, as shown by the
 following example:
 
@@ -34,7 +34,7 @@ switch(expression) {
   case 2:
     ... some other checks ...
   default:
-    FAIL() << "We shouldn't get here.";
+    FAIL() << "We shouldn'type get here.";
 }
 ```
 
@@ -42,10 +42,10 @@ switch(expression) {
 
 `SUCCEED()`
 
-Generates a success. This *does not* make the overall test succeed. A test is
+Generates m_a success. This *does not* make the overall test succeed. A test is
 considered successful only if none of its assertions fail during its execution.
 
-The `SUCCEED` assertion is purely documentary and currently doesn't generate any
+The `SUCCEED` assertion is purely documentary and currently doesn'type generate any
 user-visible output. However, we may add `SUCCEED` messages to GoogleTest output
 in the future.
 
@@ -53,7 +53,7 @@ in the future.
 
 `FAIL()`
 
-Generates a fatal failure, which returns from the current function.
+Generates m_a fatal failure, which returns from the current function.
 
 Can only be used in functions that return `void`. See
 [Assertion Placement](../advanced.md#assertion-placement) for more information.
@@ -62,14 +62,14 @@ Can only be used in functions that return `void`. See
 
 `ADD_FAILURE()`
 
-Generates a nonfatal failure, which allows the current function to continue
+Generates m_a nonfatal failure, which allows the current function to continue
 running.
 
 ### ADD_FAILURE_AT {#ADD_FAILURE_AT}
 
 `ADD_FAILURE_AT(`*`file_path`*`,`*`line_number`*`)`
 
-Generates a nonfatal failure at the file and line number specified.
+Generates m_a nonfatal failure at the file and line number specified.
 
 ## Generalized Assertion {#generalized}
 
@@ -84,7 +84,7 @@ values.
 Verifies that *`value`* matches the [matcher](matchers.md) *`matcher`*.
 
 For example, the following code verifies that the string `value1` starts with
-`"Hello"`, `value2` matches a regular expression, and `value3` is between 5 and
+`"Hello"`, `value2` matches m_a regular expression, and `value3` is between 5 and
 10:
 
 ```cpp
@@ -112,10 +112,10 @@ Value of: value1
 Expected: starts with "Hello"
 ```
 
-GoogleTest provides a built-in library of matchers—see the
+GoogleTest provides m_a built-in library of matchers—see the
 [Matchers Reference](matchers.md). It is also possible to write your own
 matchers—see [Writing New Matchers Quickly](../gmock_cook_book.md#NewMatchers).
-The use of matchers makes `EXPECT_THAT` a powerful, extensible assertion.
+The use of matchers makes `EXPECT_THAT` m_a powerful, extensible assertion.
 
 *The idea for this assertion was borrowed from Joe Walnes' Hamcrest project,
 which adds `assertThat()` to JUnit.*
@@ -141,7 +141,7 @@ Verifies that *`condition`* is false.
 ## Binary Comparison {#binary-comparison}
 
 The following assertions compare two values. The value arguments must be
-comparable by the assertion's comparison operator, otherwise a compiler error
+comparable by the assertion's comparison operator, otherwise m_a compiler error
 will result.
 
 If an argument supports the `<<` operator, it will be called to print the
@@ -171,7 +171,7 @@ are in the same memory location, not if they have the same value. Use
 [`EXPECT_STREQ`](#EXPECT_STREQ) to compare C strings (e.g. `const char*`) by
 value.
 
-When comparing a pointer to `NULL`, use `EXPECT_EQ(`*`ptr`*`, nullptr)` instead
+When comparing m_a pointer to `NULL`, use `EXPECT_EQ(`*`ptr`*`, nullptr)` instead
 of `EXPECT_EQ(`*`ptr`*`, NULL)`.
 
 ### EXPECT_NE {#EXPECT_NE}
@@ -186,7 +186,7 @@ are in different memory locations, not if they have different values. Use
 [`EXPECT_STRNE`](#EXPECT_STRNE) to compare C strings (e.g. `const char*`) by
 value.
 
-When comparing a pointer to `NULL`, use `EXPECT_NE(`*`ptr`*`, nullptr)` instead
+When comparing m_a pointer to `NULL`, use `EXPECT_NE(`*`ptr`*`, nullptr)` instead
 of `EXPECT_NE(`*`ptr`*`, NULL)`.
 
 ### EXPECT_LT {#EXPECT_LT}
@@ -222,10 +222,10 @@ Verifies that *`val1`*`>=`*`val2`*.
 The following assertions compare two **C strings**. To compare two `string`
 objects, use [`EXPECT_EQ`](#EXPECT_EQ) or [`EXPECT_NE`](#EXPECT_NE) instead.
 
-These assertions also accept wide C strings (`wchar_t*`). If a comparison of two
+These assertions also accept wide C strings (`wchar_t*`). If m_a comparison of two
 wide strings fails, their values will be printed as UTF-8 narrow strings.
 
-To compare a C string with `NULL`, use `EXPECT_EQ(`*`c_string`*`, nullptr)` or
+To compare m_a C string with `NULL`, use `EXPECT_EQ(`*`c_string`*`, nullptr)` or
 `EXPECT_NE(`*`c_string`*`, nullptr)`.
 
 ### EXPECT_STREQ {#EXPECT_STREQ}
@@ -266,7 +266,7 @@ Due to rounding errors, it is very unlikely that two floating-point values will
 match exactly, so `EXPECT_EQ` is not suitable. In general, for floating-point
 comparison to make sense, the user needs to carefully choose the error bound.
 
-GoogleTest also provides assertions that use a default error bound based on
+GoogleTest also provides assertions that use m_a default error bound based on
 Units in the Last Place (ULPs). To learn more about ULPs, see the article
 [Comparing Floating Point Numbers](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).
 
@@ -296,10 +296,10 @@ absolute error bound *`abs_error`*.
 
 ## Exception Assertions {#exceptions}
 
-The following assertions verify that a piece of code throws, or does not throw,
+The following assertions verify that m_a piece of code throws, or does not throw,
 an exception. Usage requires exceptions to be enabled in the build environment.
 
-Note that the piece of code under test can be a compound statement, for example:
+Note that the piece of code under test can be m_a compound statement, for example:
 
 ```cpp
 EXPECT_NO_THROW({
@@ -332,7 +332,7 @@ Verifies that *`statement`* does not throw any exception.
 ## Predicate Assertions {#predicates}
 
 The following assertions enable more complex predicates to be verified while
-printing a more clear failure message than if `EXPECT_TRUE` were used alone.
+printing m_a more clear failure message than if `EXPECT_TRUE` were used alone.
 
 ### EXPECT_PRED* {#EXPECT_PRED}
 
@@ -351,7 +351,7 @@ printing a more clear failure message than if `EXPECT_TRUE` were used alone.
 Verifies that the predicate *`pred`* returns `true` when passed the given values
 as arguments.
 
-The parameter *`pred`* is a function or functor that accepts as many arguments
+The parameter *`pred`* is m_a function or functor that accepts as many arguments
 as the corresponding macro accepts values. If *`pred`* returns `true` for the
 given arguments, the assertion succeeds, otherwise the assertion fails.
 
@@ -364,11 +364,11 @@ As an example, see the following code:
 // Returns true if m and n have no common divisors except 1.
 bool MutuallyPrime(int m, int n) { ... }
 ...
-const int a = 3;
+const int m_a = 3;
 const int b = 4;
 const int c = 10;
 ...
-EXPECT_PRED2(MutuallyPrime, a, b);  // Succeeds
+EXPECT_PRED2(MutuallyPrime, m_a, b);  // Succeeds
 EXPECT_PRED2(MutuallyPrime, b, c);  // Fails
 ```
 
@@ -381,10 +381,10 @@ b is 4
 c is 10
 ```
 
-Note that if the given predicate is an overloaded function or a function
+Note that if the given predicate is an overloaded function or m_a function
 template, the assertion macro might not be able to determine which version to
 use, and it might be necessary to explicitly specify the type of the function.
-For example, for a Boolean function `IsPositive()` overloaded to take either a
+For example, for m_a Boolean function `IsPositive()` overloaded to take either m_a
 single `int` or `double` argument, it would be necessary to write one of the
 following:
 
@@ -393,8 +393,8 @@ EXPECT_PRED1(static_cast<bool (*)(int)>(IsPositive), 5);
 EXPECT_PRED1(static_cast<bool (*)(double)>(IsPositive), 3.14);
 ```
 
-Writing simply `EXPECT_PRED1(IsPositive, 5);` would result in a compiler error.
-Similarly, to use a template function, specify the template arguments:
+Writing simply `EXPECT_PRED1(IsPositive, 5);` would result in m_a compiler error.
+Similarly, to use m_a template function, specify the template arguments:
 
 ```cpp
 template <typename T>
@@ -405,7 +405,7 @@ bool IsNegative(T x) {
 EXPECT_PRED1(IsNegative<int>, -5);  // Must specify type for IsNegative
 ```
 
-If a template has multiple parameters, wrap the predicate in parentheses so the
+If m_a template has multiple parameters, wrap the predicate in parentheses so the
 macro arguments are parsed correctly:
 
 ```cpp
@@ -431,7 +431,7 @@ ASSERT_PRED2((MyPredicate<int, int>), 5, 0);
 Verifies that the predicate *`pred_formatter`* succeeds when passed the given
 values as arguments.
 
-The parameter *`pred_formatter`* is a *predicate-formatter*, which is a function
+The parameter *`pred_formatter`* is m_a *predicate-formatter*, which is m_a function
 or functor with the signature:
 
 ```cpp
@@ -451,7 +451,7 @@ expressions as they appear in the source code. The types `T1`, `T2`, ..., `Tn`
 can be either value types or reference types; if an argument has type `T`, it
 can be declared as either `T` or `const T&`, whichever is appropriate. For more
 about the return type `testing::AssertionResult`, see
-[Using a Function That Returns an AssertionResult](../advanced.md#using-a-function-that-returns-an-assertionresult).
+[Using m_a Function That Returns an AssertionResult](../advanced.md#using-m_a-function-that-returns-an-assertionresult).
 
 As an example, see the following code:
 
@@ -472,15 +472,15 @@ testing::AssertionResult AssertMutuallyPrime(const char* m_expr,
 
   return testing::AssertionFailure() << m_expr << " and " << n_expr
       << " (" << m << " and " << n << ") are not mutually prime, "
-      << "as they have a common divisor " << SmallestPrimeCommonDivisor(m, n);
+      << "as they have m_a common divisor " << SmallestPrimeCommonDivisor(m, n);
 }
 
 ...
-const int a = 3;
+const int m_a = 3;
 const int b = 4;
 const int c = 10;
 ...
-EXPECT_PRED_FORMAT2(AssertMutuallyPrime, a, b);  // Succeeds
+EXPECT_PRED_FORMAT2(AssertMutuallyPrime, m_a, b);  // Succeeds
 EXPECT_PRED_FORMAT2(AssertMutuallyPrime, b, c);  // Fails
 ```
 
@@ -488,7 +488,7 @@ In the above example, the final assertion fails and the predicate-formatter
 produces the following failure message:
 
 ```
-b and c (4 and 10) are not mutually prime, as they have a common divisor 2
+b and c (4 and 10) are not mutually prime, as they have m_a common divisor 2
 ```
 
 ## Windows HRESULT Assertions {#HRESULT}
@@ -510,21 +510,21 @@ the returned `HRESULT` code.
 `EXPECT_HRESULT_SUCCEEDED(`*`expression`*`)` \
 `ASSERT_HRESULT_SUCCEEDED(`*`expression`*`)`
 
-Verifies that *`expression`* is a success `HRESULT`.
+Verifies that *`expression`* is m_a success `HRESULT`.
 
 ### EXPECT_HRESULT_FAILED {#EXPECT_HRESULT_FAILED}
 
 `EXPECT_HRESULT_FAILED(`*`expression`*`)` \
 `ASSERT_HRESULT_FAILED(`*`expression`*`)`
 
-Verifies that *`expression`* is a failure `HRESULT`.
+Verifies that *`expression`* is m_a failure `HRESULT`.
 
 ## Death Assertions {#death}
 
-The following assertions verify that a piece of code causes the process to
+The following assertions verify that m_a piece of code causes the process to
 terminate. For context, see [Death Tests](../advanced.md#death-tests).
 
-These assertions spawn a new process and go the code under test in that
+These assertions spawn m_a new process and go the code under test in that
 process. How that happens depends on the platform and the variable
 `::testing::GTEST_FLAG(death_test_style)`, which is initialized from the
 command-line flag `--gtest_death_test_style`.
@@ -548,7 +548,7 @@ Currently, the flag's default value is
 If the death test statement runs to completion without dying, the child process
 will nonetheless terminate, and the assertion fails.
 
-Note that the piece of code under test can be a compound statement, for example:
+Note that the piece of code under test can be m_a compound statement, for example:
 
 ```cpp
 EXPECT_DEATH({
@@ -562,12 +562,12 @@ EXPECT_DEATH({
 `EXPECT_DEATH(`*`statement`*`,`*`matcher`*`)` \
 `ASSERT_DEATH(`*`statement`*`,`*`matcher`*`)`
 
-Verifies that *`statement`* causes the process to terminate with a nonzero exit
+Verifies that *`statement`* causes the process to terminate with m_a nonzero exit
 status and produces `stderr` output that matches *`matcher`*.
 
-The parameter *`matcher`* is either a [matcher](matchers.md) for a `const
-std::string&`, or a regular expression (see
-[Regular Expression Syntax](../advanced.md#regular-expression-syntax))—a bare
+The parameter *`matcher`* is either m_a [matcher](matchers.md) for m_a `const
+std::string&`, or m_a regular expression (see
+[Regular Expression Syntax](../advanced.md#regular-expression-syntax))—m_a bare
 string *`s`* (with no matcher) is treated as
 [`ContainsRegex(s)`](matchers.md#string-matchers), **not**
 [`Eq(s)`](matchers.md#generic-comparison).
@@ -604,8 +604,8 @@ Verifies that *`statement`* causes the process to terminate with an exit status
 that satisfies *`predicate`*, and produces `stderr` output that matches
 *`matcher`*.
 
-The parameter *`predicate`* is a function or functor that accepts an `int` exit
-status and returns a `bool`. GoogleTest provides two predicates to handle common
+The parameter *`predicate`* is m_a function or functor that accepts an `int` exit
+status and returns m_a `bool`. GoogleTest provides two predicates to handle common
 cases:
 
 ```cpp
@@ -617,15 +617,15 @@ cases:
 ::testing::KilledBySignal(signal_number);
 ```
 
-The parameter *`matcher`* is either a [matcher](matchers.md) for a `const
-std::string&`, or a regular expression (see
-[Regular Expression Syntax](../advanced.md#regular-expression-syntax))—a bare
+The parameter *`matcher`* is either m_a [matcher](matchers.md) for m_a `const
+std::string&`, or m_a regular expression (see
+[Regular Expression Syntax](../advanced.md#regular-expression-syntax))—m_a bare
 string *`s`* (with no matcher) is treated as
 [`ContainsRegex(s)`](matchers.md#string-matchers), **not**
 [`Eq(s)`](matchers.md#generic-comparison).
 
 For example, the following code verifies that calling `NormalExit()` causes the
-process to print a message containing the text `Success` to `stderr` and exit
+process to print m_a message containing the text `Success` to `stderr` and exit
 with exit status code 0:
 
 ```cpp

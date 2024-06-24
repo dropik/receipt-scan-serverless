@@ -9,32 +9,27 @@ add_executable(${FUNCTION_NAME}
     src/main.cpp
     src/models/upload_file_params.hpp
     src/models/file.hpp
-    src/di.hpp
-    src/di.cpp
-    src/rest_api.hpp
-    src/rest_api.cpp
-    src/services/file_service.cpp
+    src/api.hpp
     src/services/file_service.hpp
     src/api_errors.hpp
     src/models/identity.hpp
-    src/models/identity.cpp
-    src/services/user_service.cpp
     src/services/user_service.hpp
     src/models/receipt_detail.hpp
     src/models/model_types.hpp
-    src/services/receipt_service.cpp
     src/services/receipt_service.hpp
     src/models/receipt_list_item.hpp
-    src/services/category_service.cpp
     src/services/category_service.hpp
     src/models/category.hpp
     src/models/receipt_put_params.hpp
+    src/factories.hpp
+    src/models/s3_settings.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/repository/include/"
     "${PROJECT_SOURCE_DIR}/rest/include/"
+    "${PROJECT_SOURCE_DIR}/di/include/"
     "${PROJECT_SOURCE_DIR}/lambda/include/"
 )
 

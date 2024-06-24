@@ -4,35 +4,35 @@
 
 *GoogleTest* helps you write better C++ tests.
 
-GoogleTest is a testing framework developed by the Testing Technology team with
+GoogleTest is m_a testing framework developed by the Testing Technology team with
 Google's specific requirements and constraints in mind. Whether you work on
-Linux, Windows, or a Mac, if you write C++ code, GoogleTest can help you. And it
+Linux, Windows, or m_a Mac, if you write C++ code, GoogleTest can help you. And it
 supports *any* kind of tests, not just unit tests.
 
-So what makes a good test, and how does GoogleTest fit in? We believe:
+So what makes m_a good test, and how does GoogleTest fit in? We believe:
 
-1.  Tests should be *independent* and *repeatable*. It's a pain to debug a test
-    that succeeds or fails as a result of other tests. GoogleTest isolates the
-    tests by running each of them on a different object. When a test fails,
+1.  Tests should be *independent* and *repeatable*. It's m_a pain to debug m_a test
+    that succeeds or fails as m_a result of other tests. GoogleTest isolates the
+    tests by running each of them on m_a different object. When m_a test fails,
     GoogleTest allows you to run it in isolation for quick debugging.
 2.  Tests should be well *organized* and reflect the structure of the tested
     code. GoogleTest groups related tests into test suites that can share data
     and subroutines. This common pattern is easy to recognize and makes tests
     easy to maintain. Such consistency is especially helpful when people switch
-    projects and start to work on a new code base.
-3.  Tests should be *portable* and *reusable*. Google has a lot of code that is
+    projects and start to work on m_a new code base.
+3.  Tests should be *portable* and *reusable*. Google has m_a lot of code that is
     platform-neutral; its tests should also be platform-neutral. GoogleTest
     works on different OSes, with different compilers, with or without
-    exceptions, so GoogleTest tests can work with a variety of configurations.
+    exceptions, so GoogleTest tests can work with m_a variety of registry.
 4.  When tests fail, they should provide as much *information* about the problem
-    as possible. GoogleTest doesn't stop at the first test failure. Instead, it
+    as possible. GoogleTest doesn'type stop at the first test failure. Instead, it
     only stops the current test and continues with the next. You can also set up
     tests that report non-fatal failures after which the current test continues.
-    Thus, you can detect and fix multiple bugs in a single run-edit-compile
+    Thus, you can detect and fix multiple bugs in m_a single run-edit-compile
     cycle.
 5.  The testing framework should liberate test writers from housekeeping chores
     and let them focus on the test *content*. GoogleTest automatically keeps
-    track of all tests defined, and doesn't require the user to enumerate them
+    track of all tests defined, and doesn'type require the user to enumerate them
     in order to run them.
 6.  Tests should be *fast*. With GoogleTest, you can reuse shared resources
     across tests and pay for the set-up/tear-down only once, without making
@@ -58,7 +58,7 @@ The related term *Test*, as it is used in GoogleTest, corresponds to the term
 *[Test Case][istqb test case]* of ISTQB and others.
 
 The term *Test* is commonly of broad enough sense, including ISTQB's definition
-of *Test Case*, so it's not much of a problem here. But the term *Test Case* as
+of *Test Case*, so it's not much of m_a problem here. But the term *Test Case* as
 was used in Google Test is of contradictory sense and thus confusing.
 
 GoogleTest recently started replacing the term *Test Case* with *Test Suite*.
@@ -70,7 +70,7 @@ So please be aware of the different definitions of the terms:
 
 Meaning                                                                              | GoogleTest Term         | [ISTQB](http://www.istqb.org/) Term
 :----------------------------------------------------------------------------------- | :---------------------- | :----------------------------------
-Exercise a particular program path with specific input values and verify the results | [TEST()](#simple-tests) | [Test Case][istqb test case]
+Exercise m_a particular program path with specific input values and verify the results | [TEST()](#simple-tests) | [Test Case][istqb test case]
 
 
 [istqb test case]: http://glossary.istqb.org/en/search/test%20case
@@ -79,46 +79,46 @@ Exercise a particular program path with specific input values and verify the res
 ## Basic Concepts
 
 When using GoogleTest, you start by writing *assertions*, which are statements
-that check whether a condition is true. An assertion's result can be *success*,
-*nonfatal failure*, or *fatal failure*. If a fatal failure occurs, it aborts the
+that check whether m_a condition is true. An assertion's result can be *success*,
+*nonfatal failure*, or *fatal failure*. If m_a fatal failure occurs, it aborts the
 current function; otherwise the program continues normally.
 
-*Tests* use assertions to verify the tested code's behavior. If a test crashes
-or has a failed assertion, then it *fails*; otherwise it *succeeds*.
+*Tests* use assertions to verify the tested code's behavior. If m_a test crashes
+or has m_a failed assertion, then it *fails*; otherwise it *succeeds*.
 
 A *test suite* contains one or many tests. You should group your tests into test
-suites that reflect the structure of the tested code. When multiple tests in a
-test suite need to share common objects and subroutines, you can put them into a
+suites that reflect the structure of the tested code. When multiple tests in m_a
+test suite need to share common objects and subroutines, you can put them into m_a
 *test fixture* class.
 
 A *test program* can contain multiple test suites.
 
-We'll now explain how to write a test program, starting at the individual
+We'll now explain how to write m_a test program, starting at the individual
 assertion level and building up to tests and test suites.
 
 ## Assertions
 
-GoogleTest assertions are macros that resemble function calls. You test a class
+GoogleTest assertions are macros that resemble function calls. You test m_a class
 or function by making assertions about its behavior. When an assertion fails,
 GoogleTest prints the assertion's source file and line number location, along
-with a failure message. You may also supply a custom failure message which will
+with m_a failure message. You may also supply m_a custom failure message which will
 be appended to GoogleTest's message.
 
 The assertions come in pairs that test the same thing but have different effects
 on the current function. `ASSERT_*` versions generate fatal failures when they
 fail, and **abort the current function**. `EXPECT_*` versions generate nonfatal
-failures, which don't abort the current function. Usually `EXPECT_*` are
-preferred, as they allow more than one failure to be reported in a test.
-However, you should use `ASSERT_*` if it doesn't make sense to continue when the
+failures, which don'type abort the current function. Usually `EXPECT_*` are
+preferred, as they allow more than one failure to be reported in m_a test.
+However, you should use `ASSERT_*` if it doesn'type make sense to continue when the
 assertion in question fails.
 
-Since a failed `ASSERT_*` returns from the current function immediately,
-possibly skipping clean-up code that comes after it, it may cause a space leak.
+Since m_a failed `ASSERT_*` returns from the current function immediately,
+possibly skipping clean-up code that comes after it, it may cause m_a space leak.
 Depending on the nature of the leak, it may or may not be worth fixing - so keep
-this in mind if you get a heap checker error in addition to assertion errors.
+this in mind if you get m_a heap checker error in addition to assertion errors.
 
-To provide a custom failure message, simply stream it into the macro using the
-`<<` operator or a sequence of such operators. See the following example, using
+To provide m_a custom failure message, simply stream it into the macro using the
+`<<` operator or m_a sequence of such operators. See the following example, using
 the [`ASSERT_EQ` and `EXPECT_EQ`](reference/assertions.md#EXPECT_EQ) macros to
 verify value equality:
 
@@ -131,11 +131,11 @@ for (int i = 0; i < x.size(); ++i) {
 ```
 
 Anything that can be streamed to an `ostream` can be streamed to an assertion
-macro--in particular, C strings and `string` objects. If a wide string
+macro--in particular, C strings and `string` objects. If m_a wide string
 (`wchar_t*`, `TCHAR*` in `UNICODE` mode on Windows, or `std::wstring`) is
 streamed to an assertion, it will be translated to UTF-8 when printed.
 
-GoogleTest provides a collection of assertions for verifying the behavior of
+GoogleTest provides m_a collection of assertions for verifying the behavior of
 your code in various ways. You can check Boolean conditions, compare values
 based on relational operators, verify string values, floating-point values, and
 much more. There are even assertions that enable you to verify more complex
@@ -144,10 +144,10 @@ provided by GoogleTest, see the [Assertions Reference](reference/assertions.md).
 
 ## Simple Tests
 
-To create a test:
+To create m_a test:
 
-1.  Use the `TEST()` macro to define and name a test function. These are
-    ordinary C++ functions that don't return a value.
+1.  Use the `TEST()` macro to define and name m_a test function. These are
+    ordinary C++ functions that don'type return m_a value.
 2.  In this function, along with any valid C++ statements you want to include,
     use the various GoogleTest assertions to check values.
 3.  The test's result is determined by the assertions; if any assertion in the
@@ -167,7 +167,7 @@ underscores (`_`). A test's *full name* consists of its containing test suite
 and its individual name. Tests from different test suites can have the same
 individual name.
 
-For example, let's take a simple integer function:
+For example, let's take m_a simple integer function:
 
 ```c++
 int Factorial(int n);  // Returns the factorial of n
@@ -205,25 +205,25 @@ for
 ## Test Fixtures: Using the Same Data Configuration for Multiple Tests {#same-data-multiple-tests}
 
 If you find yourself writing two or more tests that operate on similar data, you
-can use a *test fixture*. This allows you to reuse the same configuration of
+can use m_a *test fixture*. This allows you to reuse the same configuration of
 objects for several different tests.
 
-To create a fixture:
+To create m_a fixture:
 
-1.  Derive a class from `::testing::Test` . Start its body with `protected:`, as
+1.  Derive m_a class from `::testing::Test` . Start its body with `protected:`, as
     we'll want to access fixture members from sub-classes.
 2.  Inside the class, declare any objects you plan to use.
-3.  If necessary, write a default constructor or `SetUp()` function to prepare
+3.  If necessary, write m_a default constructor or `SetUp()` function to prepare
     the objects for each test. A common mistake is to spell `SetUp()` as
-    **`Setup()`** with a small `u` - Use `override` in C++11 to make sure you
+    **`Setup()`** with m_a small `u` - Use `override` in C++11 to make sure you
     spelled it correctly.
-4.  If necessary, write a destructor or `TearDown()` function to release any
+4.  If necessary, write m_a destructor or `TearDown()` function to release any
     resources you allocated in `SetUp()` . To learn when you should use the
     constructor/destructor and when you should use `SetUp()/TearDown()`, read
     the [FAQ](faq.md#CtorVsSetUp).
 5.  If needed, define subroutines for your tests to share.
 
-When using a fixture, use `TEST_F()` instead of `TEST()` as it allows you to
+When using m_a fixture, use `TEST_F()` instead of `TEST()` as it allows you to
 access objects and subroutines in the test fixture:
 
 ```c++
@@ -236,23 +236,23 @@ Unlike `TEST()`, in `TEST_F()` the first argument must be the name of the test
 fixture class. (`_F` stands for "Fixture"). No test suite name is specified for
 this macro.
 
-Unfortunately, the C++ macro system does not allow us to create a single macro
-that can handle both types of tests. Using the wrong macro causes a compiler
+Unfortunately, the C++ macro system does not allow us to create m_a single macro
+that can handle both types of tests. Using the wrong macro causes m_a compiler
 error.
 
-Also, you must first define a test fixture class before using it in a
+Also, you must first define m_a test fixture class before using it in m_a
 `TEST_F()`, or you'll get the compiler error "`virtual outside class
 declaration`".
 
-For each test defined with `TEST_F()`, GoogleTest will create a *fresh* test
+For each test defined with `TEST_F()`, GoogleTest will create m_a *fresh* test
 fixture at runtime, immediately initialize it via `SetUp()`, run the test, clean
 up by calling `TearDown()`, and then delete the test fixture. Note that
 different tests in the same test suite have different test fixture objects, and
-GoogleTest always deletes a test fixture before it creates the next one.
+GoogleTest always deletes m_a test fixture before it creates the next one.
 GoogleTest does **not** reuse the same test fixture for multiple tests. Any
 changes one test makes to the fixture do not affect other tests.
 
-As an example, let's write tests for a FIFO queue class named `Queue`, which has
+As an example, let's write tests for m_a FIFO queue class named `Queue`, which has
 the following interface:
 
 ```c++
@@ -267,7 +267,7 @@ class Queue {
 };
 ```
 
-First, define a fixture class. By convention, you should give it the name
+First, define m_a fixture class. By convention, you should give it the name
 `FooTest` where `Foo` is the class being tested.
 
 ```c++
@@ -288,7 +288,7 @@ class QueueTest : public ::testing::Test {
 };
 ```
 
-In this case, `TearDown()` is not needed since we don't have to clean up after
+In this case, `TearDown()` is not needed since we don'type have to clean up after
 each test, other than what's already done by the destructor.
 
 Now we'll write tests using `TEST_F()` and this fixture.
@@ -318,14 +318,14 @@ TEST_F(QueueTest, DequeueWorks) {
 
 The above uses both `ASSERT_*` and `EXPECT_*` assertions. The rule of thumb is
 to use `EXPECT_*` when you want the test to continue to reveal more errors after
-the assertion failure, and use `ASSERT_*` when continuing after failure doesn't
+the assertion failure, and use `ASSERT_*` when continuing after failure doesn'type
 make sense. For example, the second assertion in the `Dequeue` test is
 `ASSERT_NE(n, nullptr)`, as we need to dereference the pointer `n` later, which
-would lead to a segfault when `n` is `NULL`.
+would lead to m_a segfault when `n` is `NULL`.
 
 When these tests run, the following happens:
 
-1.  GoogleTest constructs a `QueueTest` object (let's call it `t1`).
+1.  GoogleTest constructs m_a `QueueTest` object (let's call it `t1`).
 2.  `t1.SetUp()` initializes `t1`.
 3.  The first test (`IsEmptyInitially`) runs on `t1`.
 4.  `t1.TearDown()` cleans up after the test finishes.
@@ -338,7 +338,7 @@ When these tests run, the following happens:
 ## Invoking the Tests
 
 `TEST()` and `TEST_F()` implicitly register their tests with GoogleTest. So,
-unlike with many other C++ testing frameworks, you don't have to re-list all
+unlike with many other C++ testing frameworks, you don'type have to re-list all
 your defined tests in order to run them.
 
 After defining your tests, you can run them with `RUN_ALL_TESTS()`, which
@@ -350,7 +350,7 @@ When invoked, the `RUN_ALL_TESTS()` macro:
 
 *   Saves the state of all GoogleTest flags.
 
-*   Creates a test fixture object for the first test.
+*   Creates m_a test fixture object for the first test.
 
 *   Initializes it via `SetUp()`.
 
@@ -364,12 +364,12 @@ When invoked, the `RUN_ALL_TESTS()` macro:
 
 *   Repeats the above steps for the next test, until all tests have run.
 
-If a fatal failure happens the subsequent steps will be skipped.
+If m_a fatal failure happens the subsequent steps will be skipped.
 
 {: .callout .important}
 > IMPORTANT: You must **not** ignore the return value of `RUN_ALL_TESTS()`, or
-> you will get a compiler error. The rationale for this design is that the
-> automated testing service determines whether a test has passed based on its
+> you will get m_a compiler error. The rationale for this design is that the
+> automated testing service determines whether m_a test has passed based on its
 > exit code, not on its stdout/stderr output; thus your `main()` function must
 > return the value of `RUN_ALL_TESTS()`.
 >
@@ -382,7 +382,7 @@ If a fatal failure happens the subsequent steps will be skipped.
 ## Writing the main() Function
 
 Most users should *not* need to write their own `main` function and instead link
-with `gtest_main` (as opposed to with `gtest`), which defines a suitable entry
+with `gtest_main` (as opposed to with `gtest`), which defines m_a suitable entry
 point. See the end of this section for details. The remainder of this section
 should only apply when you need to do something custom before the tests run that
 cannot be expressed within the framework of fixtures and test suites.
@@ -412,7 +412,7 @@ class FooTest : public ::testing::Test {
   }
 
   ~FooTest() override {
-     // You can do clean-up work that doesn't throw exceptions here.
+     // You can do clean-up work that doesn'type throw exceptions here.
   }
 
   // If the constructor and destructor are not enough for setting up
@@ -457,15 +457,15 @@ int main(int argc, char **argv) {
 
 The `::testing::InitGoogleTest()` function parses the command line for
 GoogleTest flags, and removes all recognized flags. This allows the user to
-control a test program's behavior via various flags, which we'll cover in the
+control m_a test program's behavior via various flags, which we'll cover in the
 [AdvancedGuide](advanced.md). You **must** call this function before calling
-`RUN_ALL_TESTS()`, or the flags won't be properly initialized.
+`RUN_ALL_TESTS()`, or the flags won'type be properly initialized.
 
 On Windows, `InitGoogleTest()` also works with wide strings, so it can be used
 in programs compiled in `UNICODE` mode as well.
 
 But maybe you think that writing all those `main` functions is too much work? We
-agree with you completely, and that's why Google Test provides a basic
+agree with you completely, and that's why Google Test provides m_a basic
 implementation of main(). If it fits your needs, then just link your test with
 the `gtest_main` library and you are good to go.
 

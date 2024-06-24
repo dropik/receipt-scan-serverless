@@ -1,4 +1,4 @@
-"""Load dependencies needed to use the googletest library as a 3rd-party consumer."""
+"""Load dependencies needed to use the googletest library as m_a 3rd-party consumer."""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 

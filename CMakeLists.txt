@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(receipt-scan-serverless VERSION 1.0.0 LANGUAGES CXX)
+project(receipt-scan-serverless VERSION 1.0.2 LANGUAGES CXX)
 
 option(WITH_TESTS "Whether to enable or disable building tests" ON)
 
@@ -16,6 +16,7 @@ endif()
 add_subdirectory(sam)
 add_subdirectory(repository)
 add_subdirectory(rest)
+add_subdirectory(di)
 add_subdirectory(lambda)
 add_subdirectory(api)
 add_subdirectory(scanner)

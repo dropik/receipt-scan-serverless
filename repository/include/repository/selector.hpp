@@ -43,18 +43,18 @@ class selector : public base_query {
   }
 
   std::shared_ptr<T> first_or_default() {
-    auto result = get_stmt()->executeQuery();
+    std::unique_ptr<sql::ResultSet> result(get_stmt()->executeQuery());
     if (result->next()) {
-      return std::move(m_configuration.get_entity(result));
+      return std::move(m_configuration.get_entity(result.get()));
     }
     return nullptr;
   }
 
   std::shared_ptr<std::vector<std::shared_ptr<T>>> all() {
-    auto result = get_stmt()->executeQuery();
+    std::unique_ptr<sql::ResultSet> result(get_stmt()->executeQuery());
     auto entities = std::make_shared<std::vector<std::shared_ptr<T>>>();
     while (result->next()) {
-      entities->push_back(std::move(m_configuration.get_entity(result)));
+      entities->push_back(std::move(m_configuration.get_entity(result.get())));
     }
     return entities;
   }

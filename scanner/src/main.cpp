@@ -7,10 +7,9 @@
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
-#include <lambda/logger.hpp>
-
 #include <repository/client.hpp>
 #include <lambda/lambda.hpp>
+#include <di/container.hpp>
 
 #ifdef DEBUG
 #include <lambda/runtime.hpp>
@@ -20,6 +19,7 @@
 #endif
 
 #include "handler.hpp"
+#include "factories.hpp"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -28,21 +28,13 @@ using namespace Aws::Utils::Json;
 using namespace Aws::Textract;
 using namespace Aws::BedrockRuntime;
 using namespace scanner;
-
-static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
-  return [] {
-    return Aws::MakeShared<ConsoleLogSystem>(
-      "console_logger",
-      LogLevel::Info);
-  };
-}
+using namespace di;
+using namespace lambda;
 
 int main(int argc, char* argv[]) {
-
   SDKOptions options;
   options.loggingOptions.logLevel = Utils::Logging::LogLevel::Info;
   options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
-  std::shared_ptr<sql::Connection> db_connection;
 
 #ifdef DEBUG
   lambda::runtime::set_debug(argc, argv);
@@ -51,26 +43,29 @@ int main(int argc, char* argv[]) {
 
   InitAPI(options);
   {
-    std::shared_ptr<lambda::logger> l = std::make_shared<lambda::logger>("Scanner");
-
-    Aws::Client::ClientConfiguration config;
-#ifdef DEBUG
-    config.region = AWS_REGION;
-#endif
-
     try {
-      auto stage = lambda::get_stage();
-      auto connection_string = repository::get_connection_string(stage, config);
+      log = lambda::logger("Scanner");
 
-      auto repo = std::make_shared<repository::client>(connection_string, l);
+      auto h = [](auto req) {
+        container<
+            singleton<Aws::Client::ClientConfiguration>,
+            singleton<repository::connection_settings>,
+            singleton<TextractClient>,
+            singleton<BedrockRuntimeClient>,
+            singleton<repository::t_client, repository::client<>>,
 
-      std::shared_ptr<TextractClient> textract_client =
-          Aws::MakeShared<TextractClient>("textract_client", config);
+            transient<repository::t_receipt_repository, repository::receipt_repository<>>,
+            transient<repository::t_category_repository, repository::category_repository<>>,
 
-      std::shared_ptr<BedrockRuntimeClient> bedrock_client =
-          Aws::MakeShared<BedrockRuntimeClient>("bedrock_client", config);
+            transient<services::t_receipt_extractor, services::receipt_extractor<>>,
+            transient<services::t_categorizer, services::categorizer<>>,
 
-      handler h(repo, textract_client, bedrock_client, l);
+            transient<t_handler, handler<>>
+        > services;
+
+        return services.template get<t_handler>()->operator()(req);
+      };
+
 #ifdef DEBUG
       lambda::runtime::run_debug(h);
 #else
@@ -78,7 +73,7 @@ int main(int argc, char* argv[]) {
 #endif  // DEBUG
 
     } catch (std::exception &e) {
-      l->error("Error occurred during execution of the function.");
+      log.error("Error occurred during execution of the function.");
     }
   }
 
@@ -86,4 +81,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-

@@ -13,7 +13,5 @@ struct identity {
   std::string user_id;
 };
 
-extern identity current_identity;
-
 }
 }

@@ -12,15 +12,42 @@
 namespace api {
 namespace services {
 
-class user_service {
- public:
-  user_service(std::shared_ptr<repository::client> repository, const models::identity &identity);
+struct t_user_service {};
 
-  void init_user();
+template<
+    typename TRepository = repository::t_client,
+    typename TIdentity = const models::identity>
+class user_service {
+  using user = repository::models::user;
+
+ public:
+  user_service(TRepository repository, TIdentity identity)
+      : m_repository(std::move(repository)), m_identity(std::move(identity)) {}
+
+  void init_user() {
+    auto user_id = m_identity->user_id;
+
+    auto existing_user =
+        m_repository->template select<user>("select * from users where id = ?")
+            .with_param(user_id)
+            .first_or_default();
+
+    if (existing_user) return;
+
+    user user{.id = user_id};
+    m_repository->create(user);
+
+    m_repository->execute(
+            "insert into categories (id, user_id, name) "
+            "select uuid_v4(), ?, name from categories "
+            "where user_id is null;")
+        .with_param(user_id)
+        .go();
+  }
 
  private:
-  std::shared_ptr<repository::client> m_repository;
-  const models::identity &m_identity;
+  TRepository m_repository;
+  TIdentity m_identity;
 };
 
 }

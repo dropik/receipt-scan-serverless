@@ -186,7 +186,7 @@ cc_test(
     size = "small",
     # All Samples except:
     #   sample9 (main)
-    #   sample10 (main and takes a command line option and needs to be separate)
+    #   sample10 (main and takes m_a command line option and needs to be separate)
     srcs = [
         "googletest/samples/sample1_unittest.cc",
         "googletest/samples/sample2_unittest.cc",

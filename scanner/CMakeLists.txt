@@ -6,18 +6,22 @@ find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime)
 
 add_executable(${FUNCTION_NAME}
-        src/main.cpp
-        src/handler.hpp
-        src/handler.cpp
-        src/utils.hpp
-        src/utils.cpp
-        src/models/bedrock_payload.hpp
-        src/models/bedrock_response.hpp)
+    src/main.cpp
+    src/handler.hpp
+    src/utils.hpp
+    src/utils.cpp
+    src/models/bedrock_payload.hpp
+    src/models/bedrock_response.hpp
+    src/factories.hpp
+    src/services/receipt_extractor.hpp
+    src/services/categorizer.hpp
+)
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
-  "${PROJECT_SOURCE_DIR}/include"
-  "${PROJECT_SOURCE_DIR}/repository/include"
-  "${PROJECT_SOURCE_DIR}/lambda/include"
+    "${PROJECT_SOURCE_DIR}/include"
+    "${PROJECT_SOURCE_DIR}/repository/include"
+    "${PROJECT_SOURCE_DIR}/lambda/include"
+    "${PROJECT_SOURCE_DIR}/di/include"
 )
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
@@ -36,3 +40,7 @@ file(WRITE "${PROJECT_BINARY_DIR}/${FUNCTION_NAME}/Makefile"
     "\tmkdir -p $(ARTIFACTS_DIR)/bin\n"
     "\tcp ${FUNCTION_NAME} $(ARTIFACTS_DIR)/bin\n"
     "\tln -sf bin/${FUNCTION_NAME} $(ARTIFACTS_DIR)/bootstrap\n")
+
+if(WITH_TESTS)
+  add_subdirectory(tests)
+endif()

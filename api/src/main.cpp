@@ -1,35 +1,30 @@
 #include <memory>
 
 #include <aws/core/Aws.h>
-#include <aws/core/http/HttpTypes.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
-
-#include <aws/s3/S3Client.h>
 
 #ifdef DEBUG
 #include <lambda/runtime.hpp>
 #endif
 
-#include "rest_api.hpp"
+#include <lambda/log.hpp>
+#include <di/container.hpp>
+
+#include "api.hpp"
+#include "factories.hpp"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
 using namespace Aws::Utils::Logging;
 using namespace api;
 using namespace rest;
-
-static std::function<std::shared_ptr<LogSystemInterface>()> GetConsoleLoggerFactory() {
-  return [] {
-    return Aws::MakeShared<ConsoleLogSystem>(
-      "console_logger",
-      LogLevel::Info);
-  };
-}
+using namespace di;
+using namespace services;
 
 int main(int argc, char** argv) {
   SDKOptions options;
   options.loggingOptions.logLevel = Utils::Logging::LogLevel::Info;
-  options.loggingOptions.logger_create_fn = GetConsoleLoggerFactory();
+  options.loggingOptions.logger_create_fn = lambda::GetConsoleLoggerFactory();
 
 #ifdef DEBUG
   lambda::runtime::set_debug(argc, argv);
@@ -38,16 +33,35 @@ int main(int argc, char** argv) {
 
   InitAPI(options);
   {
-    auto api = create_api();
+    lambda::log = lambda::logger("Api");
+
+    auto function = [](auto req) {
+      container<
+          singleton<Aws::Client::ClientConfiguration>,
+          singleton<repository::connection_settings>,
+          singleton<models::s3_settings>,
+          singleton<Aws::S3::S3Client>,
+          singleton<repository::t_client, repository::client<>>,
+
+          scoped<models::identity>,
+
+          transient<t_user_service, user_service<>>,
+          transient<t_file_service, file_service<>>,
+          transient<t_receipt_service, receipt_service<>>,
+          transient<t_category_service, category_service<>>
+      > services;
+
+      auto api = create_api(services);
+      return api(req);
+    };
 
 #ifdef DEBUG
-    lambda::runtime::run_debug(api);
+    lambda::runtime::run_debug(function);
 #else
-    run_handler(api);
+    run_handler(function);
 #endif // DEBUG
   }
   ShutdownAPI(options);
 
   return 0;
 }
-
