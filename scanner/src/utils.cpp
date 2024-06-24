@@ -12,6 +12,12 @@ std::string scanner::utils::gen_uuid() {
 
 void scanner::utils::ltrim(std::string& s) {
   s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-            return !isspace(ch);
-          }));
+    return !isspace(ch);
+  }));
+}
+
+void scanner::utils::rtrim(std::string& s) {
+  s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+    return !isspace(ch);
+  }).base(), s.end());
 }

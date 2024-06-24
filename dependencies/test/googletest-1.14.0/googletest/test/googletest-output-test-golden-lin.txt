@@ -71,7 +71,7 @@ Stack trace: (omitted)
 [0;31m[  FAILED  ] [mNonfatalFailureTest.DiffForLongStrings
 [0;32m[----------] [m3 tests from FatalFailureTest
 [0;32m[ RUN      ] [mFatalFailureTest.FatalFailureInSubroutine
-(expecting a failure that x should be 1)
+(expecting m_a failure that x should be 1)
 googletest-output-test_.cc:#: Failure
 Expected equality of these values:
   1
@@ -81,7 +81,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mFatalFailureTest.FatalFailureInSubroutine
 [0;32m[ RUN      ] [mFatalFailureTest.FatalFailureInNestedSubroutine
-(expecting a failure that x should be 1)
+(expecting m_a failure that x should be 1)
 googletest-output-test_.cc:#: Failure
 Expected equality of these values:
   1
@@ -91,7 +91,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mFatalFailureTest.FatalFailureInNestedSubroutine
 [0;32m[ RUN      ] [mFatalFailureTest.NonfatalFailureInSubroutine
-(expecting a failure on false)
+(expecting m_a failure on false)
 googletest-output-test_.cc:#: Failure
 Value of: false
   Actual: false
@@ -101,17 +101,17 @@ Stack trace: (omitted)
 [0;31m[  FAILED  ] [mFatalFailureTest.NonfatalFailureInSubroutine
 [0;32m[----------] [m1 test from LoggingTest
 [0;32m[ RUN      ] [mLoggingTest.InterleavingLoggingAndAssertions
-(expecting 2 failures on (3) >= (a[i]))
+(expecting 2 failures on (3) >= (m_a[i]))
 i == 0
 i == 1
 googletest-output-test_.cc:#: Failure
-Expected: (3) >= (a[i]), actual: 3 vs 9
+Expected: (3) >= (m_a[i]), actual: 3 vs 9
 Stack trace: (omitted)
 
 i == 2
 i == 3
 googletest-output-test_.cc:#: Failure
-Expected: (3) >= (a[i]), actual: 3 vs 6
+Expected: (3) >= (m_a[i]), actual: 3 vs 6
 Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mLoggingTest.InterleavingLoggingAndAssertions
@@ -132,19 +132,19 @@ Stack trace: (omitted)
 (expected to fail)
 googletest-output-test_.cc:#: Failure
 Failed
-This failure is expected, and shouldn't have a trace.
+This failure is expected, and shouldn'type have m_a trace.
 Stack trace: (omitted)
 
 googletest-output-test_.cc:#: Failure
 Failed
-This failure is expected, and should have a trace.
+This failure is expected, and should have m_a trace.
 Google Test trace:
 googletest-output-test_.cc:#: Expected trace
 Stack trace: (omitted)
 
 googletest-output-test_.cc:#: Failure
 Failed
-This failure is expected, and shouldn't have a trace.
+This failure is expected, and shouldn'type have m_a trace.
 Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mSCOPED_TRACETest.ObeysScopes
@@ -284,7 +284,7 @@ Stack trace: (omitted)
 [0;32m[ RUN      ] [mScopedTraceTest.WithExplicitFileAndLine
 googletest-output-test_.cc:#: Failure
 Failed
-Check that the trace is attached to a particular location.
+Check that the trace is attached to m_a particular location.
 Google Test trace:
 explicit_file.cc:123: expected trace message
 Stack trace: (omitted)
@@ -479,7 +479,7 @@ Stack trace: (omitted)
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.SucceedsWhenThereIsOneNonfatalFailure
 [0;32m[       OK ] [mExpectNonfatalFailureTest.SucceedsWhenThereIsOneNonfatalFailure
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenThereIsNoNonfatalFailure
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 0 failures
@@ -487,7 +487,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenThereIsNoNonfatalFailure
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenThereAreTwoNonfatalFailures
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 2 failures
@@ -507,7 +507,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenThereAreTwoNonfatalFailures
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenThereIsOneFatalFailure
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual:
@@ -521,7 +521,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenThereIsOneFatalFailure
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenStatementReturns
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 0 failures
@@ -529,7 +529,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectNonfatalFailureTest.FailsWhenStatementReturns
 [0;32m[ RUN      ] [mExpectNonfatalFailureTest.FailsWhenStatementThrows
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 non-fatal failure
   Actual: 0 failures
@@ -544,7 +544,7 @@ Stack trace: (omitted)
 [0;32m[ RUN      ] [mExpectFatalFailureTest.SucceedsWhenThereIsOneFatalFailure
 [0;32m[       OK ] [mExpectFatalFailureTest.SucceedsWhenThereIsOneFatalFailure
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenThereIsNoFatalFailure
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 0 failures
@@ -552,7 +552,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenThereIsNoFatalFailure
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenThereAreTwoFatalFailures
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 2 failures
@@ -572,7 +572,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenThereAreTwoFatalFailures
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenThereIsOneNonfatalFailure
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual:
@@ -586,7 +586,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenThereIsOneNonfatalFailure
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenStatementReturns
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 0 failures
@@ -594,7 +594,7 @@ Stack trace: (omitted)
 
 [0;31m[  FAILED  ] [mExpectFatalFailureTest.FailsWhenStatementReturns
 [0;32m[ RUN      ] [mExpectFatalFailureTest.FailsWhenStatementThrows
-(expecting a failure)
+(expecting m_a failure)
 gtest.cc:#: Failure
 Expected: 1 fatal failure
   Actual: 0 failures
@@ -990,18 +990,18 @@ Stack trace: (omitted)
 [0;32m[ RUN      ] [mEmptyBasenameParamInst.Passes/0
 [0;32m[       OK ] [mEmptyBasenameParamInst.Passes/0
 [0;32m[----------] [m2 tests from PrintingStrings/ParamTest
-[0;32m[ RUN      ] [mPrintingStrings/ParamTest.Success/a
-[0;32m[       OK ] [mPrintingStrings/ParamTest.Success/a
-[0;32m[ RUN      ] [mPrintingStrings/ParamTest.Failure/a
+[0;32m[ RUN      ] [mPrintingStrings/ParamTest.Success/m_a
+[0;32m[       OK ] [mPrintingStrings/ParamTest.Success/m_a
+[0;32m[ RUN      ] [mPrintingStrings/ParamTest.Failure/m_a
 googletest-output-test_.cc:#: Failure
 Expected equality of these values:
   "b"
   GetParam()
-    Which is: "a"
+    Which is: "m_a"
 Expected failure
 Stack trace: (omitted)
 
-[0;31m[  FAILED  ] [mPrintingStrings/ParamTest.Failure/a, where GetParam() = "a"
+[0;31m[  FAILED  ] [mPrintingStrings/ParamTest.Failure/m_a, where GetParam() = "m_a"
 [0;32m[----------] [m3 tests from GoogleTestVerification
 [0;32m[ RUN      ] [mGoogleTestVerification.UninstantiatedParameterizedTestSuite<NoTests>
 googletest-output-test_.cc:#: Failure
@@ -1009,7 +1009,7 @@ Parameterized test suite NoTests is instantiated via INSTANTIATE_TEST_SUITE_P, b
 
 Ideally, INSTANTIATE_TEST_SUITE_P should only ever be invoked from code that always depend on code that provides TEST_P. Failing to do so is often an indication of dead code, e.g. the last TEST_P was removed but the rest got left behind.
 
-To suppress this error for this test suite, insert the following line (in a non-header) in the namespace it is defined in:
+To suppress this error for this test suite, insert the following line (in m_a non-header) in the namespace it is defined in:
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(NoTests);
 Stack trace: (omitted)
@@ -1019,9 +1019,9 @@ Stack trace: (omitted)
 googletest-output-test_.cc:#: Failure
 Parameterized test suite DetectNotInstantiatedTest is defined via TEST_P, but never instantiated. None of the test cases will run. Either no INSTANTIATE_TEST_SUITE_P is provided or the only ones provided expand to nothing.
 
-Ideally, TEST_P definitions should only ever be included as part of binaries that intend to use them. (As opposed to, for example, being placed in a library that may be linked in to get other utilities.)
+Ideally, TEST_P definitions should only ever be included as part of binaries that intend to use them. (As opposed to, for example, being placed in m_a library that may be linked in to get other utilities.)
 
-To suppress this error for this test suite, insert the following line (in a non-header) in the namespace it is defined in:
+To suppress this error for this test suite, insert the following line (in m_a non-header) in the namespace it is defined in:
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(DetectNotInstantiatedTest);
 Stack trace: (omitted)
@@ -1031,9 +1031,9 @@ Stack trace: (omitted)
 googletest-output-test_.cc:#: Failure
 Type parameterized test suite DetectNotInstantiatedTypesTest is defined via REGISTER_TYPED_TEST_SUITE_P, but never instantiated via INSTANTIATE_TYPED_TEST_SUITE_P. None of the test cases will run.
 
-Ideally, TYPED_TEST_P definitions should only ever be included as part of binaries that intend to use them. (As opposed to, for example, being placed in a library that may be linked in to get other utilities.)
+Ideally, TYPED_TEST_P definitions should only ever be included as part of binaries that intend to use them. (As opposed to, for example, being placed in m_a library that may be linked in to get other utilities.)
 
-To suppress this error for this test suite, insert the following line (in a non-header) in the namespace it is defined in:
+To suppress this error for this test suite, insert the following line (in m_a non-header) in the namespace it is defined in:
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(DetectNotInstantiatedTypesTest);
 Stack trace: (omitted)
@@ -1111,7 +1111,7 @@ Stack trace: (omitted)
 [0;31m[  FAILED  ] [mBadDynamicFixture1.TestBase
 [0;31m[  FAILED  ] [mBadDynamicFixture2.Derived
 [0;31m[  FAILED  ] [mPrintingFailingParams/FailingParamTest.Fails/0, where GetParam() = 2
-[0;31m[  FAILED  ] [mPrintingStrings/ParamTest.Failure/a, where GetParam() = "a"
+[0;31m[  FAILED  ] [mPrintingStrings/ParamTest.Failure/m_a, where GetParam() = "m_a"
 [0;31m[  FAILED  ] [mGoogleTestVerification.UninstantiatedParameterizedTestSuite<NoTests>
 [0;31m[  FAILED  ] [mGoogleTestVerification.UninstantiatedParameterizedTestSuite<DetectNotInstantiatedTest>
 [0;31m[  FAILED  ] [mGoogleTestVerification.UninstantiatedTypeParameterizedTestSuite<DetectNotInstantiatedTypesTest>
@@ -1127,7 +1127,7 @@ Stack trace: (omitted)
 [----------] Global test environment set-up.
 [----------] 3 tests from FatalFailureTest
 [ RUN      ] FatalFailureTest.FatalFailureInSubroutine
-(expecting a failure that x should be 1)
+(expecting m_a failure that x should be 1)
 googletest-output-test_.cc:#: Failure
 Expected equality of these values:
   1
@@ -1137,7 +1137,7 @@ Stack trace: (omitted)
 
 [  FAILED  ] FatalFailureTest.FatalFailureInSubroutine (? ms)
 [ RUN      ] FatalFailureTest.FatalFailureInNestedSubroutine
-(expecting a failure that x should be 1)
+(expecting m_a failure that x should be 1)
 googletest-output-test_.cc:#: Failure
 Expected equality of these values:
   1
@@ -1147,7 +1147,7 @@ Stack trace: (omitted)
 
 [  FAILED  ] FatalFailureTest.FatalFailureInNestedSubroutine (? ms)
 [ RUN      ] FatalFailureTest.NonfatalFailureInSubroutine
-(expecting a failure on false)
+(expecting m_a failure on false)
 googletest-output-test_.cc:#: Failure
 Value of: false
   Actual: false
@@ -1159,17 +1159,17 @@ Stack trace: (omitted)
 
 [----------] 1 test from LoggingTest
 [ RUN      ] LoggingTest.InterleavingLoggingAndAssertions
-(expecting 2 failures on (3) >= (a[i]))
+(expecting 2 failures on (3) >= (m_a[i]))
 i == 0
 i == 1
 googletest-output-test_.cc:#: Failure
-Expected: (3) >= (a[i]), actual: 3 vs 9
+Expected: (3) >= (m_a[i]), actual: 3 vs 9
 Stack trace: (omitted)
 
 i == 2
 i == 3
 googletest-output-test_.cc:#: Failure
-Expected: (3) >= (a[i]), actual: 3 vs 6
+Expected: (3) >= (m_a[i]), actual: 3 vs 6
 Stack trace: (omitted)
 
 [  FAILED  ] LoggingTest.InterleavingLoggingAndAssertions (? ms)

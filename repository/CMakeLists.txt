@@ -25,19 +25,33 @@ add_library(repository STATIC
     src/statement.cpp
     include/repository/models/receipt_file.hpp
     include/repository/configurations/receipt_file_configuration.hpp
+    include/repository/connection_settings.hpp
+    include/repository/factories.hpp
+    include/repository/receipt_repository.hpp
+    include/repository/configurations/registry.hpp
+    include/repository/category_repository.hpp
 )
 
 target_include_directories(repository PUBLIC
-        "include")
+    "include"
+    "${PROJECT_SOURCE_DIR}/di/include"
+    "${PROJECT_SOURCE_DIR}/lambda/include"
+)
 
 target_link_libraries(repository PUBLIC
-        ${AWSSDK_LINK_LIBRARIES}
-        "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
-        "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
-        aws-lambda-cpp-common
-        gssapi_krb5
-        ssl)
+    lambda
+    ${AWSSDK_LINK_LIBRARIES}
+    "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
+    "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
+    aws-lambda-cpp-common
+    gssapi_krb5
+    ssl
+)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(repository PRIVATE DEBUG)
+endif()
+
+if(WITH_TESTS)
+    add_subdirectory(integration_tests)
 endif()

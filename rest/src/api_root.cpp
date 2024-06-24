@@ -3,6 +3,7 @@
 //
 
 #include <rest/api_root.hpp>
+#include <lambda/log.hpp>
 
 namespace rest {
 
@@ -13,29 +14,24 @@ api_root::api_root() {
 }
 
 void api_root::use_exception_filter() {
-  use([this](const api_request_t &request, const auto &next) {
+  use([](const api_request_t &request, const auto &next) {
     try {
       return next(request);
     } catch (api_exception &e) {
-      if (m_logger) {
-        m_logger->info("API Exception: %d %s", e.error, e.message.c_str());
-      }
+      lambda::log.info("API Exception: %d %s", e.error, e.message.c_str());
       return bad_request(e);
     } catch (std::exception &e) {
-      if (m_logger) {
-        m_logger->error("Internal error: %s", e.what());
-      }
+      lambda::log.error("Internal error: %s", e.what());
       return internal_server_error();
     }
   });
 }
 
-void api_root::use_logging(const std::shared_ptr<lambda::logger> &logger) {
-  m_logger = logger;
-  use([this](const api_request_t &request, const auto &next) {
-    m_logger->info("Request: %s %s", request.http_method.c_str(), request.path.c_str());
+void api_root::use_logging() {
+  use([](const api_request_t &request, const auto &next) {
+    lambda::log.info("Request: %s %s", request.http_method.c_str(), request.path.c_str());
     auto response = next(request);
-    m_logger->info("%s %s Response: %d", request.http_method.c_str(), request.path.c_str(), response.status_code);
+    lambda::log.info("%s %s Response: %d", request.http_method.c_str(), request.path.c_str(), response.status_code);
     return response;
   });
 }
