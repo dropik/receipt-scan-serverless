@@ -17,7 +17,7 @@ struct receipt {
   std::string store_name;
   std::string category;
   std::string state;
-  int version;
+  int version = 0;
 
   std::vector<receipt_item> items;
   lambda::nullable<receipt_file> file;

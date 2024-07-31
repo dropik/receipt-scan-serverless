@@ -148,3 +148,38 @@ TEST_F(receipt_repository_test, should_not_find_receipt_if_file_name_and_doc_num
   auto receipt = receipt_repository->get(DEFAULT_USER_ID, "file_name", 1);
   ASSERT_FALSE(receipt.has_value());
 }
+
+TEST_F(receipt_repository_test, should_store_receipt_version_as_0_when_created) {
+  auto receipt_repository = services.get<repository::t_receipt_repository>();
+  auto r = create_receipt();
+  receipt_repository->store(r);
+  auto repo = services.get<repository::t_client>();
+  auto stored_receipt = repo->get<receipt>(r.id);
+  ASSERT_EQ(0, stored_receipt->version);
+}
+
+TEST_F(receipt_repository_test, should_udpate_version_if_receipt_exists) {
+  auto receipt_repository = services.get<repository::t_receipt_repository>();
+  auto r = create_receipt();
+  receipt_repository->store(r);
+  r.store_name = "new_store_name";
+  receipt_repository->store(r);
+  auto repo = services.get<repository::t_client>();
+  auto stored_receipt = repo->get<receipt>(r.id);
+  ASSERT_EQ(1, stored_receipt->version);
+}
+
+TEST_F(receipt_repository_test, should_handle_optimistic_concurrency) {
+  auto receipt_repository = services.get<repository::t_receipt_repository>();
+  auto r = create_receipt();
+  receipt_repository->store(r);
+  auto repo = services.get<repository::t_client>();
+  auto stored_receipt = repo->get<receipt>(r.id);
+  stored_receipt->store_name = "new_store_name";
+  receipt_repository->store(*stored_receipt);
+  r.store_name = "new_store_name_2";
+  receipt_repository->store(r);
+  auto stored_receipt_2 = repo->get<receipt>(r.id);
+  ASSERT_EQ(1, stored_receipt_2->version);
+  ASSERT_EQ("new_store_name", stored_receipt_2->store_name);
+}

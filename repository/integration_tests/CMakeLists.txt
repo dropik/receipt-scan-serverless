@@ -7,6 +7,7 @@ add_executable(repository_integration_tests_run
     base_repository_integration_test.hpp
     base_repository_integration_test.cpp
     client_test.cpp
+    ../include/repository/configurations/common/version_configuration.hpp
 )
 
 target_include_directories(repository_integration_tests_run PUBLIC

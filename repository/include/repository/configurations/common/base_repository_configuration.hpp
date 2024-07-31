@@ -14,6 +14,7 @@
 #include "id_configuration.hpp"
 #include "property_configuration.hpp"
 #include "table_configuration.hpp"
+#include "version_configuration.hpp"
 
 #define HAS_TABLE(table_name) has_table(table_name)
 
@@ -53,6 +54,8 @@
       [](const entity_t& entity) -> long double { return entity.field; }, \
       [](entity_t& entity, long double d) { entity.field = d; })
 
+#define HAS_VERSION() has_version([](const entity_t& entity) -> const int & { return entity.version; }, [](entity_t& entity, const int &v) { entity.version = v; }).with_column_name("version")
+
 #define WITH_COLUMN(column_name) .with_column_name(column_name)
 
 namespace repository {
@@ -78,9 +81,15 @@ class base_repository_configuration {
         if (!property) continue;
         query += ", " + property->get_column_name();
       }
+      if (m_version) {
+        query += ", " + m_version->get_column_name();
+      }
       query += ") values (?";
       for (size_t i = 0; i < m_properties.size(); i++) {
         query += ", ?";
+      }
+      if (m_version) {
+          query += ", ?";
       }
       query += ")";
       std::shared_ptr<sql::PreparedStatement> stmt(
@@ -98,6 +107,9 @@ class base_repository_configuration {
       m_properties[i]->configure_statement(property_index, entity,
                                            m_insert_statement);
       property_index++;
+    }
+    if (m_version) {
+      m_version->configure_statement(property_index, 0, m_insert_statement);
     }
 
     return m_insert_statement;
@@ -118,6 +130,9 @@ class base_repository_configuration {
       for (const auto &property : m_properties) {
         if (!property) continue;
         query += ", " + property->get_column_name();
+      }
+      if (m_version) {
+          query += ", " + m_version->get_column_name();
       }
       query += " from " + m_table->get_name() + " where " +
           m_id->get_column_name() + " = ?";
@@ -141,6 +156,9 @@ class base_repository_configuration {
       if (!m_properties[i]) continue;
       m_properties[i]->set_entity_property(*entity, result);
     }
+    if (m_version) {
+      m_version->set_version(*entity, result);
+    }
     return entity;
   }
 
@@ -162,7 +180,13 @@ class base_repository_configuration {
           query += ", ";
         }
       }
+      if (m_version) {
+        query += ", " + m_version->get_column_name() + " = ?";
+      }
       query += " where " + m_id->get_column_name() + " = ?";
+      if (m_version) {
+        query += " and " + m_version->get_column_name() + " < ?";
+      }
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -172,14 +196,22 @@ class base_repository_configuration {
     }
 
     int property_index = 1;
+    int new_version = 0;
     for (size_t i = 0; i < m_properties.size(); i++) {
       if (!m_properties[i]) continue;
-      m_properties[i]->configure_statement(property_index, entity,
-                                           m_update_statement);
+      m_properties[i]->configure_statement(property_index, entity, m_update_statement);
       property_index++;
     }
-    m_id->configure_statement(property_index, entity,
-                              m_update_statement);
+    if (m_version) {
+      new_version = m_version->get_version(entity) + 1;
+      m_version->configure_statement(property_index, new_version, m_update_statement);
+      property_index++;
+    }
+    m_id->configure_statement(property_index, entity, m_update_statement);
+    property_index++;
+    if (m_version) {
+      m_update_statement->setInt(property_index, new_version);
+    }
 
     return m_update_statement;
   }
@@ -247,6 +279,14 @@ class base_repository_configuration {
     return *m_properties.back();
   }
 
+  version_configuration<T> &has_version(
+      const typename version_configuration<T>::version_selector_t &version_selector,
+      const typename version_configuration<T>::version_setter_t &version_setter
+      ) {
+    m_version = std::make_shared<version_configuration<T>>(version_selector, version_setter);
+    return *m_version;
+  }
+
  private:
   std::shared_ptr<sql::PreparedStatement> m_insert_statement;
   std::shared_ptr<sql::PreparedStatement> m_select_statement;
@@ -256,6 +296,7 @@ class base_repository_configuration {
   std::shared_ptr<table_configuration> m_table;
   std::shared_ptr<id_configuration<T>> m_id;
   std::vector<std::shared_ptr<base_property_configuration<T>>> m_properties;
+  std::shared_ptr<version_configuration<T>> m_version;
 };
 
 }  // namespace common

@@ -24,7 +24,8 @@ class repository_configuration<models::receipt>
     HAS_STRING(store_name) WITH_COLUMN("store_name");
     HAS_STRING(category) WITH_COLUMN("category");
     HAS_STRING(state) WITH_COLUMN("state");
-    HAS_INT(version) WITH_COLUMN("version");
+
+    HAS_VERSION();
   }
 };
 

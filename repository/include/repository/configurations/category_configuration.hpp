@@ -18,7 +18,8 @@ class repository_configuration<models::category>
     HAS_STRING(user_id) WITH_COLUMN("user_id");
     HAS_STRING(name) WITH_COLUMN("name");
     HAS_INT(color) WITH_COLUMN("color");
-    HAS_INT(version) WITH_COLUMN("version");
+
+    HAS_VERSION();
   }
 };
 

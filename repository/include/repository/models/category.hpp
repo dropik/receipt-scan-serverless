@@ -12,7 +12,7 @@ struct category {
   guid user_id;
   std::string name;
   int color;
-  int version;
+  int version = 0;
 };
 
 }  // namespace models
