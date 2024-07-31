@@ -168,3 +168,64 @@ create table receipt_files (
 # 2024-06-10: add state to receipts
 alter table receipts
 add column state enum('processing', 'done') not null default 'processing';
+
+# v1.1.0
+# 2024-07-31: delete default categories
+delete from categories where user_id is null;
+
+# 2024-07-31: add budgets table
+create table budgets (
+  id char(36) not null primary key,
+  user_id char(36) not null,
+  month date not null,
+  amount decimal(10, 2) not null default 0,
+  version int not null default 0,
+
+  unique index ix_user_id_month (user_id, month),
+  index ix_user_id (user_id),
+
+  constraint fk_user_budget foreign key (user_id)
+    references users(id)
+    on delete restrict
+    on update restrict
+);
+
+# 2024-07-31: add color to categories
+alter table categories
+add column color int not null default 0;
+
+# 2024-07-31: add version to categories and receipts
+alter table categories
+add column version int not null default 0;
+
+alter table receipts
+add column version int not null default 0;
+
+# 2024-07-31: add user devices table
+create table user_devices (
+  id char(36) not null primary key,
+  user_id char(36) not null,
+
+  index ix_user_id (user_id),
+
+  constraint fk_user_device foreign key (user_id)
+    references users(id)
+    on delete cascade
+    on update restrict
+);
+
+# 2024-07-31: add entity events table
+create table entity_events (
+  id char(36) not null primary key,
+  device_id char(36) not null,
+  entity_type varchar(100) not null,
+  entity_id char(36) not null,
+  event_type enum('create', 'update', 'delete') not null,
+
+  index ix_device_id (device_id),
+
+  constraint fk_device_entity_event foreign key (device_id)
+    references user_devices(id)
+    on delete cascade
+    on update restrict
+);
