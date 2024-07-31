@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(receipt-scan-serverless VERSION 1.0.2 LANGUAGES CXX)
+project(receipt-scan-serverless VERSION 1.1.0 LANGUAGES CXX)
 
 option(WITH_TESTS "Whether to enable or disable building tests" ON)
 
