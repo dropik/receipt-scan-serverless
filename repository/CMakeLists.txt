@@ -31,6 +31,12 @@ add_library(repository STATIC
     include/repository/configurations/registry.hpp
     include/repository/category_repository.hpp
     include/repository/configurations/common/version_configuration.hpp
+    include/repository/models/budget.hpp
+    include/repository/configurations/budget_configuration.hpp
+    include/repository/models/user_device.hpp
+    include/repository/configurations/user_device_configuration.hpp
+    include/repository/models/entity_event.hpp
+    include/repository/configurations/entity_event_configuration.hpp
 )
 
 target_include_directories(repository PUBLIC

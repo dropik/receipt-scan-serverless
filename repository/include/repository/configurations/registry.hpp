@@ -11,6 +11,9 @@
 #include "repository/configurations/receipt_item_configuration.hpp"
 #include "repository/configurations/receipt_file_configuration.hpp"
 #include "repository/configurations/user_configuration.hpp"
+#include "repository/configurations/budget_configuration.hpp"
+#include "repository/configurations/user_device_configuration.hpp"
+#include "repository/configurations/entity_event_configuration.hpp"
 
 namespace repository {
 namespace configurations {
@@ -31,7 +34,10 @@ using registry = configurations_registry<
     models::receipt,
     models::receipt_item,
     models::receipt_file,
-    models::user
+    models::user,
+    models::budget,
+    models::user_device,
+    models::entity_event
 >;
 
 }

@@ -8,6 +8,12 @@ add_executable(repository_integration_tests_run
     base_repository_integration_test.cpp
     client_test.cpp
     ../include/repository/configurations/common/version_configuration.hpp
+    ../include/repository/models/budget.hpp
+    ../include/repository/configurations/budget_configuration.hpp
+    ../include/repository/models/user_device.hpp
+    ../include/repository/configurations/user_device_configuration.hpp
+    ../include/repository/models/entity_event.hpp
+    ../include/repository/configurations/entity_event_configuration.hpp
 )
 
 target_include_directories(repository_integration_tests_run PUBLIC
