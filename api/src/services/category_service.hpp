@@ -70,7 +70,7 @@ class category_service {
       throw rest::api_exception(forbidden, "Access denied");
     }
 
-    m_repository->drop(existing);
+    m_repository->drop(*existing);
   }
 
  private:

@@ -14,6 +14,7 @@ add_executable(repository_integration_tests_run
     ../include/repository/configurations/user_device_configuration.hpp
     ../include/repository/models/entity_event.hpp
     ../include/repository/configurations/entity_event_configuration.hpp
+    ../include/repository/configurations/common/tracking_configuration.hpp
 )
 
 target_include_directories(repository_integration_tests_run PUBLIC

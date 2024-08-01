@@ -175,7 +175,7 @@ class receipt_service {
   void delete_receipt(const models::guid_t &receipt_id) {
     auto receipt = get_receipt_by_id(receipt_id);
     auto file = try_get_receipt_file(receipt_id);
-    m_repository->drop(receipt);
+    m_repository->drop(*receipt);
     if (file) {
       m_file_service->delete_file(file->file_name);
     }

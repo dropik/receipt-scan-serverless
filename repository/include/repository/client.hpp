@@ -58,6 +58,10 @@ class client {
         throw std::runtime_error("Unable to create prepared statement!");
       }
       stmt->executeUpdate();
+
+      if (configuration.has_tracking()) {
+        configuration.track_creation(entity, get_connection());
+      }
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while creating entity in the database: %s",
                         e.what());
@@ -96,6 +100,10 @@ class client {
         throw std::runtime_error("Unable to create prepared statement!");
       }
       stmt->executeUpdate();
+
+      if (configuration.has_tracking()) {
+        configuration.track_update(entity, get_connection());
+      }
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while updating entity in the database: %s",
                         e.what());
@@ -104,7 +112,8 @@ class client {
   }
 
   template<typename T>
-  void drop(const models::guid &id) {
+  void drop(const T &entity) {
+    auto id = entity.id;
     auto &configuration = m_registry.get<T>();
     lambda::log.info("Deleting from %s...", configuration.get_table_name().c_str());
     try {
@@ -113,16 +122,15 @@ class client {
         throw std::runtime_error("Unable to create prepared statement!");
       }
       stmt->executeUpdate();
+
+      if (configuration.has_tracking()) {
+        configuration.track_delete(entity, get_connection());
+      }
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while deleting entity in the database: %s",
                         e.what());
       throw;
     }
-  }
-
-  template<typename T>
-  void drop(const std::shared_ptr<T> &entity) {
-    drop<T>(entity->id);
   }
 
   template<typename T>

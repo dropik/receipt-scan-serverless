@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common.hpp"
+
 namespace repository {
 namespace models {
 

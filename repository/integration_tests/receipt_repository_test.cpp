@@ -38,6 +38,13 @@ static receipt create_receipt() {
   return r;
 }
 
+static user_device create_user_device() {
+  user_device ud;
+  ud.id = "12345";
+  ud.user_id = DEFAULT_USER_ID;
+  return ud;
+}
+
 TEST_F(receipt_repository_test, should_create_receipt) {
   auto receipt_repository = services.get<repository::t_receipt_repository>();
   auto r = create_receipt();
@@ -182,4 +189,59 @@ TEST_F(receipt_repository_test, should_handle_optimistic_concurrency) {
   auto stored_receipt_2 = repo->get<receipt>(r.id);
   ASSERT_EQ(1, stored_receipt_2->version);
   ASSERT_EQ("new_store_name", stored_receipt_2->store_name);
+}
+
+TEST_F(receipt_repository_test, should_create_create_event_when_receipt_created) {
+  auto receipt_repository = services.get<repository::t_receipt_repository>();
+  auto r = create_receipt();
+  auto ud = create_user_device();
+  auto repo = services.get<repository::t_client>();
+  repo->create(ud);
+  receipt_repository->store(r);
+  auto events = repo->select<entity_event>("select * from entity_events where entity_id = ?").with_param(r.id).all();
+  ASSERT_EQ(1, events->size());
+  ASSERT_EQ(r.id, events->operator[](0)->entity_id);
+  ASSERT_EQ(ud.id, events->operator[](0)->device_id);
+  ASSERT_EQ("receipt", events->operator[](0)->entity_type);
+  auto expected_event = entity_event::create;
+  ASSERT_EQ(expected_event, events->operator[](0)->event_type);
+}
+
+TEST_F(receipt_repository_test, should_create_update_event_when_receipt_updated) {
+  auto receipt_repository = services.get<repository::t_receipt_repository>();
+  auto r = create_receipt();
+  auto ud = create_user_device();
+  auto repo = services.get<repository::t_client>();
+  repo->create(ud);
+  receipt_repository->store(r);
+  r.store_name = "new_store_name";
+  receipt_repository->store(r);
+  auto events =
+      repo->select<entity_event>("select * from entity_events where entity_id = ? and event_type = 'update'").with_param(
+          r.id).all();
+  ASSERT_EQ(1, events->size());
+  ASSERT_EQ(r.id, events->operator[](0)->entity_id);
+  ASSERT_EQ(ud.id, events->operator[](0)->device_id);
+  ASSERT_EQ("receipt", events->operator[](0)->entity_type);
+  auto expected_event = entity_event::update;
+  ASSERT_EQ(expected_event, events->operator[](0)->event_type);
+}
+
+TEST_F(receipt_repository_test, should_create_delete_event_when_receipt_deleted) {
+  auto receipt_repository = services.get<repository::t_receipt_repository>();
+  auto r = create_receipt();
+  auto ud = create_user_device();
+  auto repo = services.get<repository::t_client>();
+  repo->create(ud);
+  repo->create(r);
+  repo->drop(r);
+  auto events =
+      repo->select<entity_event>("select * from entity_events where entity_id = ? and event_type = 'delete'").with_param(
+          r.id).all();
+  ASSERT_EQ(1, events->size());
+  ASSERT_EQ(r.id, events->operator[](0)->entity_id);
+  ASSERT_EQ(ud.id, events->operator[](0)->device_id);
+  ASSERT_EQ("receipt", events->operator[](0)->entity_type);
+  auto expected_event = entity_event::del;
+  ASSERT_EQ(expected_event, events->operator[](0)->event_type);
 }

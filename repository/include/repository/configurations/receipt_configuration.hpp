@@ -26,6 +26,7 @@ class repository_configuration<models::receipt>
     HAS_STRING(state) WITH_COLUMN("state");
 
     HAS_VERSION();
+    HAS_TRACKING(id, user_id) WITH_ENTITY_NAME("receipt");
   }
 };
 
