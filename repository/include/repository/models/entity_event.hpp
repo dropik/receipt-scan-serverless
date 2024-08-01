@@ -14,6 +14,7 @@ struct entity_event {
   std::string entity_type;
   guid entity_id;
   std::string event_type;
+  std::string event_timestamp;
 
   static constexpr auto create = "create";
   static constexpr auto update = "update";

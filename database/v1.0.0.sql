@@ -221,6 +221,7 @@ create table entity_events (
   entity_type varchar(100) not null,
   entity_id char(36) not null,
   event_type enum('create', 'update', 'delete') not null,
+  event_timestamp timestamp not null default current_timestamp,
 
   index ix_device_id (device_id),
 

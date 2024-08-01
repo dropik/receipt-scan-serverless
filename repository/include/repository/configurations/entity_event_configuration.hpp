@@ -23,6 +23,7 @@ class repository_configuration<models::entity_event>
     HAS_STRING(entity_type) WITH_COLUMN("entity_type");
     HAS_STRING(entity_id) WITH_COLUMN("entity_id");
     HAS_STRING(event_type) WITH_COLUMN("event_type");
+    HAS_STRING(event_timestamp) WITH_COLUMN("event_timestamp");
   }
 };
 
