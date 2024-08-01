@@ -57,7 +57,10 @@ class client {
       if (!stmt) {
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      stmt->executeUpdate();
+      auto result = stmt->executeUpdate();
+      if (result == 0) {
+        throw std::runtime_error("Optimistic concurrency error");
+      }
 
       if (configuration.has_tracking()) {
         configuration.track_creation(entity, get_connection());
@@ -99,7 +102,10 @@ class client {
       if (!stmt) {
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      stmt->executeUpdate();
+      auto result = stmt->executeUpdate();
+      if (result == 0) {
+        throw std::runtime_error("Optimistic concurrency error");
+      }
 
       if (configuration.has_tracking()) {
         configuration.track_update(entity, get_connection());

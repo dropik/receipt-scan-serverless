@@ -185,7 +185,12 @@ TEST_F(receipt_repository_test, should_handle_optimistic_concurrency) {
   stored_receipt->store_name = "new_store_name";
   receipt_repository->store(*stored_receipt);
   r.store_name = "new_store_name_2";
-  receipt_repository->store(r);
+  try {
+    receipt_repository->store(r);
+    FAIL() << "Expected an exception";
+  } catch (const std::exception &e) {
+    ASSERT_STREQ("Optimistic concurrency error", e.what());
+  }
   auto stored_receipt_2 = repo->get<receipt>(r.id);
   ASSERT_EQ(1, stored_receipt_2->version);
   ASSERT_EQ("new_store_name", stored_receipt_2->store_name);
