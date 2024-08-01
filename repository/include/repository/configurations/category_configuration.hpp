@@ -20,6 +20,7 @@ class repository_configuration<models::category>
     HAS_INT(color) WITH_COLUMN("color");
 
     HAS_VERSION();
+    HAS_TRACKING(id, user_id) WITH_ENTITY_NAME("category");
   }
 };
 
