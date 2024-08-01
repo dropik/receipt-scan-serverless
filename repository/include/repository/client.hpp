@@ -119,15 +119,18 @@ class client {
 
   template<typename T>
   void drop(const T &entity) {
-    auto id = entity.id;
     auto &configuration = m_registry.get<T>();
     lambda::log.info("Deleting from %s...", configuration.get_table_name().c_str());
     try {
-      auto &stmt = configuration.get_delete_statement(id, get_connection());
+      auto &stmt = configuration.get_delete_statement(entity, get_connection());
       if (!stmt) {
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      stmt->executeUpdate();
+
+      auto result = stmt->executeUpdate();
+      if (result == 0) {
+        throw std::runtime_error("Optimistic concurrency error");
+      }
 
       if (configuration.has_tracking()) {
         configuration.track_delete(entity, get_connection());

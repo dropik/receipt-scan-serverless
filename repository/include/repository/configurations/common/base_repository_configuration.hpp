@@ -229,7 +229,7 @@ class base_repository_configuration {
   }
 
   const std::shared_ptr<sql::PreparedStatement> &get_delete_statement(
-      const std::string &id, const std::shared_ptr<sql::Connection> &connection) {
+      const T &entity, const std::shared_ptr<sql::Connection> &connection) {
     if (!m_delete_statement) {
       if (!m_table) {
         throw std::runtime_error("Table is not configured!");
@@ -240,6 +240,9 @@ class base_repository_configuration {
 
       std::string query = "delete from " + m_table->get_name() + " where " +
           m_id->get_column_name() + " = ?";
+      if (m_version) {
+        query += " and " + m_version->get_column_name() + " = ?";
+      }
       std::shared_ptr<sql::PreparedStatement> stmt(
           connection->prepareStatement(query));
       if (!stmt) {
@@ -248,7 +251,10 @@ class base_repository_configuration {
       m_delete_statement = std::move(stmt);
     }
 
-    m_delete_statement->setString(1, id);
+    m_id->configure_statement(1, entity, m_delete_statement);
+    if (m_version) {
+      m_version->configure_statement(2, m_version->get_version(entity), m_delete_statement);
+    }
 
     return m_delete_statement;
   }
