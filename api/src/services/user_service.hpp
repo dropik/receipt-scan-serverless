@@ -36,13 +36,6 @@ class user_service {
 
     user user{.id = user_id};
     m_repository->create(user);
-
-    m_repository->execute(
-            "insert into categories (id, user_id, name) "
-            "select uuid_v4(), ?, name from categories "
-            "where user_id is null;")
-        .with_param(user_id)
-        .go();
   }
 
  private:
