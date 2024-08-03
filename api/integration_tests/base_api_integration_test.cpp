@@ -85,6 +85,9 @@ void assert_response(const aws::lambda_runtime::invocation_response &response,
 }
 
 std::string expected_response(const std::string &status, const std::string &body) {
+  auto compact = compact_json(body);
+  string::replace_all(compact, "\"", "\\\"");
+
   return pretty_json(string::format(R"(
 {
   "body": "%s",
@@ -93,11 +96,15 @@ std::string expected_response(const std::string &status, const std::string &body
   "multiValueHeaders": {},
   "statusCode": %s
 }
-  )", body.c_str(), status.c_str()));
+  )", compact.c_str(), status.c_str()));
 }
 
 std::string pretty_json(const std::string &json) {
   return Aws::Utils::Json::JsonView(json).WriteReadable();
+}
+
+std::string compact_json(const std::string &json) {
+  return Aws::Utils::Json::JsonView(json).WriteCompact(false);
 }
 
 }

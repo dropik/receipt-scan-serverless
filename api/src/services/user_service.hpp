@@ -8,6 +8,8 @@
 
 #include <repository/client.hpp>
 #include "../models/identity.hpp"
+#include "../api_errors.hpp"
+#include "../models/user.hpp"
 
 namespace api {
 namespace services {
@@ -36,6 +38,16 @@ class user_service {
 
     user user{.id = user_id};
     m_repository->create(user);
+  }
+
+  models::user get_user() {
+    auto users = m_repository->template select<user>("select * from users where id = ?")
+        .with_param(m_identity->user_id)
+        .all();
+    if (users->empty()) {
+      throw rest::api_exception(not_found, "User not found");
+    }
+    return models::user::from_repository(*users->at(0));
   }
 
  private:

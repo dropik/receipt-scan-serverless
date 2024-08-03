@@ -54,6 +54,7 @@ void assert_response(const aws::lambda_runtime::invocation_response &response,
                      const std::string &expected_body);
 std::string expected_response(const std::string &status, const std::string &body = "");
 std::string pretty_json(const std::string &json);
+std::string compact_json(const std::string &json);
 
 }
 }

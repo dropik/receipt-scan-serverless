@@ -24,6 +24,8 @@ add_executable(api_integration_tests
     base_api_integration_test.cpp
     mocks/factories.hpp
     user_test.cpp
+    ../src/models/user.hpp
+    ../src/models/user.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

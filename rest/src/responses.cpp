@@ -16,7 +16,7 @@ api_response_t ok() {
 api_response_t bad_request() {
   api_response_t response;
   response.status_code = 400;
-  response.set_body("Bad request", false);
+  response.set_body("", false);
   return response;
 }
 
@@ -30,21 +30,21 @@ api_response_t bad_request(const api_exception &e) {
 api_response_t unauthorized() {
   api_response_t response;
   response.status_code = 401;
-  response.set_body("Unauthorized", false);
+  response.set_body("", false);
   return response;
 }
 
 api_response_t not_found() {
   api_response_t response;
   response.status_code = 404;
-  response.set_body("Not found", false);
+  response.set_body("", false);
   return response;
 }
 
 api_response_t method_not_allowed() {
   api_response_t response;
   response.status_code = 405;
-  response.set_body("Method not allowed", false);
+  response.set_body("", false);
   return response;
 }
 

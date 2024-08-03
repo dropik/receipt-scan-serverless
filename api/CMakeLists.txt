@@ -23,6 +23,8 @@ add_executable(${FUNCTION_NAME}
     src/models/receipt_put_params.hpp
     src/factories.hpp
     src/models/s3_settings.hpp
+    src/models/user.hpp
+    src/models/user.cpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

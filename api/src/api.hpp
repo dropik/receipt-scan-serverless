@@ -50,13 +50,31 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
     return next(request);
   });
 
-  api->use_exception_filter();
+  api->use([](const auto &request, const auto &next) {
+    try {
+      return next(request);
+    } catch (rest::api_exception &e) {
+      lambda::log.info("API Exception: %d %s", e.error, e.message.c_str());
+      if (e.error == not_found) {
+        return rest::not_found();
+      }
+      return bad_request(e);
+    } catch (std::exception &e) {
+      lambda::log.error("Internal error: %s", e.what());
+      return rest::internal_server_error();
+    }
+  });
 
   // Routes
 
   api->any("/v1")([&c](api_resource &v1) {
-    v1.post("/users")([&c]() {
-      return c.template get<services::t_user_service>()->init_user();
+    v1.any("/user")([&c](api_resource &user) {
+      user.post("/")([&c]() {
+        return c.template get<services::t_user_service>()->init_user();
+      });
+      user.get("/")([&c]() {
+        return c.template get<services::t_user_service>()->get_user();
+      });
     });
 
     v1.any("/files")([&c](api_resource &files) {
