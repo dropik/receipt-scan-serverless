@@ -21,13 +21,17 @@ void base_api_integration_test::SetUp() {
   api = std::move(create_api(services));
 }
 
+void base_api_integration_test::init_user() {
+  (*api)(create_request("POST", "/v1/user", ""));
+}
+
 aws::lambda_runtime::invocation_request create_request(const std::string &method,
                                                        const std::string &path,
                                                        const std::string &body) {
   return {
       .payload = string::format(R"(
 {
-  "body": %s,
+  "body": "%s",
   "resource": "/{proxy+}",
   "path": "%s",
   "httpMethod": "%s",
@@ -74,7 +78,7 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
     "protocol": "HTTP/1.1"
   }
 }
-)", body.c_str(), path.c_str(), method.c_str(), path.c_str(), USER_ID, path.c_str(), method.c_str()),
+)", make_body(body).c_str(), path.c_str(), method.c_str(), path.c_str(), USER_ID, path.c_str(), method.c_str()),
   };
 }
 
@@ -85,9 +89,6 @@ void assert_response(const aws::lambda_runtime::invocation_response &response,
 }
 
 std::string expected_response(const std::string &status, const std::string &body) {
-  auto compact = compact_json(body);
-  string::replace_all(compact, "\"", "\\\"");
-
   return pretty_json(string::format(R"(
 {
   "body": "%s",
@@ -96,7 +97,13 @@ std::string expected_response(const std::string &status, const std::string &body
   "multiValueHeaders": {},
   "statusCode": %s
 }
-  )", compact.c_str(), status.c_str()));
+  )", make_body(body).c_str(), status.c_str()));
+}
+
+std::string make_body(const std::string &body) {
+  auto compact = compact_json(body);
+  string::replace_all(compact, "\"", "\\\"");
+  return compact;
 }
 
 std::string pretty_json(const std::string &json) {

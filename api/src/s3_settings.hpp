@@ -7,7 +7,6 @@
 #include <string>
 
 namespace api {
-namespace models {
 
 struct s3_settings {
   s3_settings() = default;
@@ -18,5 +17,4 @@ struct s3_settings {
   std::string bucket;
 };
 
-}
 }

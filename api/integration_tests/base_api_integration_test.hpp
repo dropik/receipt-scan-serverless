@@ -13,12 +13,13 @@
 #include "repository/client.hpp"
 #include "rest/api_root.hpp"
 
-#include "../src/models/s3_settings.hpp"
-#include "../src/models/identity.hpp"
+#include "../src/s3_settings.hpp"
+#include "../src/identity.hpp"
 #include "../src/services/user_service.hpp"
 #include "../src/services/file_service.hpp"
 #include "../src/services/receipt_service.hpp"
 #include "../src/services/category_service.hpp"
+#include "../src/services/device_service.hpp"
 
 #include "mocks/mock_s3_client.hpp"
 
@@ -35,17 +36,19 @@ class base_api_integration_test : public repository_integration_test {
   di::container<
       di::singleton<Aws::Client::ClientConfiguration>,
       di::singleton<repository::connection_settings>,
-      di::singleton<models::s3_settings>,
+      di::singleton<s3_settings>,
       di::singleton<Aws::S3::S3Client, mocks::mock_s3_client>,
       di::singleton<repository::t_client, repository::client<>>,
 
-      di::scoped<models::identity>,
+      di::scoped<identity>,
 
       di::transient<services::t_user_service, services::user_service<>>,
+      di::transient<services::t_device_service, services::device_service<>>,
       di::transient<services::t_file_service, services::file_service<>>,
       di::transient<services::t_receipt_service, services::receipt_service<>>,
       di::transient<services::t_category_service, services::category_service<>>
   > services;
+  void init_user();
 };
 
 aws::lambda_runtime::invocation_request create_request(const std::string &method,
@@ -55,6 +58,7 @@ void assert_response(const aws::lambda_runtime::invocation_response &response,
                      const std::string &expected_status,
                      const std::string &expected_body);
 std::string expected_response(const std::string &status, const std::string &body = "");
+std::string make_body(const std::string &body);
 std::string pretty_json(const std::string &json);
 std::string compact_json(const std::string &json);
 

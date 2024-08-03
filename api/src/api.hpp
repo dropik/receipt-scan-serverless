@@ -8,20 +8,20 @@
 
 #include "config.h"
 
-#include "models/identity.hpp"
-#include "models/model_types.hpp"
-#include "models/upload_file_params.hpp"
+#include "identity.hpp"
+#include "model_types.hpp"
+#include "parameters/put_file.hpp"
 
 #include "services/user_service.hpp"
 #include "services/file_service.hpp"
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
+#include "services/device_service.hpp"
 
 namespace api {
 
 using api_root = rest::api_root;
 using api_resource = rest::api_resource;
-using guid_t = models::guid_t;
 
 template<typename TServiceContainer>
 std::unique_ptr<api_root> create_api(TServiceContainer &c) {
@@ -37,8 +37,8 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       return rest::unauthorized();
     }
 
-    auto identity = c.template get<models::identity>();
-    identity->user_id = user_id;
+    auto i = c.template get<identity>();
+    i->user_id = user_id;
     return next(request);
   });
 
@@ -77,8 +77,12 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       });
     });
 
+    v1.put<parameters::put_device>("/devices")([&c](const auto &request) {
+      return c.template get<services::t_device_service>()->register_device(request);
+    });
+
     v1.any("/files")([&c](api_resource &files) {
-      files.post<models::upload_file_params>("/")([&c](const auto &request) {
+      files.post<parameters::put_file>("/")([&c](const auto &request) {
         return c.template get<services::t_file_service>()->get_upload_file_url(request);
       });
     });
@@ -95,7 +99,7 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
           return c.template get<services::t_receipt_service>()->get_receipt_file(receipt_id);
         });
       });
-      receipts.put<models::receipt_put_params>("/")([&c](const auto &request) {
+      receipts.put<parameters::put_receipt>("/")([&c](const auto &request) {
         return c.template get<services::t_receipt_service>()->put_receipt(request);
       });
       receipts.del<guid_t>()([&c](const guid_t &receipt_id) {
@@ -107,7 +111,7 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       categories.get("/")([&c]() {
         return c.template get<services::t_category_service>()->get_categories();
       });
-      categories.put<models::category>("/")([&c](const auto &request) {
+      categories.put<responses::category>("/")([&c](const auto &request) {
         return c.template get<services::t_category_service>()->put_category(request);
       });
       categories.del<guid_t>()([&c](const guid_t &category_id) {

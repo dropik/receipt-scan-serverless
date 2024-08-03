@@ -5,7 +5,7 @@
 #include "user.hpp"
 
 namespace api {
-namespace models {
+namespace responses {
 
 user user::from_repository(const repository::models::user &u) {
   return {

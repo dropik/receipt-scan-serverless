@@ -12,8 +12,8 @@
 #include <lambda/factories.hpp>
 #include <repository/factories.hpp>
 
-#include "models/identity.hpp"
-#include "models/s3_settings.hpp"
+#include "identity.hpp"
+#include "s3_settings.hpp"
 
 #include "services/file_service.hpp"
 #include "services/user_service.hpp"
@@ -39,7 +39,7 @@ struct service_factory<Aws::S3::S3Client> {
 };
 
 template<>
-struct service_factory<api::models::s3_settings> {
+struct service_factory<api::s3_settings> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
     return std::move(factory(getenv("IMAGES_BUCKET")));

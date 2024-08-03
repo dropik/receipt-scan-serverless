@@ -37,13 +37,14 @@ int main(int argc, char** argv) {
       container<
           singleton<Aws::Client::ClientConfiguration>,
           singleton<repository::connection_settings>,
-          singleton<models::s3_settings>,
+          singleton<s3_settings>,
           singleton<Aws::S3::S3Client>,
           singleton<repository::t_client, repository::client<>>,
 
-          scoped<models::identity>,
+          scoped<identity>,
 
           transient<t_user_service, user_service<>>,
+          transient<t_device_service, device_service<>>,
           transient<t_file_service, file_service<>>,
           transient<t_receipt_service, receipt_service<>>,
           transient<t_category_service, category_service<>>

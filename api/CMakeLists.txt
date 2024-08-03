@@ -7,24 +7,26 @@ find_package(AWSSDK COMPONENTS core s3)
 
 add_executable(${FUNCTION_NAME}
     src/main.cpp
-    src/models/upload_file_params.hpp
-    src/models/file.hpp
+    src/parameters/put_file.hpp
+    src/responses/file.hpp
     src/api.hpp
     src/services/file_service.hpp
     src/api_errors.hpp
-    src/models/identity.hpp
+    src/identity.hpp
     src/services/user_service.hpp
-    src/models/receipt_detail.hpp
-    src/models/model_types.hpp
+    src/responses/receipt_detail.hpp
+    src/model_types.hpp
     src/services/receipt_service.hpp
-    src/models/receipt_list_item.hpp
+    src/responses/receipt_list_item.hpp
     src/services/category_service.hpp
-    src/models/category.hpp
-    src/models/receipt_put_params.hpp
+    src/responses/category.hpp
+    src/parameters/put_receipt.hpp
     src/factories.hpp
-    src/models/s3_settings.hpp
-    src/models/user.hpp
-    src/models/user.cpp
+    src/s3_settings.hpp
+    src/responses/user.hpp
+    src/responses/user.cpp
+    src/services/device_service.hpp
+    src/parameters/put_device.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

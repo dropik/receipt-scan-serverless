@@ -2,15 +2,15 @@ find_package(ZLIB REQUIRED)
 find_package(AWSSDK COMPONENTS core ssm)
 
 add_executable(api_integration_tests
-    ../src/models/category.hpp
-    ../src/models/file.hpp
-    ../src/models/identity.hpp
-    ../src/models/model_types.hpp
-    ../src/models/receipt_detail.hpp
-    ../src/models/receipt_list_item.hpp
-    ../src/models/receipt_put_params.hpp
-    ../src/models/s3_settings.hpp
-    ../src/models/upload_file_params.hpp
+    ../src/responses/category.hpp
+    ../src/responses/file.hpp
+    ../src/identity.hpp
+    ../src/model_types.hpp
+    ../src/responses/receipt_detail.hpp
+    ../src/responses/receipt_list_item.hpp
+    ../src/parameters/put_receipt.hpp
+    ../src/s3_settings.hpp
+    ../src/parameters/put_file.hpp
     ../src/services/category_service.hpp
     ../src/services/file_service.hpp
     ../src/services/receipt_service.hpp
@@ -24,8 +24,11 @@ add_executable(api_integration_tests
     base_api_integration_test.cpp
     mocks/factories.hpp
     user_test.cpp
-    ../src/models/user.hpp
-    ../src/models/user.cpp
+    ../src/responses/user.hpp
+    ../src/responses/user.cpp
+    devices_test.cpp
+    ../src/services/device_service.hpp
+    ../src/parameters/put_device.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

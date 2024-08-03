@@ -9,10 +9,10 @@
 
 #include <lambda/json.hpp>
 
-#include "model_types.hpp"
+#include "../model_types.hpp"
 
 namespace api {
-namespace models {
+namespace responses {
 
 struct receipt_item_detail {
   guid_t id;

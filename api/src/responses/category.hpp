@@ -5,10 +5,10 @@
 #pragma once
 
 #include <lambda/json.hpp>
-#include "model_types.hpp"
+#include "../model_types.hpp"
 
 namespace api {
-namespace models {
+namespace responses {
 
 struct category {
   guid_t id;

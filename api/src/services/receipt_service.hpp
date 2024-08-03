@@ -8,10 +8,10 @@
 #include <repository/client.hpp>
 #include <lambda/string_utils.hpp>
 
-#include "../models/identity.hpp"
-#include "../models/receipt_detail.hpp"
-#include "../models/receipt_list_item.hpp"
-#include "../models/receipt_put_params.hpp"
+#include "../identity.hpp"
+#include "../responses/receipt_detail.hpp"
+#include "../responses/receipt_list_item.hpp"
+#include "../parameters/put_receipt.hpp"
 
 #include "file_service.hpp"
 
@@ -22,23 +22,23 @@ class t_receipt_service {};
 
 template<
     typename TRepository = repository::t_client,
-    typename TIdentity = const models::identity,
+    typename TIdentity = const identity,
     typename TFileService = t_file_service>
 class receipt_service {
  public:
   using receipt = repository::models::receipt;
   using receipt_item = repository::models::receipt_item;
   using receipt_file = repository::models::receipt_file;
-  using receipt_list_item = models::receipt_list_item;
-  using receipt_detail = models::receipt_detail;
-  using receipt_item_detail = models::receipt_item_detail;
+  using receipt_list_item = responses::receipt_list_item;
+  using receipt_detail = responses::receipt_detail;
+  using receipt_item_detail = responses::receipt_item_detail;
 
   receipt_service(TRepository repository, TIdentity identity, TFileService file_service)
       : m_repository(std::move(repository)),
         m_identity(std::move(identity)),
         m_file_service(std::move(file_service)) {}
 
-  std::vector<models::receipt_list_item> get_receipts() {
+  std::vector<responses::receipt_list_item> get_receipts() {
     auto receipts = m_repository->template select<receipt>(
             "select * from receipts where user_id = ? "
             "order by date desc")
@@ -80,7 +80,7 @@ class receipt_service {
     return response;
   }
 
-  models::receipt_detail get_receipt(const models::guid_t &receipt_id) {
+  responses::receipt_detail get_receipt(const guid_t &receipt_id) {
     auto receipt = get_receipt_by_id(receipt_id);
     auto receipt_items = m_repository->template select<receipt_item>(
             "select * from receipt_items ri "
@@ -121,7 +121,7 @@ class receipt_service {
     return rr;
   }
 
-  models::file get_receipt_file(const models::guid_t &receipt_id) {
+  responses::file get_receipt_file(const guid_t &receipt_id) {
     auto file = try_get_receipt_file(receipt_id);
     if (!file) {
       throw rest::api_exception(not_found, "Receipt file not found");
@@ -129,7 +129,7 @@ class receipt_service {
     return m_file_service->get_download_file_url(file->file_name);
   }
 
-  void put_receipt(const models::receipt_put_params &params) {
+  void put_receipt(const parameters::put_receipt &params) {
     receipt r;
     r.id = params.id;
     r.user_id = m_identity->user_id;
@@ -172,7 +172,7 @@ class receipt_service {
     }
   }
 
-  void delete_receipt(const models::guid_t &receipt_id) {
+  void delete_receipt(const guid_t &receipt_id) {
     auto receipt = get_receipt_by_id(receipt_id);
     auto file = try_get_receipt_file(receipt_id);
     m_repository->drop(*receipt);
@@ -186,20 +186,20 @@ class receipt_service {
   TIdentity m_identity;
   TFileService m_file_service;
 
-  std::shared_ptr<repository::models::receipt> try_get_receipt(const models::guid_t &receipt_id) {
+  std::shared_ptr<repository::models::receipt> try_get_receipt(const guid_t &receipt_id) {
     return m_repository->template select<receipt>(
             "select * from receipts where id = ?")
         .with_param(receipt_id)
         .first_or_default();
   }
-  std::shared_ptr<repository::models::receipt> get_receipt_by_id(const models::guid_t &receipt_id) {
+  std::shared_ptr<repository::models::receipt> get_receipt_by_id(const guid_t &receipt_id) {
     auto receipt = try_get_receipt(receipt_id);
     if (!receipt || receipt->user_id != m_identity->user_id) {
       throw rest::api_exception(not_found, "Receipt not found");
     }
     return receipt;
   }
-  std::shared_ptr<repository::models::receipt_file> try_get_receipt_file(const models::guid_t &receipt_id) {
+  std::shared_ptr<repository::models::receipt_file> try_get_receipt_file(const guid_t &receipt_id) {
     auto rf = m_repository->template select<receipt_file>(
             "select * from receipt_files where receipt_id = ?")
         .with_param(receipt_id)

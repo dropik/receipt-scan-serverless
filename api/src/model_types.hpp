@@ -7,9 +7,7 @@
 #include "repository/models/common.hpp"
 
 namespace api {
-namespace models {
 
 typedef repository::models::guid guid_t;
 
-}
 }
