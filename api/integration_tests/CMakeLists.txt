@@ -22,6 +22,7 @@ add_executable(api_integration_tests
     mocks/mock_s3_client.cpp
     base_api_integration_test.hpp
     base_api_integration_test.cpp
+    mocks/factories.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC
@@ -37,6 +38,7 @@ target_include_directories(api_integration_tests PUBLIC
 target_link_libraries(api_integration_tests
     repository
     lambda
+    rest
     ${AWSSDK_LINK_LIBRARIES}
     gtest
     integration_tests_common

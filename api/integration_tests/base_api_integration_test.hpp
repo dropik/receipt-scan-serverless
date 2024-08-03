@@ -11,6 +11,7 @@
 #include "di/container.hpp"
 #include "repository/connection_settings.hpp"
 #include "repository/client.hpp"
+#include "rest/api_root.hpp"
 
 #include "../src/models/s3_settings.hpp"
 #include "../src/models/identity.hpp"
@@ -27,8 +28,8 @@ namespace integration_tests {
 class base_api_integration_test : public base_repository_integration_test {
  protected:
   std::shared_ptr<sql::Connection> get_connection() override;
-
- private:
+  void SetUp() override;
+  rest::api_root api;
   di::container<
       di::singleton<Aws::Client::ClientConfiguration>,
       di::singleton<repository::connection_settings>,

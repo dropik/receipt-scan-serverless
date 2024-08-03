@@ -6,7 +6,7 @@
 
 using namespace api::integration_tests::mocks;
 
-mock_s3_client::mock_s3_client(Aws::Client::ClientConfiguration &client_configuration) {}
+mock_s3_client::mock_s3_client(const Aws::Client::ClientConfiguration &client_configuration) {}
 
 std::string mock_s3_client::GeneratePresignedUrlWithSSES3(const std::string &bucket, const std::string &key, Aws::Http::HttpMethod http_method) {
   return "https://s3.amazonaws.com/" + bucket + "/" + key;
