@@ -2,7 +2,6 @@ find_package(ZLIB REQUIRED)
 find_package(AWSSDK COMPONENTS core ssm)
 
 add_executable(api_integration_tests
-    main.cpp
     ../src/models/category.hpp
     ../src/models/file.hpp
     ../src/models/identity.hpp
@@ -19,8 +18,10 @@ add_executable(api_integration_tests
     ../src/api.hpp
     ../src/api_errors.hpp
     ../src/factories.hpp
-    mocks/s3_mock_client.hpp
-    mocks/s3_mock_client.cpp
+    mocks/mock_s3_client.hpp
+    mocks/mock_s3_client.cpp
+    base_api_integration_test.hpp
+    base_api_integration_test.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC
@@ -29,6 +30,8 @@ target_include_directories(api_integration_tests PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/repository/include"
     "${PROJECT_SOURCE_DIR}/di/include"
+    "${PROJECT_SOURCE_DIR}/rest/include"
+    "${PROJECT_SOURCE_DIR}/integration_tests_common/include"
 )
 
 target_link_libraries(api_integration_tests
@@ -36,6 +39,7 @@ target_link_libraries(api_integration_tests
     lambda
     ${AWSSDK_LINK_LIBRARIES}
     gtest
+    integration_tests_common
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

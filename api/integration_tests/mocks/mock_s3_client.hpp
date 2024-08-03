@@ -12,9 +12,9 @@ namespace api {
 namespace integration_tests {
 namespace mocks {
 
-class s3_mock_client {
+class mock_s3_client {
  public:
-  s3_mock_client(Aws::Client::ClientConfiguration &client_configuration);
+  mock_s3_client(Aws::Client::ClientConfiguration &client_configuration);
 
   std::string GeneratePresignedUrlWithSSES3(const std::string &bucket,
                                             const std::string &key,

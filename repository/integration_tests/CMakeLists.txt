@@ -1,8 +1,7 @@
 find_package(ZLIB REQUIRED)
 find_package(AWSSDK COMPONENTS core ssm)
 
-add_executable(repository_integration_tests_run
-    main.cpp
+add_executable(repository_integration_tests
     receipt_repository_test.cpp
     ../../integration_tests_common/include/integration_tests_common/base_repository_integration_test.hpp
     ../../integration_tests_common/src/base_repository_integration_test.cpp
@@ -17,7 +16,7 @@ add_executable(repository_integration_tests_run
     ../include/repository/configurations/common/tracking_configuration.hpp
 )
 
-target_include_directories(repository_integration_tests_run PUBLIC
+target_include_directories(repository_integration_tests PUBLIC
     ${gtest_SOURCE_DIR}/include
     ${gtest_SOURCE_DIR}
     "${PROJECT_SOURCE_DIR}/include"
@@ -26,7 +25,7 @@ target_include_directories(repository_integration_tests_run PUBLIC
     "${PROJECT_SOURCE_DIR}/integration_tests_common/include"
 )
 
-target_link_libraries(repository_integration_tests_run
+target_link_libraries(repository_integration_tests
     repository
     lambda
     ${AWSSDK_LINK_LIBRARIES}
@@ -35,5 +34,5 @@ target_link_libraries(repository_integration_tests_run
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_definitions(repository_integration_tests_run PRIVATE DEBUG)
+  target_compile_definitions(repository_integration_tests PRIVATE DEBUG)
 endif()

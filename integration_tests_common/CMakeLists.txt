@@ -1,4 +1,8 @@
+find_package(ZLIB REQUIRED)
+find_package(AWSSDK COMPONENTS core)
+
 add_library(integration_tests_common STATIC
+    src/main.cpp
     include/integration_tests_common/base_repository_integration_test.hpp
     src/base_repository_integration_test.cpp
 )
@@ -13,6 +17,7 @@ target_include_directories(integration_tests_common PUBLIC
 
 target_link_libraries(integration_tests_common
     gtest
+    ${AWSSDK_LINK_LIBRARIES}
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
