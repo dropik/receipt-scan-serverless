@@ -24,13 +24,13 @@ using api_resource = rest::api_resource;
 using guid_t = models::guid_t;
 
 template<typename TServiceContainer>
-api_root create_api(TServiceContainer &c) {
-  api_root api;
+std::unique_ptr<api_root> create_api(TServiceContainer &c) {
+  std::unique_ptr<api_root> api = std::make_unique<api_root>();
 
   // Middleware
 
   // Identity
-  api.use([&c](const auto &request, const auto &next) {
+  api->use([&c](const auto &request, const auto &next) {
     auto auth = request.request_context.authorizer;
     auto user_id = auth.claims["sub"];
     if (user_id.empty()) {
@@ -42,20 +42,20 @@ api_root create_api(TServiceContainer &c) {
     return next(request);
   });
 
-  api.use_logging();
+  api->use_logging();
 
   // Version
-  api.use([](const auto &request, const auto &next) {
+  api->use([](const auto &request, const auto &next) {
     lambda::log.info("App Version: %s", APP_VERSION);
     return next(request);
   });
 
-  api.use_exception_filter();
+  api->use_exception_filter();
 
   // Routes
 
-  api.any("/v1")([&c](api_resource &v1) {
-    v1.post("/user")([&c]() {
+  api->any("/v1")([&c](api_resource &v1) {
+    v1.post("/users")([&c]() {
       return c.template get<services::t_user_service>()->init_user();
     });
 
@@ -98,7 +98,7 @@ api_root create_api(TServiceContainer &c) {
     });
   });
 
-  return api;
+  return std::move(api);
 }
 
 }

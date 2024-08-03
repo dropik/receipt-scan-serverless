@@ -23,6 +23,7 @@ add_executable(api_integration_tests
     base_api_integration_test.hpp
     base_api_integration_test.cpp
     mocks/factories.hpp
+    user_test.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

@@ -29,7 +29,7 @@ class base_api_integration_test : public base_repository_integration_test {
  protected:
   std::shared_ptr<sql::Connection> get_connection() override;
   void SetUp() override;
-  rest::api_root api;
+  std::unique_ptr<rest::api_root> api;
   di::container<
       di::singleton<Aws::Client::ClientConfiguration>,
       di::singleton<repository::connection_settings>,
@@ -45,6 +45,15 @@ class base_api_integration_test : public base_repository_integration_test {
       di::transient<services::t_category_service, services::category_service<>>
   > services;
 };
+
+aws::lambda_runtime::invocation_request create_request(const std::string &method,
+                                                       const std::string &path,
+                                                       const std::string &body);
+void assert_response(const aws::lambda_runtime::invocation_response &response,
+                     const std::string &expected_status,
+                     const std::string &expected_body);
+std::string expected_response(const std::string &status, const std::string &body = "");
+std::string pretty_json(const std::string &json);
 
 }
 }

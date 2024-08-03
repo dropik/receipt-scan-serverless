@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
       > services;
 
       auto api = create_api(services);
-      return api(req);
+      return (*api)(req);
     };
 
 #ifdef DEBUG
