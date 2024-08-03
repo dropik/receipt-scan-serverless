@@ -12,6 +12,7 @@ configure_file(include/config.h.in
 
 if(WITH_TESTS)
     add_subdirectory(dependencies/test/googletest-1.14.0)
+    add_subdirectory(integration_tests_common)
 endif()
 add_subdirectory(sam)
 add_subdirectory(repository)

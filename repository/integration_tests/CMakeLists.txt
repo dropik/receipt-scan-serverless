@@ -4,8 +4,8 @@ find_package(AWSSDK COMPONENTS core ssm)
 add_executable(repository_integration_tests_run
     main.cpp
     receipt_repository_test.cpp
-    base_repository_integration_test.hpp
-    base_repository_integration_test.cpp
+    ../../integration_tests_common/include/integration_tests_common/base_repository_integration_test.hpp
+    ../../integration_tests_common/src/base_repository_integration_test.cpp
     client_test.cpp
     ../include/repository/configurations/common/version_configuration.hpp
     ../include/repository/models/budget.hpp
@@ -23,6 +23,7 @@ target_include_directories(repository_integration_tests_run PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/repository/include"
     "${PROJECT_SOURCE_DIR}/di/include"
+    "${PROJECT_SOURCE_DIR}/integration_tests_common/include"
 )
 
 target_link_libraries(repository_integration_tests_run
@@ -30,6 +31,7 @@ target_link_libraries(repository_integration_tests_run
     lambda
     ${AWSSDK_LINK_LIBRARIES}
     gtest
+    integration_tests_common
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

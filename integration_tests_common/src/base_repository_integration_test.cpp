@@ -2,7 +2,7 @@
 // Created by Daniil Ryzhkov on 23/06/2024.
 //
 
-#include "base_repository_integration_test.hpp"
+#include "integration_tests_common/base_repository_integration_test.hpp"
 
 void base_repository_integration_test::SetUp() {
   auto connection = get_connection();

@@ -1,5 +1,3 @@
-#include <memory>
-
 #include <aws/core/Aws.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 

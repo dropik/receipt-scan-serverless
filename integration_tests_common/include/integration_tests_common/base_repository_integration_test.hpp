@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <fstream>
 #include <memory>
 #include <mariadb/conncpp/Statement.hpp>

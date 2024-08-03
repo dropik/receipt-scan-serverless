@@ -16,5 +16,5 @@ target_include_directories(lambda PUBLIC
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(repository PRIVATE DEBUG)
+    target_compile_definitions(lambda PRIVATE DEBUG)
 endif()

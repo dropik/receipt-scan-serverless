@@ -5,7 +5,7 @@
 #include <aws/core/client/ClientConfiguration.h>
 #include <thread>
 
-#include "base_repository_integration_test.hpp"
+#include "integration_tests_common/base_repository_integration_test.hpp"
 #include "repository/client.hpp"
 
 #include "di/container.hpp"
