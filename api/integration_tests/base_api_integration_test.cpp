@@ -64,7 +64,7 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
     },
     "authorizer": {
       "claims": {
-        "sub": "d394a832-4011-7023-c519-afe3adaf0233"
+        "sub": "%s"
       }
     },
     "path": "%s",
@@ -74,7 +74,7 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
     "protocol": "HTTP/1.1"
   }
 }
-)", body.c_str(), path.c_str(), method.c_str(), path.c_str(), path.c_str(), method.c_str()),
+)", body.c_str(), path.c_str(), method.c_str(), path.c_str(), USER_ID, path.c_str(), method.c_str()),
   };
 }
 

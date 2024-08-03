@@ -22,6 +22,8 @@
 
 #include "mocks/mock_s3_client.hpp"
 
+#define USER_ID "d394a832-4011-7023-c519-afe3adaf0233"
+
 namespace api {
 namespace integration_tests {
 
