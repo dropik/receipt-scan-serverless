@@ -7,3 +7,4 @@
 constexpr int invalid_argument = 1;
 constexpr int not_found = 2;
 constexpr int forbidden = 3;
+constexpr int user_not_initialized = 4;

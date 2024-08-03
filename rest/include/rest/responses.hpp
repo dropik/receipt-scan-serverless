@@ -16,6 +16,7 @@ api_response_t unauthorized();
 api_response_t not_found();
 api_response_t method_not_allowed();
 api_response_t internal_server_error();
+api_response_t conflict();
 
 template<typename T>
 inline api_response_t ok(const T &payload) {

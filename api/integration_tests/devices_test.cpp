@@ -18,7 +18,7 @@ class devices_test : public base_api_integration_test {};
 TEST_F(devices_test, put_device) {
   // should not be created until user is created
   auto response = (*api)(create_request("PUT", ENDPOINT, R"({"id":")" TEST_DEVICE R"("})"));
-  assert_response(response, "400", R"({"error":1,"message":"User is not initialized"})");
+  assert_response(response, "400", R"({"error":4,"message":"User is not initialized"})");
 
   auto repo = services.get<repository::t_client>();
   auto devices = repo->select<::models::user_device>("select * from user_devices").all();

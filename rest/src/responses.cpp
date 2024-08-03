@@ -54,5 +54,11 @@ api_response_t internal_server_error() {
   response.set_body("", false);
   return response;
 }
+api_response_t conflict() {
+  api_response_t response;
+  response.status_code = 409;
+  response.set_body(R"("Optimistic concurrency error")", false);
+  return response;
+}
 
 }

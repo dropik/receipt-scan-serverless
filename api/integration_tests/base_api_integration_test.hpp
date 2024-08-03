@@ -22,6 +22,7 @@
 #include "../src/services/device_service.hpp"
 
 #include "mocks/mock_s3_client.hpp"
+#include "../src/services/budget_service.hpp"
 
 #define USER_ID "d394a832-4011-7023-c519-afe3adaf0233"
 
@@ -44,9 +45,10 @@ class base_api_integration_test : public repository_integration_test {
 
       di::transient<services::t_user_service, services::user_service<>>,
       di::transient<services::t_device_service, services::device_service<>>,
+      di::transient<services::t_budget_service, services::budget_service<>>,
+      di::transient<services::t_category_service, services::category_service<>>,
       di::transient<services::t_file_service, services::file_service<>>,
-      di::transient<services::t_receipt_service, services::receipt_service<>>,
-      di::transient<services::t_category_service, services::category_service<>>
+      di::transient<services::t_receipt_service, services::receipt_service<>>
   > services;
   void init_user();
 };

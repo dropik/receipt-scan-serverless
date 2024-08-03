@@ -38,6 +38,7 @@ add_library(repository STATIC
     include/repository/models/entity_event.hpp
     include/repository/configurations/entity_event_configuration.hpp
     include/repository/configurations/common/tracking_configuration.hpp
+    include/repository/exceptions.hpp
 )
 
 target_include_directories(repository PUBLIC

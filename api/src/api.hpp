@@ -17,6 +17,7 @@
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
 #include "services/device_service.hpp"
+#include "services/budget_service.hpp"
 
 namespace api {
 
@@ -50,9 +51,26 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
     return next(request);
   });
 
+  api->use([&c](const auto &request, const auto &next) {
+    if (request.path == "/v1/user") return next(request);
+
+    auto repo = c.template get<repository::t_client>();
+    auto id = c.template get<identity>();
+    auto users = repo->template select<repository::models::user>("select * from users where id = ?")
+        .with_param(id->user_id)
+        .all();
+    if (users->size() == 0) {
+      throw rest::api_exception(user_not_initialized, "User is not initialized");
+    }
+
+    return next(request);
+  });
+
   api->use([](const auto &request, const auto &next) {
     try {
       return next(request);
+    } catch (repository::concurrency_exception &e) {
+      return rest::conflict();
     } catch (rest::api_exception &e) {
       lambda::log.info("API Exception: %d %s", e.error, e.message.c_str());
       if (e.error == not_found) {
@@ -81,6 +99,27 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       return c.template get<services::t_device_service>()->register_device(request);
     });
 
+    v1.any("/budgets")([&c](api_resource &budgets) {
+      budgets.get("/")([&c]() {
+        return c.template get<services::t_budget_service>()->get_budgets();
+      });
+      budgets.put<parameters::put_budget>("/")([&c](const auto &request) {
+        return c.template get<services::t_budget_service>()->store_budget(request);
+      });
+    });
+
+    v1.any("/categories")([&c](api_resource &categories) {
+      categories.get("/")([&c]() {
+        return c.template get<services::t_category_service>()->get_categories();
+      });
+      categories.put<responses::category>("/")([&c](const auto &request) {
+        return c.template get<services::t_category_service>()->put_category(request);
+      });
+      categories.del<guid_t>()([&c](const guid_t &category_id) {
+        return c.template get<services::t_category_service>()->delete_category(category_id);
+      });
+    });
+
     v1.any("/files")([&c](api_resource &files) {
       files.post<parameters::put_file>("/")([&c](const auto &request) {
         return c.template get<services::t_file_service>()->get_upload_file_url(request);
@@ -104,18 +143,6 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       });
       receipts.del<guid_t>()([&c](const guid_t &receipt_id) {
         return c.template get<services::t_receipt_service>()->delete_receipt(receipt_id);
-      });
-    });
-
-    v1.any("/categories")([&c](api_resource &categories) {
-      categories.get("/")([&c]() {
-        return c.template get<services::t_category_service>()->get_categories();
-      });
-      categories.put<responses::category>("/")([&c](const auto &request) {
-        return c.template get<services::t_category_service>()->put_category(request);
-      });
-      categories.del<guid_t>()([&c](const guid_t &category_id) {
-        return c.template get<services::t_category_service>()->delete_category(category_id);
       });
     });
   });

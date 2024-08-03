@@ -27,6 +27,11 @@ add_executable(${FUNCTION_NAME}
     src/responses/user.cpp
     src/services/device_service.hpp
     src/parameters/put_device.hpp
+    src/services/budget_service.hpp
+    src/parameters/put_budget.hpp
+    src/parameters/put_budget.cpp
+    src/responses/budget.hpp
+    src/responses/budget.cpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

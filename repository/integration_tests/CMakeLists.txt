@@ -16,6 +16,7 @@ add_executable(repository_integration_tests
     ../include/repository/configurations/common/tracking_configuration.hpp
     base_repository_integration_test.hpp
     base_repository_integration_test.cpp
+    ../include/repository/exceptions.hpp
 )
 
 target_include_directories(repository_integration_tests PUBLIC

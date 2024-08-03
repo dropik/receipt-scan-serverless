@@ -1,0 +1,160 @@
+//
+// Created by Daniil Ryzhkov on 03/08/2024.
+//
+
+#include "base_api_integration_test.hpp"
+
+#define ENDPOINT "/v1/budgets"
+#define TEST_BUDGET "d394a832-4011-7023-c519-afe3adaf0233"
+
+using namespace repository;
+
+namespace api {
+namespace integration_tests {
+
+class budget_test : public base_api_integration_test {};
+
+TEST_F(budget_test, put_budget) {
+  // should not be created until user is created
+  auto response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1500.0,
+  "version": 0
+})"));
+  assert_response(response, "400", R"({"error":4,"message":"User is not initialized"})");
+
+  auto repo = services.get<repository::t_client>();
+  auto budgets = repo->select<::models::budget>("select * from budgets").all();
+
+  ASSERT_EQ(budgets->size(), 0);
+
+  init_user();
+
+  // should create budget
+  response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1500.0,
+  "version": 0
+})"));
+  assert_response(response, "200", "");
+
+  budgets = repo->select<::models::budget>("select * from budgets").all();
+  ASSERT_EQ(budgets->size(), 1);
+
+  auto b = budgets->at(0);
+  ASSERT_EQ(b->id, TEST_BUDGET);
+  ASSERT_EQ(b->user_id, USER_ID);
+  ASSERT_EQ(b->month, "2024-07-01");
+  ASSERT_EQ(b->amount, 1500.0);
+  ASSERT_EQ(b->version, 0);
+}
+
+TEST_F(budget_test, put_budget_should_update_version) {
+  init_user();
+
+  auto response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1500.0,
+  "version": 0
+})"));
+  assert_response(response, "200", "");
+
+  auto repo = services.get<repository::t_client>();
+  auto budgets = repo->select<::models::budget>("select * from budgets").all();
+  ASSERT_EQ(budgets->size(), 1);
+
+  auto b = budgets->at(0);
+  ASSERT_EQ(b->version, 0);
+
+  response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1200.0,
+  "version": 0
+})"));
+  assert_response(response, "200", "");
+
+  budgets = repo->select<::models::budget>("select * from budgets").all();
+  ASSERT_EQ(budgets->size(), 1);
+
+  b = budgets->at(0);
+  ASSERT_EQ(b->version, 1);
+  ASSERT_EQ(b->amount, 1200.0);
+}
+
+TEST_F(budget_test, put_budget_should_handle_optimistic_concurrency) {
+  init_user();
+
+  auto response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1500.0,
+  "version": 0
+})"));
+  response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1500.0,
+  "version": 0
+})"));
+  assert_response(response, "200", "");
+
+  auto repo = services.get<repository::t_client>();
+  auto budgets = repo->select<::models::budget>("select * from budgets").all();
+  ASSERT_EQ(budgets->size(), 1);
+
+  auto b = budgets->at(0);
+  ASSERT_EQ(b->version, 1);
+
+  response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1200.0,
+  "version": 0
+})"));
+  assert_response(response, "409", R"("Optimistic concurrency error")");
+
+  budgets = repo->select<::models::budget>("select * from budgets").all();
+  ASSERT_EQ(budgets->size(), 1);
+
+  b = budgets->at(0);
+  ASSERT_EQ(b->version, 1);
+  ASSERT_EQ(b->amount, 1500.0);
+}
+
+TEST_F(budget_test, get_budgets) {
+  init_user();
+
+  auto response = (*api)(create_request("PUT", ENDPOINT, R"(
+{
+  "id": ")" TEST_BUDGET R"(",
+  "month": "2024-07-01",
+  "amount": 1500.0,
+  "version": 0
+})"));
+  assert_response(response, "200", "");
+
+  response = (*api)(create_request("GET", ENDPOINT, ""));
+  assert_response(response, "200", R"(
+[
+  {
+    "amount":1500.0,
+    "id": ")" TEST_BUDGET R"(",
+    "month": "2024-07-01",
+    "version":0
+  }
+])");
+}
+
+}
+}

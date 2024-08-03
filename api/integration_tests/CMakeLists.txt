@@ -29,6 +29,12 @@ add_executable(api_integration_tests
     devices_test.cpp
     ../src/services/device_service.hpp
     ../src/parameters/put_device.hpp
+    budget_test.cpp
+    ../src/services/budget_service.hpp
+    ../src/parameters/put_budget.hpp
+    ../src/parameters/put_budget.cpp
+    ../src/responses/budget.hpp
+    ../src/responses/budget.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

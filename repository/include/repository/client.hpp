@@ -17,6 +17,7 @@
 #include "selector.hpp"
 #include "statement.hpp"
 #include "connection_settings.hpp"
+#include "exceptions.hpp"
 
 namespace repository {
 
@@ -57,10 +58,7 @@ class client {
       if (!stmt) {
         throw std::runtime_error("Unable to create prepared statement!");
       }
-      auto result = stmt->executeUpdate();
-      if (result == 0) {
-        throw std::runtime_error("Optimistic concurrency error");
-      }
+      stmt->executeUpdate();
 
       if (configuration.has_tracking()) {
         configuration.track_creation(entity, get_connection());
@@ -104,7 +102,7 @@ class client {
       }
       auto result = stmt->executeUpdate();
       if (result == 0) {
-        throw std::runtime_error("Optimistic concurrency error");
+        throw concurrency_exception();
       }
 
       if (configuration.has_tracking()) {
@@ -129,7 +127,7 @@ class client {
 
       auto result = stmt->executeUpdate();
       if (result == 0) {
-        throw std::runtime_error("Optimistic concurrency error");
+        throw concurrency_exception();
       }
 
       if (configuration.has_tracking()) {

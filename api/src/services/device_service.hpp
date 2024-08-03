@@ -31,13 +31,6 @@ class device_service {
       throw rest::api_exception(invalid_argument, "Id is required");
     }
 
-    auto users = m_repository->template select<repository::models::user>("select * from users where id = ?")
-        .with_param(m_identity->user_id)
-        .all();
-    if (users->size() == 0) {
-      throw rest::api_exception(invalid_argument, "User is not initialized");
-    }
-
     auto devices = m_repository->template select<user_device>("select * from user_devices where id = ?")
         .with_param(params.id)
         .all();
