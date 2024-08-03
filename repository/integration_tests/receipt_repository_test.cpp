@@ -6,7 +6,7 @@
 #include <di/container.hpp>
 #include <repository/factories.hpp>
 #include <repository/receipt_repository.hpp>
-#include "integration_tests_common/base_repository_integration_test.hpp"
+#include "base_repository_integration_test.hpp"
 
 using namespace di;
 using namespace repository::models;

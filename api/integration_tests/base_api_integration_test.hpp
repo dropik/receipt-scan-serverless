@@ -7,7 +7,7 @@
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/s3/S3Client.h>
 
-#include "integration_tests_common/base_repository_integration_test.hpp"
+#include "integration_tests_common/repository_integration_test.hpp"
 #include "di/container.hpp"
 #include "repository/connection_settings.hpp"
 #include "repository/client.hpp"
@@ -25,7 +25,7 @@
 namespace api {
 namespace integration_tests {
 
-class base_api_integration_test : public base_repository_integration_test {
+class base_api_integration_test : public repository_integration_test {
  protected:
   std::shared_ptr<sql::Connection> get_connection() override;
   void SetUp() override;

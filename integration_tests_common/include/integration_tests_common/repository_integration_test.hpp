@@ -14,7 +14,7 @@
 
 #define DEFAULT_USER_ID "user_id"
 
-class base_repository_integration_test : public ::testing::Test {
+class repository_integration_test : public ::testing::Test {
  protected:
   void SetUp() override;
   void TearDown() override;

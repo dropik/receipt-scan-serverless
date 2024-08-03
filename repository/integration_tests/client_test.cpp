@@ -5,13 +5,13 @@
 #include <aws/core/client/ClientConfiguration.h>
 #include <thread>
 
-#include "integration_tests_common/base_repository_integration_test.hpp"
 #include "repository/client.hpp"
 
 #include "di/container.hpp"
 #include "repository/factories.hpp"
 
 #include "repository/models/receipt.hpp"
+#include "base_repository_integration_test.hpp"
 
 using namespace di;
 using namespace repository::models;

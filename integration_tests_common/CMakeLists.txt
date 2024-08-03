@@ -3,8 +3,8 @@ find_package(AWSSDK COMPONENTS core)
 
 add_library(integration_tests_common STATIC
     src/main.cpp
-    include/integration_tests_common/base_repository_integration_test.hpp
-    src/base_repository_integration_test.cpp
+    include/integration_tests_common/repository_integration_test.hpp
+    src/repository_integration_test.cpp
 )
 
 target_include_directories(integration_tests_common PUBLIC

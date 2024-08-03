@@ -2,9 +2,9 @@
 // Created by Daniil Ryzhkov on 23/06/2024.
 //
 
-#include "integration_tests_common/base_repository_integration_test.hpp"
+#include "integration_tests_common/repository_integration_test.hpp"
 
-void base_repository_integration_test::SetUp() {
+void repository_integration_test::SetUp() {
   auto connection = get_connection();
   std::unique_ptr<sql::Statement>(connection->createStatement())->execute("drop database if exists receipt_scan_test");
   std::unique_ptr<sql::Statement>(connection->createStatement())->execute("create database receipt_scan_test");
@@ -67,11 +67,9 @@ void base_repository_integration_test::SetUp() {
       // do nothing
     }
   }
-
-  std::unique_ptr<sql::Statement>(connection->createStatement())->execute("insert into users (id) values ('" DEFAULT_USER_ID "')");
 }
 
-void base_repository_integration_test::TearDown() {
+void repository_integration_test::TearDown() {
   auto connection = get_connection();
   std::unique_ptr<sql::Statement>(connection->createStatement())->execute("drop database if exists receipt_scan_test");
 }

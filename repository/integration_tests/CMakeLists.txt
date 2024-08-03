@@ -3,8 +3,8 @@ find_package(AWSSDK COMPONENTS core ssm)
 
 add_executable(repository_integration_tests
     receipt_repository_test.cpp
-    ../../integration_tests_common/include/integration_tests_common/base_repository_integration_test.hpp
-    ../../integration_tests_common/src/base_repository_integration_test.cpp
+    ../../integration_tests_common/include/integration_tests_common/repository_integration_test.hpp
+    ../../integration_tests_common/src/repository_integration_test.cpp
     client_test.cpp
     ../include/repository/configurations/common/version_configuration.hpp
     ../include/repository/models/budget.hpp
@@ -14,6 +14,8 @@ add_executable(repository_integration_tests
     ../include/repository/models/entity_event.hpp
     ../include/repository/configurations/entity_event_configuration.hpp
     ../include/repository/configurations/common/tracking_configuration.hpp
+    base_repository_integration_test.hpp
+    base_repository_integration_test.cpp
 )
 
 target_include_directories(repository_integration_tests PUBLIC

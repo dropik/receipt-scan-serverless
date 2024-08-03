@@ -17,7 +17,7 @@ std::shared_ptr<sql::Connection> base_api_integration_test::get_connection() {
 }
 
 void base_api_integration_test::SetUp() {
-  base_repository_integration_test::SetUp();
+  repository_integration_test::SetUp();
   api = std::move(create_api(services));
 }
 
