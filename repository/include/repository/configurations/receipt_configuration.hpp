@@ -24,6 +24,7 @@ class repository_configuration<models::receipt>
     HAS_STRING(store_name) WITH_COLUMN("store_name");
     HAS_STRING(category) WITH_COLUMN("category");
     HAS_STRING(state) WITH_COLUMN("state");
+    HAS_STRING(image_name) WITH_COLUMN("image_name");
 
     HAS_VERSION();
     HAS_TRACKING(id, user_id) WITH_ENTITY_NAME("receipt");

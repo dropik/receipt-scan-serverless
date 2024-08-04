@@ -23,8 +23,6 @@ add_library(repository STATIC
     include/repository/base_query.hpp
     src/base_query.cpp
     src/statement.cpp
-    include/repository/models/receipt_file.hpp
-    include/repository/configurations/receipt_file_configuration.hpp
     include/repository/connection_settings.hpp
     include/repository/factories.hpp
     include/repository/receipt_repository.hpp

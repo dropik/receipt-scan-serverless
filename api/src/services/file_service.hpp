@@ -9,7 +9,6 @@
 #include <rest/api_exception.hpp>
 
 #include "../responses/file.hpp"
-#include "../parameters/put_file.hpp"
 #include "../identity.hpp"
 #include "../s3_settings.hpp"
 #include "../api_errors.hpp"
@@ -30,12 +29,12 @@ class file_service {
         m_bucket(std::move(s3_settings->bucket)),
         m_identity(std::move(identity)) {}
 
-  responses::file get_upload_file_url(const parameters::put_file &params) {
-    if (params.name.empty()) {
+  responses::file get_upload_receipt_image_url(const std::string &image_name) {
+    if (image_name.empty()) {
       throw rest::api_exception(invalid_argument, "Name is required");
     }
 
-    auto key = get_key(m_identity->user_id, params.name);
+    auto key = get_receipt_image_key(m_identity->user_id, image_name);
 
     std::string presignedUrl = m_s3_client->GeneratePresignedUrlWithSSES3(m_bucket,
                                                                           key,
@@ -44,12 +43,12 @@ class file_service {
     return responses::file{presignedUrl};
   }
 
-  responses::file get_download_file_url(const std::string &name) {
-    if (name.empty()) {
+  responses::file get_download_receipt_image_url(const std::string &image_name) {
+    if (image_name.empty()) {
       throw rest::api_exception(invalid_argument, "Name is required");
     }
 
-    auto key = get_key(m_identity->user_id, name);
+    auto key = get_receipt_image_key(m_identity->user_id, image_name);
 
     std::string presignedUrl = m_s3_client->GeneratePresignedUrl(m_bucket,
                                                                  key,
@@ -58,12 +57,12 @@ class file_service {
     return responses::file{presignedUrl};
   }
 
-  void delete_file(const std::string &name) {
-    if (name.empty()) {
+  void delete_receipt_image(const std::string &image_name) {
+    if (image_name.empty()) {
       throw rest::api_exception(invalid_argument, "Name is required");
     }
 
-    auto key = get_key(m_identity->user_id, name);
+    auto key = get_receipt_image_key(m_identity->user_id, image_name);
 
     Aws::S3::Model::DeleteObjectRequest request;
     request.WithBucket(m_bucket.c_str()).WithKey(key.c_str());
@@ -79,7 +78,7 @@ class file_service {
   std::string m_bucket;
   TIdentity m_identity;
 
-  static std::string get_key(const std::string &user_id, const std::string &name) {
+  static std::string get_receipt_image_key(const std::string &user_id, const std::string &name) {
     return lambda::string::format("users/%s/receipts/%s", user_id.c_str(), name.c_str());
   }
 };

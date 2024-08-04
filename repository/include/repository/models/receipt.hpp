@@ -3,7 +3,6 @@
 #include <string>
 #include <lambda/nullable.hpp>
 #include "receipt_item.hpp"
-#include "receipt_file.hpp"
 
 namespace repository {
 namespace models {
@@ -17,10 +16,10 @@ struct receipt {
   std::string store_name;
   std::string category;
   std::string state;
+  std::string image_name;
   int version = 0;
 
   std::vector<receipt_item> items;
-  lambda::nullable<receipt_file> file;
 
   static constexpr auto processing = "processing";
   static constexpr auto done = "done";

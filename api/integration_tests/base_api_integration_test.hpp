@@ -41,6 +41,7 @@ class base_api_integration_test : public repository_integration_test {
       di::singleton<Aws::S3::S3Client, mocks::mock_s3_client>,
       di::singleton<repository::t_client, repository::client<>>,
       di::transient<repository::t_category_repository, repository::category_repository<>>,
+      di::transient<repository::t_receipt_repository, repository::receipt_repository<>>,
 
       di::scoped<identity>,
 

@@ -83,7 +83,7 @@ class client {
       if (result->next()) {
         return std::move(configuration.get_entity(result.get()));
       }
-      throw std::runtime_error("Entity not found!");
+      throw entity_not_found_exception();
     } catch (std::exception &e) {
       lambda::log.error(
           "Error occurred while getting entity from the database: %s", e.what());

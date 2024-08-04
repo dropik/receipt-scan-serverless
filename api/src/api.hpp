@@ -10,7 +10,6 @@
 
 #include "identity.hpp"
 #include "model_types.hpp"
-#include "parameters/put_file.hpp"
 
 #include "services/user_service.hpp"
 #include "services/file_service.hpp"
@@ -122,22 +121,22 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       });
     });
 
-    v1.any("/files")([&c](api_resource &files) {
-      files.post<parameters::put_file>("/")([&c](const auto &request) {
-        return c.template get<services::t_file_service>()->get_upload_file_url(request);
-      });
-    });
-
     v1.any("/receipts")([&c](api_resource &receipts) {
-      receipts.get("/")([&c]() {
-        return c.template get<services::t_receipt_service>()->get_receipts();
+      receipts.any("/years")([&c](api_resource &years) {
+        years.any<int>()([&c](const int &y, api_resource &year) {
+          year.any("/months")([&c, &y](api_resource &months) {
+            months.get<int>()([&c, &y](const int &m) {
+              return c.template get<services::t_receipt_service>()->get_receipts(y, m);
+            });
+          });
+        });
       });
       receipts.any<guid_t>()([&c](const guid_t &receipt_id, api_resource &receipt) {
-        receipt.get("/")([&c, &receipt_id]() {
-          return c.template get<services::t_receipt_service>()->get_receipt(receipt_id);
+        receipt.get("/image")([&c, &receipt_id]() {
+          return c.template get<services::t_receipt_service>()->get_receipt_get_image_url(receipt_id);
         });
-        receipt.get("/file")([&c, &receipt_id]() {
-          return c.template get<services::t_receipt_service>()->get_receipt_file(receipt_id);
+        receipt.post("/image")([&c, &receipt_id]() {
+          return c.template get<services::t_receipt_service>()->get_receipt_put_image_url(receipt_id);
         });
       });
       receipts.put<parameters::put_receipt>("/")([&c](const auto &request) {

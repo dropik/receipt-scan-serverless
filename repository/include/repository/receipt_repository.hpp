@@ -15,39 +15,55 @@ class receipt_repository {
  public:
   explicit receipt_repository(TRepository repository) : m_repository(std::move(repository)) {}
 
-  lambda::nullable<models::receipt> get(const std::string &user_id, const std::string &file_name, int doc_number) {
-    auto file = m_repository->template select<models::receipt_file>(
-            "select * from receipt_files rf "
-            "join receipts r on r.id = rf.receipt_id "
-            "where r.user_id = ? and rf.file_name = ? and rf.doc_number = ?")
-        .with_param(user_id)
-        .with_param(file_name)
-        .with_param(doc_number)
-        .first_or_default();
-
-    if (!file) {
-      return {};
-    }
-
+  lambda::nullable<models::receipt> get(const std::string &user_id, const std::string &image_name) {
     auto receipt = m_repository->template select<models::receipt>(
-            "select * from receipts where id = ?")
-        .with_param(file->receipt_id)
+            "select * from receipts where user_id = ? and image_name = ?")
+        .with_param(user_id)
+        .with_param(image_name)
         .first_or_default();
 
     if (!receipt) {
       return {};
     }
 
-    auto output = *receipt;
-    output.file = *file;
+    return assemble_model(receipt);
+  }
 
-    auto items = m_repository->template select<models::receipt_item>(
-            "select * from receipt_items where receipt_id = ? order by sort_order")
-        .with_param(receipt->id)
+  lambda::nullable<models::receipt> get(const models::guid &receipt_id) {
+    auto receipt = m_repository->template get<models::receipt>(receipt_id);
+    if (!receipt) {
+      return {};
+    }
+    return assemble_model(receipt);
+  }
+
+  std::vector<models::receipt> get_by_month(const models::guid &user_id, int year, int month) {
+    auto receipts = m_repository->template select<models::receipt>(
+            "select * from receipts "
+            "where user_id = ? and year(date) = ? and month(date) = ? "
+            "order by date desc")
+        .with_param(user_id)
+        .with_param(year)
+        .with_param(month)
         .all();
 
-    for (const auto &item : *items) {
-      output.items.push_back(*item);
+    auto receipt_items = m_repository->template select<models::receipt_item>(
+            "select ri.* from receipt_items ri "
+            "join receipts r on ri.receipt_id = r.id "
+            "where r.user_id = ? and year(r.date) = ? and month(r.date) = ?")
+        .with_param(user_id)
+        .with_param(year)
+        .with_param(month)
+        .all();
+
+    std::vector<models::receipt> output;
+    output.reserve(receipts->size());
+    for (const auto &receipt : *receipts) {
+      output.push_back(*receipt);
+      for (const auto &item : *receipt_items) {
+        if (item->receipt_id != receipt->id) continue;
+        output.back().items.push_back(*item);
+      }
     }
 
     return output;
@@ -61,10 +77,6 @@ class receipt_repository {
     if (!existing_receipt) {
       m_repository->template create<models::receipt>(receipt);
     } else {
-      m_repository->execute(
-              "delete from receipt_items where receipt_id = ?")
-          .with_param(existing_receipt->id)
-          .go();
       m_repository->template update<models::receipt>(receipt);
     }
 
@@ -95,31 +107,29 @@ class receipt_repository {
           .with_param(item_id)
           .go();
     }
+  }
 
-    if (!receipt.file.has_value()) {
-      m_repository->execute(
-              "delete from receipt_files where receipt_id = ?")
-          .with_param(receipt.id)
-          .go();
-    } else {
-      auto existing_file = m_repository->template select<models::receipt_file>(
-              "select * from receipt_files where id = ?")
-          .with_param(receipt.file.get_value().id)
-          .first_or_default();
-      if (!existing_file) {
-        m_repository->execute(
-                "delete from receipt_files where receipt_id = ?")
-            .with_param(receipt.id)
-            .go();
-        m_repository->template create<models::receipt_file>(receipt.file.get_value());
-      } else {
-        m_repository->template update<models::receipt_file>(receipt.file.get_value());
-      }
-    }
+  void drop(const models::receipt &receipt) {
+    m_repository->drop(receipt);
   }
 
  private:
   TRepository m_repository;
+
+  models::receipt assemble_model(const std::shared_ptr<models::receipt>& receipt) {
+    auto output = *receipt;
+
+    auto items = m_repository->template select<models::receipt_item>(
+            "select * from receipt_items where receipt_id = ? order by sort_order")
+        .with_param(receipt->id)
+        .all();
+
+    for (const auto &item : *items) {
+      output.items.push_back(*item);
+    }
+
+    return output;
+  }
 };
 
 }

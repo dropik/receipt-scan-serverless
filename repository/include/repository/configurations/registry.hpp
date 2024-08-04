@@ -9,7 +9,6 @@
 #include "repository/configurations/category_configuration.hpp"
 #include "repository/configurations/receipt_configuration.hpp"
 #include "repository/configurations/receipt_item_configuration.hpp"
-#include "repository/configurations/receipt_file_configuration.hpp"
 #include "repository/configurations/user_configuration.hpp"
 #include "repository/configurations/budget_configuration.hpp"
 #include "repository/configurations/user_device_configuration.hpp"
@@ -33,7 +32,6 @@ using registry = configurations_registry<
     models::category,
     models::receipt,
     models::receipt_item,
-    models::receipt_file,
     models::user,
     models::budget,
     models::user_device,

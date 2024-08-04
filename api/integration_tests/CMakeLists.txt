@@ -6,11 +6,9 @@ add_executable(api_integration_tests
     ../src/responses/file.hpp
     ../src/identity.hpp
     ../src/model_types.hpp
-    ../src/responses/receipt_detail.hpp
-    ../src/responses/receipt_list_item.hpp
+    ../src/responses/receipt.hpp
     ../src/parameters/put_receipt.hpp
     ../src/s3_settings.hpp
-    ../src/parameters/put_file.hpp
     ../src/services/category_service.hpp
     ../src/services/file_service.hpp
     ../src/services/receipt_service.hpp
@@ -39,6 +37,13 @@ add_executable(api_integration_tests
     ../src/parameters/put_category.hpp
     ../src/parameters/put_category.cpp
     ../src/responses/category.cpp
+    receipt_test.cpp
+    ../src/parameters/put_receipt.cpp
+    ../src/parameters/put_receipt_item.hpp
+    ../src/parameters/put_receipt_item.cpp
+    ../src/responses/receipt_item.hpp
+    ../src/responses/receipt.cpp
+    ../src/responses/receipt_item.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

@@ -7,17 +7,15 @@ find_package(AWSSDK COMPONENTS core s3)
 
 add_executable(${FUNCTION_NAME}
     src/main.cpp
-    src/parameters/put_file.hpp
     src/responses/file.hpp
     src/api.hpp
     src/services/file_service.hpp
     src/api_errors.hpp
     src/identity.hpp
     src/services/user_service.hpp
-    src/responses/receipt_detail.hpp
+    src/responses/receipt.hpp
     src/model_types.hpp
     src/services/receipt_service.hpp
-    src/responses/receipt_list_item.hpp
     src/services/category_service.hpp
     src/responses/category.hpp
     src/parameters/put_receipt.hpp
@@ -35,6 +33,12 @@ add_executable(${FUNCTION_NAME}
     src/parameters/put_category.hpp
     src/parameters/put_category.cpp
     src/responses/category.cpp
+    src/parameters/put_receipt.cpp
+    src/parameters/put_receipt_item.hpp
+    src/parameters/put_receipt_item.cpp
+    src/responses/receipt_item.hpp
+    src/responses/receipt.cpp
+    src/responses/receipt_item.cpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
