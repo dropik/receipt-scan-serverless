@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
           singleton<s3_settings>,
           singleton<Aws::S3::S3Client>,
           singleton<repository::t_client, repository::client<>>,
+          transient<repository::t_category_repository, repository::category_repository<>>,
 
           scoped<identity>,
 

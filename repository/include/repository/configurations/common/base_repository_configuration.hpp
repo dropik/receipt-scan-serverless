@@ -121,7 +121,7 @@ class base_repository_configuration {
       property_index++;
     }
     if (m_version) {
-      m_version->configure_statement(property_index, 0, m_insert_statement);
+      m_version->configure_statement(property_index, m_version->get_version(entity), m_insert_statement);
     }
 
     return m_insert_statement;

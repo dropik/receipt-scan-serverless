@@ -39,6 +39,19 @@ class category_repository {
     }
   }
 
+  void drop(const models::guid &category_id) {
+    auto existing_category = m_repository->template select<models::category>(
+            "select * from categories where id = ?")
+        .with_param(category_id)
+        .first_or_default();
+
+    if (!existing_category) {
+      throw entity_not_found_exception();
+    }
+
+    m_repository->template drop<models::category>(*existing_category);
+  }
+
  private:
   TRepository m_repository;
 

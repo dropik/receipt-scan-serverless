@@ -1,5 +1,5 @@
 //
-// Created by Daniil Ryzhkov on 09/06/2024.
+// Created by Daniil Ryzhkov on 03/08/2024.
 //
 
 #pragma once
@@ -10,22 +10,22 @@
 #include "../model_types.hpp"
 
 namespace api {
-namespace responses {
+namespace parameters {
 
-struct category {
+struct put_category {
   guid_t id;
   std::string name;
   int color;
   int version = 0;
 
-  JSON_BEGIN_SERIALIZER(category)
+  JSON_BEGIN_SERIALIZER(put_category)
       JSON_PROPERTY("id", id)
       JSON_PROPERTY("name", name)
       JSON_PROPERTY("color", color)
       JSON_PROPERTY("version", version)
   JSON_END_SERIALIZER()
 
-  static category from_repo(const repository::models::category &category);
+  repository::models::category to_repo(const std::string &user_id) const;
 };
 
 }

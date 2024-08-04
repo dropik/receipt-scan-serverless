@@ -35,6 +35,10 @@ add_executable(api_integration_tests
     ../src/parameters/put_budget.cpp
     ../src/responses/budget.hpp
     ../src/responses/budget.cpp
+    category_test.cpp
+    ../src/parameters/put_category.hpp
+    ../src/parameters/put_category.cpp
+    ../src/responses/category.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

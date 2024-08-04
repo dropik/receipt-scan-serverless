@@ -69,14 +69,16 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
   api->use([](const auto &request, const auto &next) {
     try {
       return next(request);
-    } catch (repository::concurrency_exception &e) {
-      return rest::conflict();
     } catch (rest::api_exception &e) {
       lambda::log.info("API Exception: %d %s", e.error, e.message.c_str());
       if (e.error == not_found) {
         return rest::not_found();
       }
       return bad_request(e);
+    } catch (repository::entity_not_found_exception &e) {
+      return rest::not_found();
+    } catch (repository::concurrency_exception &e) {
+      return rest::conflict();
     } catch (std::exception &e) {
       lambda::log.error("Internal error: %s", e.what());
       return rest::internal_server_error();
@@ -112,7 +114,7 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       categories.get("/")([&c]() {
         return c.template get<services::t_category_service>()->get_categories();
       });
-      categories.put<responses::category>("/")([&c](const auto &request) {
+      categories.put<parameters::put_category>("/")([&c](const auto &request) {
         return c.template get<services::t_category_service>()->put_category(request);
       });
       categories.del<guid_t>()([&c](const guid_t &category_id) {

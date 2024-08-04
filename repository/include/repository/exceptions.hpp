@@ -9,5 +9,6 @@
 namespace repository {
 
 struct concurrency_exception : public std::exception {};
+struct entity_not_found_exception : public std::exception {};
 
 }
