@@ -4,10 +4,14 @@
 
 #include <gtest/gtest.h>
 
-#include <di/container.hpp>
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
+
+#include <di/container.hpp>
 #include "repository/client.hpp"
+#include "integration_tests_common/repository_integration_test.hpp"
+
+#include "../src/factories.hpp"
 #include "../src/handler.hpp"
 
 using namespace di;
@@ -20,7 +24,10 @@ using namespace scanner::services;
 using namespace repository;
 using namespace repository::models;
 
-#define DEFAULT_KEY "users/20a79fcd-1783-475b-9095-35afb0d34b7f/receipts/2024-06-22.jpg"
+#define USER_ID "20a79fcd-1783-475b-9095-35afb0d34b7f"
+#define DATE "2024-06-22"
+#define IMAGE_NAME DATE ".jpg"
+#define DEFAULT_KEY "users/" USER_ID "/receipts/" IMAGE_NAME
 #define DEFAULT_EVENT "ObjectCreated:Put"
 
 static aws::lambda_runtime::invocation_request create_request(
@@ -45,7 +52,7 @@ struct fake_textract_client {
   bool should_fail = false;
   bool set_quantity = true;
   bool add_items = true;
-  std::string invoice_date = "2024-06-22";
+  std::string invoice_date = DATE;
   std::string amount = "100.00";
   double confidence = 99;
   std::string currency;
@@ -143,56 +150,54 @@ struct fake_bedrock_runtime_client {
   }
 };
 
-struct fake_receipt_repository {
-  std::vector<receipt> repo;
-
-  lambda::nullable<receipt> get(const std::string &user_id, const std::string &file_name, int doc_number) {
-    if (repo.empty()) {
-      return {};
-    } else {
-      return repo[0];
-    }
-  }
-
-  void store(const receipt &r) {
-    auto it = std::find_if(repo.begin(), repo.end(), [&r](const receipt &o) {
-      return r.id == o.id;
-    });
-    if (it != repo.end()) {
-      *it = r;
-    } else {
-      repo.push_back(r);
-    }
-  }
-};
-
-struct fake_category_repository {
-  std::vector<category> get_all(const std::string &user_id) const {
-    return {
-        {"Altro"},
-    };
-  }
-};
-
-class scanner_test : public ::testing::Test {
- protected:
+class scanner_test : public repository_integration_test {
+ public:
   void SetUp() override {
+    repository_integration_test::SetUp();
+    auto repo = services.get<t_client>();
+    repo->execute("insert into users (id) values ('" USER_ID "')").go();
   }
 
-  void TearDown() override {
+ protected:
+  std::shared_ptr<sql::Connection> get_connection() override {
+    return services.get<repository::t_client>()->get_connection();
+  }
+
+  receipt create_receipt() {
+    auto repo = services.get<t_client>();
+    auto r = receipt{
+        .id = "12345",
+        .user_id = USER_ID,
+        .date = DATE,
+        .total_amount = 200.00,
+        .currency = "EUR",
+        .store_name = "Amazon",
+        .category = "",
+        .state = receipt::done,
+        .image_name = IMAGE_NAME,
+        .version = 1,
+    };
+    repo->create<receipt>(r);
+    return r;
   }
 
   container<
       scoped<TextractClient, fake_textract_client>,
       scoped<BedrockRuntimeClient, fake_bedrock_runtime_client>,
 
-      scoped<t_receipt_repository, fake_receipt_repository>,
-      scoped<t_category_repository, fake_category_repository>,
+      singleton<Aws::Client::ClientConfiguration>,
+      singleton<repository::connection_settings>,
+      singleton<t_client, client<>>,
+      transient<t_receipt_repository, receipt_repository<>>,
+      transient<t_category_repository, category_repository<>>,
+
       transient<t_receipt_extractor, receipt_extractor<>>,
       transient<t_categorizer, categorizer<>>,
 
       transient<t_handler, handler<>>
   > services;
+
+  const std::string receipt_failed = receipt::failed;
 };
 
 TEST_F(scanner_test, should_create_receipt) {
@@ -200,39 +205,38 @@ TEST_F(scanner_test, should_create_receipt) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  EXPECT_EQ(receipts[0].store_name, "Amazon");
-  EXPECT_EQ(receipts[0].date, "2024-06-22");
-  EXPECT_EQ(receipts[0].total_amount, 100.00);
-  auto receipt = receipts[0];
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
 
-  EXPECT_TRUE(receipt.file.has_value());
-  EXPECT_EQ(receipt.file.get_value().receipt_id, receipts[0].id);
-  EXPECT_EQ(receipt.file.get_value().file_name, "2024-06-22.jpg");
-  EXPECT_EQ(receipt.file.get_value().doc_number, 1);
+  auto receipt = receipts->at(0);
+  ASSERT_EQ(receipt->store_name, "Amazon");
+  ASSERT_EQ(receipt->date, DATE);
+  ASSERT_EQ(receipt->total_amount, 100.00);
+  ASSERT_EQ(receipt->version, 0);
+  ASSERT_EQ(receipt->image_name, IMAGE_NAME);
 
-  auto items = receipt.items;
-  EXPECT_EQ(items.size(), 1);
-  EXPECT_EQ(items[0].receipt_id, receipts[0].id);
-  EXPECT_EQ(items[0].description, "Item 1");
-  EXPECT_EQ(items[0].amount, 100.00);
-  EXPECT_EQ(items[0].sort_order, 0);
+  auto items = repo->select<receipt_item>("select * from receipt_items").all();
+  ASSERT_EQ(items->size(), 1);
+  auto item = items->at(0);
+  ASSERT_EQ(item->receipt_id, receipt->id);
+  ASSERT_EQ(item->description, "Item 1");
+  ASSERT_EQ(item->amount, 100.00);
+  ASSERT_EQ(item->sort_order, 0);
 }
 
 TEST_F(scanner_test, should_ignore_not_receipt_key_patter) {
   auto handler = services.get<t_handler>();
-  auto request = create_request("users/20a79fcd-1783-475b-9095-35afb0d34b7f/whatever");
+  auto request = create_request("users/" USER_ID "/whatever");
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 0);
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 0);
 }
 
 TEST_F(scanner_test, should_continue_if_textract_fails) {
@@ -243,11 +247,16 @@ TEST_F(scanner_test, should_continue_if_textract_fails) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 0);
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  auto receipt = receipts->at(0);
+  ASSERT_EQ(receipt->version, 0);
+  ASSERT_EQ(receipt->state, receipt_failed);
+  ASSERT_EQ(receipt->date, scanner::utils::today());
+  ASSERT_EQ(receipt->store_name, "-");
 }
 
 TEST_F(scanner_test, should_recognize_short_year) {
@@ -258,12 +267,12 @@ TEST_F(scanner_test, should_recognize_short_year) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  EXPECT_EQ(receipts[0].date, "2024-06-22");
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  ASSERT_EQ(receipts->at(0)->date, DATE);
 }
 
 TEST_F(scanner_test, should_sanitise_amount) {
@@ -275,14 +284,14 @@ TEST_F(scanner_test, should_sanitise_amount) {
     auto request = create_request();
     auto res = handler->operator()(request);
 
-    EXPECT_TRUE(res.is_success());
+    ASSERT_TRUE(res.is_success());
 
-    auto repo = services.get<repository::t_receipt_repository>();
-    auto receipts = repo->repo;
-    EXPECT_EQ(receipts.size(), 1);
-    EXPECT_EQ(receipts[0].total_amount, 100.00);
+    auto repo = services.get<t_client>();
+    auto receipts = repo->select<receipt>("select * from receipts").all();
+    ASSERT_EQ(receipts->size(), 1);
+    ASSERT_EQ(receipts->at(0)->total_amount, 100.00);
 
-    repo->repo.clear();
+    repo->execute("delete from receipts").go();
   };
   test("USD 100.00");
   test("100.00 USD");
@@ -296,12 +305,12 @@ TEST_F(scanner_test, should_ignore_amount_if_invalid) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  EXPECT_EQ(receipts[0].total_amount, 0.00);
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  ASSERT_EQ(receipts->at(0)->total_amount, 0.00);
 }
 
 TEST_F(scanner_test, should_import_currency) {
@@ -312,12 +321,12 @@ TEST_F(scanner_test, should_import_currency) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  EXPECT_EQ(receipts[0].currency, "USD");
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  ASSERT_EQ(receipts->at(0)->currency, "USD");
 }
 
 TEST_F(scanner_test, should_handle_incorrect_date) {
@@ -328,12 +337,12 @@ TEST_F(scanner_test, should_handle_incorrect_date) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  EXPECT_EQ(receipts[0].date, "");
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  ASSERT_EQ(receipts->at(0)->date, scanner::utils::today());
 }
 
 TEST_F(scanner_test, should_set_default_quantity) {
@@ -344,14 +353,14 @@ TEST_F(scanner_test, should_set_default_quantity) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  auto items = receipts[0].items;
-  EXPECT_EQ(items.size(), 1);
-  EXPECT_EQ(items[0].amount, 100.00);
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  auto items = repo->select<receipt_item>("select * from receipt_items").all();
+  ASSERT_EQ(items->size(), 1);
+  ASSERT_EQ(items->at(0)->amount, 100.00);
 }
 
 TEST_F(scanner_test, should_handle_incorrect_quantity) {
@@ -362,41 +371,35 @@ TEST_F(scanner_test, should_handle_incorrect_quantity) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  auto items = receipts[0].items;
-  EXPECT_EQ(items.size(), 1);
-  EXPECT_EQ(items[0].amount, 100.00);
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  auto items = repo->select<receipt_item>("select * from receipt_items").all();
+  ASSERT_EQ(items->size(), 1);
+  ASSERT_EQ(items->at(0)->amount, 100.00);
 }
 
-TEST_F(scanner_test, should_update_existing_receipt_if_present_by_user_file_and_doc_number) {
+TEST_F(scanner_test, should_update_existing_receipt_if_present_by_user_and_image_name) {
+  auto r = create_receipt();
+
   auto handler = services.get<t_handler>();
   auto request = create_request();
+
   auto res = handler->operator()(request);
+  ASSERT_TRUE(res.is_success());
 
-  EXPECT_TRUE(res.is_success());
-
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-
-  auto receipt = receipts[0];
-  receipt.total_amount = 200.00;
-  repo->store(receipt);
-
-  auto res2 = handler->operator()(request);
-  EXPECT_TRUE(res2.is_success());
-
-  auto receipts2 = repo->repo;
-  EXPECT_EQ(receipts2.size(), 1);
-  EXPECT_EQ(receipts2[0].total_amount, 100.00);
-  EXPECT_EQ(receipts2[0].id, receipt.id);
-  EXPECT_EQ(receipts2[0].file.get_value().receipt_id, receipt.id);
-  for (const auto &item : receipts2[0].items) {
-    EXPECT_EQ(item.receipt_id, receipt.id);
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  auto receipt = receipts->at(0);
+  ASSERT_EQ(receipt->total_amount, 100.00);
+  ASSERT_EQ(receipt->id, r.id);
+  ASSERT_EQ(receipt->image_name, IMAGE_NAME);
+  ASSERT_EQ(receipt->version, r.version + 1);
+  for (const auto &item : receipt->items) {
+    ASSERT_EQ(item.receipt_id, receipt->id);
   }
 }
 
@@ -405,11 +408,11 @@ TEST_F(scanner_test, should_ignore_non_put_s3_events) {
   auto request = create_request(DEFAULT_KEY, "ObjectCreated:Delete");
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 0);
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 0);
 }
 
 TEST_F(scanner_test, should_categorize) {
@@ -417,15 +420,15 @@ TEST_F(scanner_test, should_categorize) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  auto receipt = receipts[0];
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
 
-  EXPECT_EQ(receipt.items.size(), 1);
-  EXPECT_EQ(receipt.items[0].category, "Altro");
+  auto items = repo->select<receipt_item>("select * from receipt_items").all();
+  ASSERT_EQ(items->size(), 1);
+  ASSERT_EQ(items->at(0)->category, "Altro");
 }
 
 TEST_F(scanner_test, should_store_category_if_no_items_present) {
@@ -436,15 +439,15 @@ TEST_F(scanner_test, should_store_category_if_no_items_present) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  auto receipt = receipts[0];
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  auto receipt = receipts->at(0);
 
-  EXPECT_EQ(receipt.items.size(), 0);
-  EXPECT_EQ(receipt.category, "Altro");
+  ASSERT_EQ(receipt->items.size(), 0);
+  ASSERT_EQ(receipt->category, "Altro");
 }
 
 TEST_F(scanner_test, should_ignore_category_if_failed) {
@@ -455,15 +458,16 @@ TEST_F(scanner_test, should_ignore_category_if_failed) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  auto receipt = receipts[0];
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
 
-  EXPECT_EQ(receipt.items.size(), 1);
-  EXPECT_EQ(receipt.category, "");
+  auto receipt = receipts->at(0);
+  auto items = repo->select<receipt_item>("select * from receipt_items").all();
+  ASSERT_EQ(items->size(), 1);
+  ASSERT_EQ(receipt->category, "");
 }
 
 TEST_F(scanner_test, should_sanitise_extra_space_in_category) {
@@ -474,13 +478,13 @@ TEST_F(scanner_test, should_sanitise_extra_space_in_category) {
   auto request = create_request();
   auto res = handler->operator()(request);
 
-  EXPECT_TRUE(res.is_success());
+  ASSERT_TRUE(res.is_success());
 
-  auto repo = services.get<repository::t_receipt_repository>();
-  auto receipts = repo->repo;
-  EXPECT_EQ(receipts.size(), 1);
-  auto receipt = receipts[0];
+  auto repo = services.get<t_client>();
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
 
-  EXPECT_EQ(receipt.items.size(), 1);
-  EXPECT_EQ(receipt.items[0].category, "Altro");
+  auto items = repo->select<receipt_item>("select * from receipt_items").all();
+  ASSERT_EQ(items->size(), 1);
+  ASSERT_EQ(items->at(0)->category, "Altro");
 }

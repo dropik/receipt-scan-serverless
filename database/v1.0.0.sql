@@ -241,3 +241,10 @@ add column image_name varchar(100) not null default '';
 # 2024-08-04: add index on image_name
 alter table receipts
 add index ix_receipt_image_name(image_name);
+
+# 2024-08-05: add state 'failed' to receipt state
+alter table receipts
+drop column state;
+
+alter table receipts
+add column state enum('processing', 'done', 'failed') not null default 'processing';

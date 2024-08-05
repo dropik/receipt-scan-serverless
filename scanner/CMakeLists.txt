@@ -42,5 +42,5 @@ file(WRITE "${PROJECT_BINARY_DIR}/${FUNCTION_NAME}/Makefile"
     "\tln -sf bin/${FUNCTION_NAME} $(ARTIFACTS_DIR)/bootstrap\n")
 
 if(WITH_TESTS)
-  add_subdirectory(tests)
+  add_subdirectory(integration_tests)
 endif()

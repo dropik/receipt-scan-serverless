@@ -47,24 +47,28 @@ class handler {
           continue;
         }
 
-        auto receipts = m_extractor->extract(record.s3.bucket.name, record.s3.object.key);
-        for (auto &receipt : receipts) {
-          m_categorizer->categorize(receipt);
-
-          auto existing_receipt = m_repository->get(
-              receipt.user_id,
-              receipt.file.get_value().file_name,
-              receipt.file.get_value().doc_number);
-
-          if (existing_receipt.has_value()) {
-            receipt.id = existing_receipt.get_value().id;
-            receipt.file = existing_receipt.get_value().file;
-            for (auto &item : receipt.items) {
-              item.receipt_id = receipt.id;
-            }
-          }
-          m_repository->store(receipt);
+        auto extracted = m_extractor->extract(record.s3.bucket.name, record.s3.object.key);
+        if (!extracted.has_value()) {
+          lambda::log.info("Skipping not supported file.");
+          return aws::lambda_runtime::invocation_response::success("All files processed!", "application/json");
         }
+        auto receipt = extracted.get_value();
+        if (receipt.state != repository::models::receipt::failed) {
+          m_categorizer->categorize(receipt);
+        }
+
+        auto existing_receipt = m_repository->get(
+            receipt.user_id,
+            receipt.image_name);
+
+        if (existing_receipt.has_value()) {
+          receipt.id = existing_receipt.get_value().id;
+          for (auto &item : receipt.items) {
+            item.receipt_id = receipt.id;
+          }
+          receipt.version = existing_receipt.get_value().version;
+        }
+        m_repository->store(receipt);
       }
 
       lambda::log.info("All files processed.");

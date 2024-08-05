@@ -2,8 +2,7 @@ find_package(ZLIB REQUIRED)
 find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime)
 
-add_executable(scanner_tests
-    main.cpp
+add_executable(scanner_integration_tests
     scanner_test.cpp
     ../src/models/bedrock_payload.hpp
     ../src/models/bedrock_response.hpp
@@ -14,22 +13,24 @@ add_executable(scanner_tests
     ../src/services/categorizer.hpp
 )
 
-target_include_directories(scanner_tests PUBLIC
+target_include_directories(scanner_integration_tests PUBLIC
     ${gtest_SOURCE_DIR}/include
     ${gtest_SOURCE_DIR}
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/di/include"
+    "${PROJECT_SOURCE_DIR}/integration_tests_common/include"
 )
 
-target_link_libraries(scanner_tests
+target_link_libraries(scanner_integration_tests
     lambda
     repository
     AWS::aws-lambda-runtime
     ${AWSSDK_LINK_LIBRARIES}
     aws-lambda-cpp-common
     gtest
+    integration_tests_common
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_definitions(scanner_tests PRIVATE DEBUG)
+  target_compile_definitions(scanner_integration_tests PRIVATE DEBUG)
 endif()

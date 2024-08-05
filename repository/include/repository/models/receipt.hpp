@@ -23,6 +23,7 @@ struct receipt {
 
   static constexpr auto processing = "processing";
   static constexpr auto done = "done";
+  static constexpr auto failed = "failed";
 };
 
 }  // namespace models
