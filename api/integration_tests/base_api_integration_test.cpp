@@ -25,6 +25,64 @@ void base_api_integration_test::init_user() {
   (*api)(create_request("POST", "/v1/user", ""));
 }
 
+repository::models::budget base_api_integration_test::create_budget(const lambda::nullable<int>& version) {
+  auto repo = services.get<repository::t_client>();
+  auto b = repository::models::budget{
+      .id = TEST_BUDGET,
+      .user_id = USER_ID,
+      .month = "2024-07-01",
+      .amount = 1500.0,
+      .version = version.has_value() ? version.get_value() : 0,
+  };
+  repo->create<repository::models::budget>(b);
+  return b;
+}
+
+repository::models::category base_api_integration_test::create_category(const lambda::nullable<int>& version) {
+  auto repo = services.get<repository::t_client>();
+  auto c = repository::models::category{
+      .id = TEST_CATEGORY,
+      .user_id = USER_ID,
+      .name = "category",
+      .color = 29,
+      .version = version.has_value() ? version.get_value() : 0,
+  };
+  repo->create<repository::models::category>(c);
+  return c;
+}
+
+repository::models::receipt base_api_integration_test::create_receipt(const lambda::nullable<int>& version) {
+  auto repo = services.get<repository::t_client>();
+  auto r = repository::models::receipt{
+      .id = TEST_RECEIPT,
+      .user_id = USER_ID,
+      .date = "2024-08-04",
+      .total_amount = 100,
+      .currency = "EUR",
+      .store_name = "store",
+      .category = "",
+      .state = repository::models::receipt::done,
+      .image_name = "image",
+      .version = version.has_value() ? version.get_value() : 0,
+  };
+  repo->create<repository::models::receipt>(r);
+  return r;
+}
+
+repository::models::receipt_item base_api_integration_test::create_receipt_item(int sort_order) {
+  auto repo = services.get<repository::t_client>();
+  auto r = repository::models::receipt_item{
+      .id = Aws::Utils::UUID::RandomUUID(),
+      .receipt_id = TEST_RECEIPT,
+      .description = "item",
+      .amount = 100,
+      .category = "supermarket",
+      .sort_order = sort_order,
+  };
+  repo->create<repository::models::receipt_item>(r);
+  return r;
+}
+
 aws::lambda_runtime::invocation_request create_request(const std::string &method,
                                                        const std::string &path,
                                                        const std::string &body) {

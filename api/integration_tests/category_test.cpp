@@ -6,28 +6,13 @@
 #include "repository/models/category.hpp"
 
 #define ENDPOINT "/v1/categories"
-#define TEST_CATEGORY "d394a832-4011-7023-c519-afe3adaf0233"
 
 using namespace repository;
 
 namespace api {
 namespace integration_tests {
 
-class category_test : public base_api_integration_test {
- protected:
-  ::models::category create_category(const lambda::nullable<int>& version = lambda::nullable<int>()) {
-    auto repo = services.get<repository::t_client>();
-    auto c = ::models::category{
-        .id = TEST_CATEGORY,
-        .user_id = USER_ID,
-        .name = "category",
-        .color = 29,
-        .version = version.has_value() ? version.get_value() : 0,
-    };
-    repo->create<::models::category>(c);
-    return c;
-  }
-};
+class category_test : public base_api_integration_test {};
 
 TEST_F(category_test, put_category) {
   // should not be created until user is created

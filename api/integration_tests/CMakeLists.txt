@@ -44,6 +44,7 @@ add_executable(api_integration_tests
     ../src/responses/receipt_item.hpp
     ../src/responses/receipt.cpp
     ../src/responses/receipt_item.cpp
+    changes_test.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

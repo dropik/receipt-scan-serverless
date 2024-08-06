@@ -6,7 +6,6 @@
 #include "repository/models/receipt.hpp"
 
 #define ENDPOINT "/v1/receipts"
-#define TEST_RECEIPT "d394a832-4011-7023-c519-afe3adaf0233"
 
 using namespace repository;
 
@@ -15,37 +14,6 @@ namespace integration_tests {
 
 class receipt_test : public base_api_integration_test {
  protected:
-  ::models::receipt create_receipt(const lambda::nullable<int> &version = lambda::nullable<int>()) {
-    auto repo = services.get<repository::t_client>();
-    auto r = ::models::receipt{
-        .id = TEST_RECEIPT,
-        .user_id = USER_ID,
-        .date = "2024-08-04",
-        .total_amount = 100,
-        .currency = "EUR",
-        .store_name = "store",
-        .category = "",
-        .state = ::models::receipt::done,
-        .image_name = "image",
-        .version = version.has_value() ? version.get_value() : 0,
-    };
-    repo->create<::models::receipt>(r);
-    return r;
-  }
-
-  ::models::receipt_item create_receipt_item(int sort_order) {
-    auto repo = services.get<repository::t_client>();
-    auto r = ::models::receipt_item{
-        .id = Aws::Utils::UUID::RandomUUID(),
-        .receipt_id = TEST_RECEIPT,
-        .description = "item",
-        .amount = 100,
-        .category = "supermarket",
-        .sort_order = sort_order,
-    };
-    repo->create<::models::receipt_item>(r);
-    return r;
-  }
 
   const std::string receipt_done = ::models::receipt::done;
 };

@@ -25,6 +25,9 @@
 #include "../src/services/budget_service.hpp"
 
 #define USER_ID "d394a832-4011-7023-c519-afe3adaf0233"
+#define TEST_BUDGET "d394a832-4011-7023-c519-afe3adaf0233"
+#define TEST_CATEGORY "d394a832-4011-7023-c519-afe3adaf0233"
+#define TEST_RECEIPT "d394a832-4011-7023-c519-afe3adaf0233"
 
 namespace api {
 namespace integration_tests {
@@ -53,6 +56,11 @@ class base_api_integration_test : public repository_integration_test {
       di::transient<services::t_receipt_service, services::receipt_service<>>
   > services;
   void init_user();
+
+  repository::models::budget create_budget(const lambda::nullable<int>& version = lambda::nullable<int>());
+  repository::models::category create_category(const lambda::nullable<int>& version = lambda::nullable<int>());
+  repository::models::receipt create_receipt(const lambda::nullable<int> &version = lambda::nullable<int>());
+  repository::models::receipt_item create_receipt_item(int sort_order);
 };
 
 aws::lambda_runtime::invocation_request create_request(const std::string &method,

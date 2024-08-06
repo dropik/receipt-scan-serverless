@@ -5,28 +5,13 @@
 #include "base_api_integration_test.hpp"
 
 #define ENDPOINT "/v1/budgets"
-#define TEST_BUDGET "d394a832-4011-7023-c519-afe3adaf0233"
 
 using namespace repository;
 
 namespace api {
 namespace integration_tests {
 
-class budget_test : public base_api_integration_test {
- protected:
-  ::models::budget create_budget(const lambda::nullable<int>& version = lambda::nullable<int>()) {
-    auto repo = services.get<repository::t_client>();
-    auto b = ::models::budget{
-        .id = TEST_BUDGET,
-        .user_id = USER_ID,
-        .month = "2024-07-01",
-        .amount = 1500.0,
-        .version = version.has_value() ? version.get_value() : 0,
-    };
-    repo->create<::models::budget>(b);
-    return b;
-  }
-};
+class budget_test : public base_api_integration_test {};
 
 TEST_F(budget_test, put_budget) {
   // should not be created until user is created
