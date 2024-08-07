@@ -248,3 +248,21 @@ drop column state;
 
 alter table receipts
 add column state enum('processing', 'done', 'failed') not null default 'processing';
+
+# 2024-08-07: add timestamp and is_deleted to receipts
+alter table receipts
+add column modified_timestamp timestamp not null default current_timestamp on update current_timestamp;
+
+alter table receipts
+add column is_deleted boolean not null default false;
+
+# 2024-08-07: add timestamp and is_deleted to categories
+alter table categories
+add column modified_timestamp timestamp not null default current_timestamp on update current_timestamp;
+
+alter table categories
+add column is_deleted boolean not null default false;
+
+# 2024-08-07: add timestamp to budgets
+alter table budgets
+add column modified_timestamp timestamp not null default current_timestamp on update current_timestamp;

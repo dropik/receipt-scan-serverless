@@ -26,6 +26,7 @@ repository::models::receipt parameters::put_receipt::to_repo(const std::string &
       .state = state,
       .image_name = image_name.has_value() ? image_name.get_value() : "",
       .version = version,
+      .is_deleted = false,
       .items = repo_items,
   };
 }

@@ -13,6 +13,7 @@ struct category {
   std::string name;
   int color;
   int version = 0;
+  bool is_deleted = false;
 };
 
 }  // namespace models

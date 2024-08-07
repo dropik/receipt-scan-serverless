@@ -196,6 +196,21 @@ TEST_F(receipt_test, get_receipts_by_month) {
   assert_response(response, "200", "[]");
 }
 
+TEST_F(receipt_test, get_receipts_by_month_deleted) {
+  init_user();
+  create_receipt();
+  create_receipt_item(0);
+
+  auto repo = services.get<repository::t_client>();
+  auto receipts = repo->select<::models::receipt>("select * from receipts").all();
+  auto r = receipts->at(0);
+  r->is_deleted = true;
+  repo->update(*r);
+
+  auto response = (*api)(create_request("GET", ENDPOINT "/years/2024/months/8", ""));
+  assert_response(response, "200", "[]");
+}
+
 TEST_F(receipt_test, delete_receipt) {
   init_user();
   create_receipt();
@@ -206,10 +221,11 @@ TEST_F(receipt_test, delete_receipt) {
 
   auto repo = services.get<repository::t_client>();
   auto receipts = repo->select<::models::receipt>("select * from receipts").all();
-  ASSERT_EQ(receipts->size(), 0);
+  ASSERT_EQ(receipts->size(), 1);
+  ASSERT_EQ(receipts->at(0)->is_deleted, true);
 
   auto items = repo->select<::models::receipt_item>("select * from receipt_items").all();
-  ASSERT_EQ(items->size(), 0);
+  ASSERT_EQ(items->size(), 1);
 }
 
 TEST_F(receipt_test, delete_receipt_not_found) {
@@ -244,6 +260,21 @@ TEST_F(receipt_test, get_receipt_image_not_found) {
   create_receipt_item(0);
 
   auto response = (*api)(create_request("GET", ENDPOINT "/" TEST_RECEIPT "asdf/image", ""));
+  assert_response(response, "404", "");
+}
+
+TEST_F(receipt_test, get_receipt_image_deleted) {
+  init_user();
+  create_receipt();
+  create_receipt_item(0);
+
+  auto repo = services.get<repository::t_client>();
+  auto receipts = repo->select<::models::receipt>("select * from receipts").all();
+  auto r = receipts->at(0);
+  r->is_deleted = true;
+  repo->update(*r);
+
+  auto response = (*api)(create_request("GET", ENDPOINT "/" TEST_RECEIPT "/image", ""));
   assert_response(response, "404", "");
 }
 

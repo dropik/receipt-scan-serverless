@@ -488,3 +488,19 @@ TEST_F(scanner_test, should_sanitise_extra_space_in_category) {
   ASSERT_EQ(items->size(), 1);
   ASSERT_EQ(items->at(0)->category, "Altro");
 }
+
+TEST_F(scanner_test, should_handle_update_of_deleted_receipt) {
+  auto r = create_receipt();
+  auto repo = services.get<t_client>();
+  repo->execute("update receipts set is_deleted = 1").go();
+
+  auto handler = services.get<t_handler>();
+  auto request = create_request();
+  auto res = handler->operator()(request);
+
+  ASSERT_TRUE(res.is_success());
+
+  auto receipts = repo->select<receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  ASSERT_EQ(receipts->at(0)->version, r.version);   // version should remain the same
+}

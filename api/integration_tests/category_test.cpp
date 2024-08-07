@@ -122,6 +122,18 @@ TEST_F(category_test, get_categories) {
 ])");
 }
 
+TEST_F(category_test, get_categories_deleted) {
+  init_user();
+  auto c = create_category();
+  auto repo = services.get<repository::t_client>();
+  c.is_deleted = true;
+  repo->update<::models::category>(c);
+
+  // should not get categories
+  auto response = (*api)(create_request("GET", ENDPOINT, ""));
+  assert_response(response, "200", "[]");
+}
+
 TEST_F(category_test, delete_category) {
   init_user();
   create_category();
@@ -132,7 +144,8 @@ TEST_F(category_test, delete_category) {
 
   auto repo = services.get<repository::t_client>();
   auto categories = repo->select<::models::category>("select * from categories").all();
-  ASSERT_EQ(categories->size(), 0);
+  ASSERT_EQ(categories->size(), 1);
+  ASSERT_EQ(categories->at(0)->is_deleted, true);
 }
 
 TEST_F(category_test, delete_category_not_found) {

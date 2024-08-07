@@ -62,6 +62,11 @@ class handler {
             receipt.image_name);
 
         if (existing_receipt.has_value()) {
+          if (existing_receipt.get_value().is_deleted) {
+            lambda::log.info("Receipt is deleted. Skipping.");
+            continue;
+          }
+
           receipt.id = existing_receipt.get_value().id;
           for (auto &item : receipt.items) {
             item.receipt_id = receipt.id;

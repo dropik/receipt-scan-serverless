@@ -39,6 +39,9 @@ add_executable(${FUNCTION_NAME}
     src/responses/receipt_item.hpp
     src/responses/receipt.cpp
     src/responses/receipt_item.cpp
+    src/responses/change.hpp
+    src/responses/changes.hpp
+    src/services/changes_service.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

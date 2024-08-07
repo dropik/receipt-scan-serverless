@@ -16,7 +16,8 @@ class category_repository {
   explicit category_repository(TRepository repository) : m_repository(std::move(repository)) {}
 
   std::vector<models::category> get_all(const std::string &user_id) const {
-    auto res = m_repository->template select<models::category>("select * from categories where user_id = ?")
+    auto res = m_repository->template select<models::category>(
+            "select * from categories where user_id = ? and is_deleted = 0 order by name")
         .with_param(user_id)
         .all();
     std::vector<models::category> results;
@@ -32,24 +33,25 @@ class category_repository {
         .with_param(category.id)
         .first_or_default();
 
-    if (existing_category) {
-      m_repository->template update(category);
-    } else {
+    if (!existing_category) {
       m_repository->template create(category);
+    } else {
+      if (existing_category->is_deleted) {
+        throw concurrency_exception();
+      }
+      m_repository->template update(category);
     }
   }
 
   void drop(const models::guid &category_id) {
-    auto existing_category = m_repository->template select<models::category>(
-            "select * from categories where id = ?")
-        .with_param(category_id)
-        .first_or_default();
+    auto existing_category = m_repository->template get<models::category>(category_id);
 
     if (!existing_category) {
       throw entity_not_found_exception();
     }
 
-    m_repository->template drop<models::category>(*existing_category);
+    existing_category->is_deleted = true;
+    m_repository->template update(*existing_category);
   }
 
  private:

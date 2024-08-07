@@ -34,13 +34,16 @@ class receipt_repository {
     if (!receipt) {
       return {};
     }
+    if (receipt->is_deleted) {
+      return {};
+    }
     return assemble_model(receipt);
   }
 
   std::vector<models::receipt> get_by_month(const models::guid &user_id, int year, int month) {
     auto receipts = m_repository->template select<models::receipt>(
             "select * from receipts "
-            "where user_id = ? and year(date) = ? and month(date) = ? "
+            "where user_id = ? and year(date) = ? and month(date) = ? and is_deleted = 0 "
             "order by date desc")
         .with_param(user_id)
         .with_param(year)
@@ -50,7 +53,7 @@ class receipt_repository {
     auto receipt_items = m_repository->template select<models::receipt_item>(
             "select ri.* from receipt_items ri "
             "join receipts r on ri.receipt_id = r.id "
-            "where r.user_id = ? and year(r.date) = ? and month(r.date) = ?")
+            "where r.user_id = ? and year(r.date) = ? and month(r.date) = ? and r.is_deleted = 0")
         .with_param(user_id)
         .with_param(year)
         .with_param(month)
@@ -77,6 +80,9 @@ class receipt_repository {
     if (!existing_receipt) {
       m_repository->template create<models::receipt>(receipt);
     } else {
+      if (existing_receipt->is_deleted) {
+        throw concurrency_exception();
+      }
       m_repository->template update<models::receipt>(receipt);
     }
 
@@ -110,7 +116,13 @@ class receipt_repository {
   }
 
   void drop(const models::receipt &receipt) {
-    m_repository->drop(receipt);
+    auto existing_receipt = m_repository->template get<models::receipt>(receipt.id);
+    if (!existing_receipt) {
+      return;
+    }
+    existing_receipt->is_deleted = true;
+    existing_receipt->version = receipt.version;
+    m_repository->template update<models::receipt>(*existing_receipt);
   }
 
  private:

@@ -18,6 +18,7 @@ struct receipt {
   std::string state;
   std::string image_name;
   int version = 0;
+  bool is_deleted = false;
 
   std::vector<receipt_item> items;
 
