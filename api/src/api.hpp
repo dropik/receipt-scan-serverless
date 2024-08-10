@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "identity.hpp"
+#include "http_request.hpp"
 #include "model_types.hpp"
 
 #include "services/user_service.hpp"
@@ -47,6 +48,12 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
   // Version
   api->use([](const auto &request, const auto &next) {
     lambda::log.info("App Version: %s", APP_VERSION);
+    return next(request);
+  });
+
+  api->use([&c](const auto &request, const auto &next) {
+    auto r = c.template get<http_request>();
+    r->current = request;
     return next(request);
   });
 
@@ -106,6 +113,10 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       });
       budgets.put<parameters::put_budget>("/")([&c](const auto &request) {
         return c.template get<services::t_budget_service>()->store_budget(request);
+      });
+      budgets.get("/changes")([&c]() {
+        auto request = c.template get<http_request>()->current;
+        return c.template get<services::t_budget_service>()->get_budget_changes(request.query_string_parameters["from"]);
       });
     });
 

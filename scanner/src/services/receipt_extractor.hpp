@@ -9,6 +9,7 @@
 #include <aws/textract/TextractClient.h>
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
 #include "repository/models/receipt.hpp"
+#include "lambda/utils.hpp"
 
 namespace scanner {
 namespace services {
@@ -268,7 +269,7 @@ class receipt_extractor : t_receipt_extractor {
         } else {
           lambda::log.info("Unable to parse found receipt date string %s.",
                            value.c_str());
-          receipt.date = utils::today();
+          receipt.date = lambda::utils::today();
         }
       } else if ((field_type == receipt_amount || field_type == receipt_total) &&
           best_total_confidence < confidence) {
@@ -393,7 +394,7 @@ class receipt_extractor : t_receipt_extractor {
     return receipt{
         .id = utils::gen_uuid(),
         .user_id = user_id,
-        .date = utils::today(),
+        .date = lambda::utils::today(),
         .total_amount = 0,
         .currency = "EUR",
         .store_name = "-",

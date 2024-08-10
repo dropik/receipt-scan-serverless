@@ -3,6 +3,7 @@
 //
 
 #include "base_api_integration_test.hpp"
+#include "lambda/utils.hpp"
 
 #define ENDPOINT "/v1/budgets"
 
@@ -110,6 +111,56 @@ TEST_F(budget_test, get_budgets) {
     "version":0
   }
 ])");
+}
+
+TEST_F(budget_test, get_changes_should_return_empty_list) {
+  init_user();
+
+  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  assert_response(response, "200", R"([])");
+}
+
+TEST_F(budget_test, get_changes_should_return_budgets) {
+  init_user();
+  create_budget();
+
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
+  assert_response(response, "200", R"([
+{
+  "action": "create",
+  "body": {
+    "amount":1500.0,
+    "id": ")" TEST_BUDGET R"(",
+    "month": "2024-07-01",
+    "version":0
+  },
+  "id": ")" TEST_BUDGET R"("
+}])");
+}
+
+TEST_F(budget_test, get_changes_should_return_update) {
+  init_user();
+  auto b = create_budget();
+  auto repo = services.get<repository::t_client>();
+  b.amount = 1200.0;
+  repo->update(b);
+  b.version++;
+  repo->update(b);
+
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
+  assert_response(response, "200", R"([
+{
+  "action": "update",
+  "body": {
+    "amount":1200.0,
+    "id": ")" TEST_BUDGET R"(",
+    "month": "2024-07-01",
+    "version":2
+  },
+  "id": ")" TEST_BUDGET R"("
+}])");
 }
 
 }

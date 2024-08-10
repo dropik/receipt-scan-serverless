@@ -10,6 +10,7 @@
 
 #include "api.hpp"
 #include "factories.hpp"
+#include "http_request.hpp"
 
 using namespace Aws;
 using namespace aws::lambda_runtime;
@@ -44,6 +45,7 @@ int main(int argc, char** argv) {
           transient<repository::t_receipt_repository, repository::receipt_repository<>>,
 
           scoped<identity>,
+          scoped<http_request>,
 
           transient<t_user_service, user_service<>>,
           transient<t_device_service, device_service<>>,

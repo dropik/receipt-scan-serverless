@@ -10,6 +10,14 @@
 namespace api {
 namespace responses {
 
+namespace change_action {
+
+const std::string create = "create";
+const std::string update = "update";
+const std::string remove = "remove";
+
+}
+
 template<typename T>
 struct change {
   std::string action;

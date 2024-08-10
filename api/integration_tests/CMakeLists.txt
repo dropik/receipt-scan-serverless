@@ -48,6 +48,7 @@ add_executable(api_integration_tests
     ../src/responses/change.hpp
     ../src/responses/changes.hpp
     ../src/services/changes_service.hpp
+    ../src/http_request.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

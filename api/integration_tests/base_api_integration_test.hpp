@@ -23,6 +23,7 @@
 
 #include "mocks/mock_s3_client.hpp"
 #include "../src/services/budget_service.hpp"
+#include "../src/http_request.hpp"
 
 #define USER_ID "d394a832-4011-7023-c519-afe3adaf0233"
 #define TEST_BUDGET "d394a832-4011-7023-c519-afe3adaf0233"
@@ -47,6 +48,7 @@ class base_api_integration_test : public repository_integration_test {
       di::transient<repository::t_receipt_repository, repository::receipt_repository<>>,
 
       di::scoped<identity>,
+      di::scoped<http_request>,
 
       di::transient<services::t_user_service, services::user_service<>>,
       di::transient<services::t_device_service, services::device_service<>>,

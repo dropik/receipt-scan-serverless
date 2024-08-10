@@ -255,7 +255,7 @@ TEST_F(scanner_test, should_continue_if_textract_fails) {
   auto receipt = receipts->at(0);
   ASSERT_EQ(receipt->version, 0);
   ASSERT_EQ(receipt->state, receipt_failed);
-  ASSERT_EQ(receipt->date, scanner::utils::today());
+  ASSERT_EQ(receipt->date, lambda::utils::today());
   ASSERT_EQ(receipt->store_name, "-");
 }
 
@@ -342,7 +342,7 @@ TEST_F(scanner_test, should_handle_incorrect_date) {
   auto repo = services.get<t_client>();
   auto receipts = repo->select<receipt>("select * from receipts").all();
   ASSERT_EQ(receipts->size(), 1);
-  ASSERT_EQ(receipts->at(0)->date, scanner::utils::today());
+  ASSERT_EQ(receipts->at(0)->date, lambda::utils::today());
 }
 
 TEST_F(scanner_test, should_set_default_quantity) {

@@ -8,6 +8,7 @@
 #include "../identity.hpp"
 #include "../responses/budget.hpp"
 #include "../parameters/put_budget.hpp"
+#include "../responses/change.hpp"
 namespace api {
 namespace services {
 
@@ -45,6 +46,27 @@ class budget_service {
     } else {
       m_repository->template create<repository::models::budget>(new_budget);
     }
+  }
+
+  std::vector<responses::change<responses::budget>> get_budget_changes(const std::string &since) {
+    auto budgets = m_repository->template select<repository::models::budget>(
+            "select * from budgets where modified_timestamp > ?")
+        .with_param(since)
+        .all();
+
+    std::vector<responses::change<responses::budget>> result;
+    result.reserve(budgets->size());
+    for (const auto &b : (*budgets)) {
+      result.push_back(responses::change<responses::budget>{
+          .action = b->version == 0
+                    ? responses::change_action::create
+                    : responses::change_action::update,
+          .id = b->id,
+          .body = responses::budget::from_repo(*b),
+      });
+    }
+
+    return result;
   }
 
  private:

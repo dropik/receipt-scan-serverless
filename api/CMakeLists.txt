@@ -42,6 +42,7 @@ add_executable(${FUNCTION_NAME}
     src/responses/change.hpp
     src/responses/changes.hpp
     src/services/changes_service.hpp
+    src/http_request.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

@@ -86,6 +86,25 @@ repository::models::receipt_item base_api_integration_test::create_receipt_item(
 aws::lambda_runtime::invocation_request create_request(const std::string &method,
                                                        const std::string &path,
                                                        const std::string &body) {
+  std::map<std::string, std::string> query_string_parameters;
+  auto endpoint = path;
+  if (path.find_first_of('?') != std::string::npos) {
+    auto parts = string::split(path, "?");
+    endpoint = parts[0];
+    auto query_string = parts[1];
+    auto query_parts = string::split(query_string, "&");
+    for (const auto &part : query_parts) {
+      auto kv = string::split(part, "=");
+      query_string_parameters[kv[0]] = kv[1];
+    }
+  }
+  std::vector<std::string> query_string_params_pairs;
+  query_string_params_pairs.reserve(query_string_parameters.size());
+  for (const auto &pair : query_string_parameters) {
+    query_string_params_pairs.push_back(string::format(R"("%s": "%s")", pair.first.c_str(), pair.second.c_str()));
+  }
+  auto query_string_params_str = string::join(", ", query_string_params_pairs);
+
   return {
       .payload = string::format(R"(
 {
@@ -96,6 +115,9 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
   "isBase64Encoded": false,
   "pathParameters": {
     "proxy": "%s"
+  },
+  "queryStringParameters": {
+    %s
   },
   "headers": {
     "Accept": "application/json",
@@ -136,7 +158,15 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
     "protocol": "HTTP/1.1"
   }
 }
-)", make_body(body).c_str(), path.c_str(), method.c_str(), path.c_str(), USER_ID, path.c_str(), method.c_str()),
+)",
+                                make_body(body).c_str(),
+                                endpoint.c_str(),
+                                method.c_str(),
+                                endpoint.c_str(),
+                                query_string_params_str.c_str(),
+                                USER_ID,
+                                endpoint.c_str(),
+                                method.c_str()),
   };
 }
 
