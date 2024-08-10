@@ -116,7 +116,7 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       });
       budgets.get("/changes")([&c]() {
         auto request = c.template get<http_request>()->current;
-        return c.template get<services::t_budget_service>()->get_budget_changes(request.query_string_parameters["from"]);
+        return c.template get<services::t_budget_service>()->get_changes(request.query_string_parameters["from"]);
       });
     });
 
@@ -159,6 +159,10 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       });
       receipts.del<guid_t>()([&c](const guid_t &receipt_id) {
         return c.template get<services::t_receipt_service>()->delete_receipt(receipt_id);
+      });
+      receipts.get("/changes")([&c]() {
+        auto request = c.template get<http_request>()->current;
+        return c.template get<services::t_receipt_service>()->get_changes(request.query_string_parameters["from"]);
       });
     });
   });

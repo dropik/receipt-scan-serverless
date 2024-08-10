@@ -4,6 +4,7 @@
 
 #include "base_api_integration_test.hpp"
 #include "repository/models/category.hpp"
+#include "lambda/utils.hpp"
 
 #define ENDPOINT "/v1/categories"
 
@@ -159,7 +160,8 @@ TEST_F(category_test, delete_category_not_found) {
 TEST_F(category_test, get_changes_should_return_empty_list) {
   init_user();
 
-  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
   assert_response(response, "200", R"([])");
 }
 
@@ -167,7 +169,8 @@ TEST_F(category_test, get_changes_should_return_categories) {
   init_user();
   create_category();
 
-  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
   assert_response(response, "200", R"([
 {
   "action": "create",
@@ -190,7 +193,8 @@ TEST_F(category_test, get_changes_should_return_update) {
   c.version++;
   repo->update(c);
 
-  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
   assert_response(response, "200", R"([
 {
   "action": "update",
@@ -214,7 +218,8 @@ TEST_F(category_test, get_changes_should_return_delete) {
   c.is_deleted = true;
   repo->update(c);
 
-  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
   assert_response(response, "200", R"([
 {
   "action": "delete",

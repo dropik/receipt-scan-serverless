@@ -13,6 +13,7 @@
 #include "../parameters/put_receipt.hpp"
 
 #include "file_service.hpp"
+#include "../responses/change.hpp"
 
 namespace api {
 namespace services {
@@ -61,6 +62,26 @@ class receipt_service {
     if (!receipt.image_name.empty()) {
       m_file_service->delete_receipt_image(receipt.image_name);
     }
+  }
+
+  std::vector<responses::change<responses::receipt>> get_changes(const std::string &since) {
+    auto results = m_repository->get_changed(m_identity->user_id, since);
+    std::vector<responses::change<responses::receipt>> response;
+    response.reserve(results.size());
+    for (const auto &item : results) {
+      response.push_back(responses::change<responses::receipt>{
+          .action = item.is_deleted
+                    ? responses::change_action::del
+                    : (item.version == 0
+                       ? responses::change_action::create
+                       : responses::change_action::update),
+          .id = item.id,
+          .body = item.is_deleted
+                  ? lambda::nullable<responses::receipt>{}
+                  : responses::receipt::from_repo(item),
+      });
+    }
+    return response;
   }
 
  private:

@@ -48,9 +48,10 @@ class budget_service {
     }
   }
 
-  std::vector<responses::change<responses::budget>> get_budget_changes(const std::string &since) {
+  std::vector<responses::change<responses::budget>> get_changes(const std::string &since) {
     auto budgets = m_repository->template select<repository::models::budget>(
-            "select * from budgets where modified_timestamp > ?")
+            "select * from budgets where user_id = ? and modified_timestamp > ?")
+        .with_param(m_identity->user_id)
         .with_param(since)
         .all();
 

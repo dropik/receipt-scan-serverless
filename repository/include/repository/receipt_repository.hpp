@@ -59,17 +59,7 @@ class receipt_repository {
         .with_param(month)
         .all();
 
-    std::vector<models::receipt> output;
-    output.reserve(receipts->size());
-    for (const auto &receipt : *receipts) {
-      output.push_back(*receipt);
-      for (const auto &item : *receipt_items) {
-        if (item->receipt_id != receipt->id) continue;
-        output.back().items.push_back(*item);
-      }
-    }
-
-    return output;
+    return assemble_models(receipts, receipt_items);
   }
 
   void store(const models::receipt &receipt) {
@@ -125,10 +115,28 @@ class receipt_repository {
     m_repository->template update<models::receipt>(*existing_receipt);
   }
 
+  std::vector<models::receipt> get_changed(const models::guid &user_id, const std::string &since) {
+    auto receipts = m_repository->template select<models::receipt>(
+            "select * from receipts where user_id = ? and modified_timestamp > ?")
+        .with_param(user_id)
+        .with_param(since)
+        .all();
+
+    auto receipt_items = m_repository->template select<models::receipt_item>(
+            "select ri.* from receipt_items ri "
+            "join receipts r on ri.receipt_id = r.id "
+            "where r.user_id = ? and r.modified_timestamp > ?")
+        .with_param(user_id)
+        .with_param(since)
+        .all();
+
+    return assemble_models(receipts, receipt_items);
+  }
+
  private:
   TRepository m_repository;
 
-  models::receipt assemble_model(const std::shared_ptr<models::receipt>& receipt) {
+  models::receipt assemble_model(const std::shared_ptr<models::receipt> &receipt) {
     auto output = *receipt;
 
     auto items = m_repository->template select<models::receipt_item>(
@@ -138,6 +146,22 @@ class receipt_repository {
 
     for (const auto &item : *items) {
       output.items.push_back(*item);
+    }
+
+    return output;
+  }
+
+  std::vector<models::receipt> assemble_models(
+      const std::shared_ptr<std::vector<std::shared_ptr<models::receipt>>> &receipts,
+      const std::shared_ptr<std::vector<std::shared_ptr<models::receipt_item>>> &receipt_items) {
+    std::vector<models::receipt> output;
+    output.reserve(receipts->size());
+    for (const auto &receipt : *receipts) {
+      output.push_back(*receipt);
+      for (const auto &item : *receipt_items) {
+        if (item->receipt_id != receipt->id) continue;
+        output.back().items.push_back(*item);
+      }
     }
 
     return output;

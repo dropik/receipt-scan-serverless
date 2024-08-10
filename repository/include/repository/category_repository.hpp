@@ -54,9 +54,10 @@ class category_repository {
     m_repository->template update(*existing_category);
   }
 
-  std::vector<models::category> get_changed(const std::string &since) {
+  std::vector<models::category> get_changed(const models::guid &user_id, const std::string &since) {
     auto categories = m_repository->template select<models::category>(
-            "select * from categories where modified_timestamp > ?")
+            "select * from categories where user_id = ? and modified_timestamp > ?")
+        .with_param(user_id)
         .with_param(since)
         .all();
 

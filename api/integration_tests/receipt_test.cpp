@@ -4,6 +4,7 @@
 
 #include "base_api_integration_test.hpp"
 #include "repository/models/receipt.hpp"
+#include "lambda/utils.hpp"
 
 #define ENDPOINT "/v1/receipts"
 
@@ -298,6 +299,106 @@ TEST_F(receipt_test, post_receipt_image_not_found) {
 
   auto response = (*api)(create_request("POST", ENDPOINT "/" TEST_RECEIPT "asdf/image", ""));
   assert_response(response, "404", "");
+}
+
+TEST_F(receipt_test, get_changes_should_return_empty_list) {
+  init_user();
+
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
+  assert_response(response, "200", R"([])");
+}
+
+TEST_F(receipt_test, get_changes_should_return_receipts) {
+  init_user();
+  auto r = create_receipt();
+  auto ri = create_receipt_item(0);
+
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
+  assert_response(response, "200", lambda::string::format(R"([
+{
+  "action": "create",
+  "body": {
+    "categories":["supermarket"],
+    "currency":"EUR",
+    "date":"2024-08-04",
+    "id": ")" TEST_RECEIPT R"(",
+    "imageName":"image",
+    "items":[
+      {
+        "amount":100,
+        "category":"supermarket",
+        "description":"item",
+        "id": "%s"
+      }
+    ],
+    "state":"done",
+    "storeName":"store",
+    "totalAmount":100,
+    "version":0
+  },
+  "id": ")" TEST_RECEIPT R"("
+}])", ri.id.c_str()));
+}
+
+TEST_F(receipt_test, get_changes_should_return_update) {
+  init_user();
+  auto r = create_receipt();
+  auto ri = create_receipt_item(0);
+  auto repo = services.get<repository::t_client>();
+  r.total_amount = 120;
+  repo->update(r);
+  r.version++;
+  repo->update(r);
+
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
+  assert_response(response, "200",  lambda::string::format(R"([
+{
+  "action": "update",
+  "body": {
+    "categories":["supermarket"],
+    "currency":"EUR",
+    "date":"2024-08-04",
+    "id": ")" TEST_RECEIPT R"(",
+    "imageName":"image",
+    "items":[
+      {
+        "amount":100,
+        "category":"supermarket",
+        "description":"item",
+        "id": "%s"
+      }
+    ],
+    "state":"done",
+    "storeName":"store",
+    "totalAmount":120,
+    "version":2
+  },
+  "id": ")" TEST_RECEIPT R"("
+}])", ri.id.c_str()));
+}
+
+TEST_F(receipt_test, get_changes_should_return_delete) {
+  init_user();
+  auto r = create_receipt();
+  create_receipt_item(0);
+  auto repo = services.get<repository::t_client>();
+  r.total_amount = 120;
+  repo->update(r);
+  r.version++;
+  r.is_deleted = true;
+  repo->update(r);
+
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
+  assert_response(response, "200", R"([
+{
+  "action": "delete",
+  "body": null,
+  "id": ")" TEST_RECEIPT R"("
+}])");
 }
 
 }

@@ -46,7 +46,7 @@ class category_service {
   }
 
   std::vector<responses::change<responses::category>> get_changes(const std::string &since) {
-    auto categories = m_repository->get_changed(since);
+    auto categories = m_repository->get_changed(m_identity->user_id, since);
 
     std::vector<responses::change<responses::category>> response;
     for (auto c : categories) {

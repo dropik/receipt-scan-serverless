@@ -116,7 +116,8 @@ TEST_F(budget_test, get_budgets) {
 TEST_F(budget_test, get_changes_should_return_empty_list) {
   init_user();
 
-  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
   assert_response(response, "200", R"([])");
 }
 
