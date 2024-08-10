@@ -266,3 +266,7 @@ add column is_deleted boolean not null default false;
 # 2024-08-07: add timestamp to budgets
 alter table budgets
 add column modified_timestamp timestamp not null default current_timestamp on update current_timestamp;
+
+# 2024-08-10: drop entity_events and user_devices tables
+drop table entity_events;
+drop table user_devices;

@@ -23,7 +23,6 @@ add_executable(${FUNCTION_NAME}
     src/s3_settings.hpp
     src/responses/user.hpp
     src/responses/user.cpp
-    src/services/device_service.hpp
     src/parameters/put_device.hpp
     src/services/budget_service.hpp
     src/parameters/put_budget.hpp
@@ -40,7 +39,6 @@ add_executable(${FUNCTION_NAME}
     src/responses/receipt.cpp
     src/responses/receipt_item.cpp
     src/responses/change.hpp
-    src/responses/changes.hpp
     src/services/changes_service.hpp
     src/http_request.hpp
 )

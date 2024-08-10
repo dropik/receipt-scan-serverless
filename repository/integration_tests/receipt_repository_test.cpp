@@ -39,13 +39,6 @@ static receipt create_receipt() {
   return r;
 }
 
-static user_device create_user_device() {
-  user_device ud;
-  ud.id = "12345";
-  ud.user_id = DEFAULT_USER_ID;
-  return ud;
-}
-
 TEST_F(receipt_repository_test, should_create_receipt) {
   auto receipt_repository = services.get<repository::t_receipt_repository>();
   auto r = create_receipt();

@@ -15,7 +15,6 @@
 #include "property_configuration.hpp"
 #include "table_configuration.hpp"
 #include "version_configuration.hpp"
-#include "tracking_configuration.hpp"
 
 #define HAS_TABLE(table_name) has_table(table_name)
 
@@ -58,17 +57,6 @@
 #define HAS_VERSION() has_version([](const entity_t& entity) -> const int & { return entity.version; }, [](entity_t& entity, const int &v) { entity.version = v; }).with_column_name("version")
 
 #define WITH_COLUMN(column_name) .with_column_name(column_name)
-
-#define HAS_TRACKING(id_field, user_id_field) \
-  has_tracking(                               \
-      [](const entity_t& entity) -> const models::guid& { \
-        return entity.id_field;               \
-      },                                      \
-      [](const entity_t& entity) -> const models::guid& { \
-        return entity.user_id_field;          \
-      })
-
-#define WITH_ENTITY_NAME(entity_name) .with_entity_name(entity_name)
 
 namespace repository {
 namespace configurations {
@@ -266,29 +254,6 @@ class base_repository_configuration {
     return m_table->get_name();
   }
 
-  bool has_tracking() const { return m_tracking != nullptr; }
-
-  void track_creation(const T &entity, const std::shared_ptr<sql::Connection> &conn) {
-    if (!m_tracking) {
-      throw std::runtime_error("Tracking is not configured!");
-    }
-    m_tracking->track_creation(entity, conn);
-  }
-
-  void track_update(const T &entity, const std::shared_ptr<sql::Connection> &conn) {
-    if (!m_tracking) {
-      throw std::runtime_error("Tracking is not configured!");
-    }
-    m_tracking->track_update(entity, conn);
-  }
-
-  void track_delete(const T &entity, const std::shared_ptr<sql::Connection> &conn) {
-    if (!m_tracking) {
-      throw std::runtime_error("Tracking is not configured!");
-    }
-    m_tracking->track_delete(entity, conn);
-  }
-
  protected:
   typedef T entity_t;
 
@@ -328,13 +293,6 @@ class base_repository_configuration {
     return *m_version;
   }
 
-  tracking_configuration<T> &has_tracking(
-      const typename tracking_configuration<T>::id_selector_t &id_selector,
-      const typename tracking_configuration<T>::id_selector_t &user_id_selector) {
-    m_tracking = std::make_shared<tracking_configuration<T>>(id_selector, user_id_selector);
-    return *m_tracking;
-  }
-
  private:
   std::shared_ptr<sql::PreparedStatement> m_insert_statement;
   std::shared_ptr<sql::PreparedStatement> m_select_statement;
@@ -345,7 +303,6 @@ class base_repository_configuration {
   std::shared_ptr<id_configuration<T>> m_id;
   std::vector<std::shared_ptr<base_property_configuration<T>>> m_properties;
   std::shared_ptr<version_configuration<T>> m_version;
-  std::shared_ptr<tracking_configuration<T>> m_tracking;
 };
 
 }  // namespace common

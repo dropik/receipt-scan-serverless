@@ -59,10 +59,6 @@ class client {
         throw std::runtime_error("Unable to create prepared statement!");
       }
       stmt->executeUpdate();
-
-      if (configuration.has_tracking()) {
-        configuration.track_creation(entity, get_connection());
-      }
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while creating entity in the database: %s",
                         e.what());
@@ -104,10 +100,6 @@ class client {
       if (result == 0) {
         throw concurrency_exception();
       }
-
-      if (configuration.has_tracking()) {
-        configuration.track_update(entity, get_connection());
-      }
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while updating entity in the database: %s",
                         e.what());
@@ -128,10 +120,6 @@ class client {
       auto result = stmt->executeUpdate();
       if (result == 0) {
         throw concurrency_exception();
-      }
-
-      if (configuration.has_tracking()) {
-        configuration.track_delete(entity, get_connection());
       }
     } catch (std::exception &e) {
       lambda::log.error("Error occurred while deleting entity in the database: %s",

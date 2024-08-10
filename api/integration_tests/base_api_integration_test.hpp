@@ -19,7 +19,6 @@
 #include "../src/services/file_service.hpp"
 #include "../src/services/receipt_service.hpp"
 #include "../src/services/category_service.hpp"
-#include "../src/services/device_service.hpp"
 
 #include "mocks/mock_s3_client.hpp"
 #include "../src/services/budget_service.hpp"
@@ -51,7 +50,6 @@ class base_api_integration_test : public repository_integration_test {
       di::scoped<http_request>,
 
       di::transient<services::t_user_service, services::user_service<>>,
-      di::transient<services::t_device_service, services::device_service<>>,
       di::transient<services::t_budget_service, services::budget_service<>>,
       di::transient<services::t_category_service, services::category_service<>>,
       di::transient<services::t_file_service, services::file_service<>>,

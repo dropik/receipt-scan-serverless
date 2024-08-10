@@ -24,7 +24,6 @@ class repository_configuration<models::budget>
     HAS_DOUBLE(amount) WITH_COLUMN("amount");
 
     HAS_VERSION();
-    HAS_TRACKING(id, user_id) WITH_ENTITY_NAME("budget");
   }
 };
 

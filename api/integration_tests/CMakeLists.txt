@@ -24,8 +24,6 @@ add_executable(api_integration_tests
     user_test.cpp
     ../src/responses/user.hpp
     ../src/responses/user.cpp
-    devices_test.cpp
-    ../src/services/device_service.hpp
     ../src/parameters/put_device.hpp
     budget_test.cpp
     ../src/services/budget_service.hpp
@@ -44,9 +42,7 @@ add_executable(api_integration_tests
     ../src/responses/receipt_item.hpp
     ../src/responses/receipt.cpp
     ../src/responses/receipt_item.cpp
-    changes_test.cpp
     ../src/responses/change.hpp
-    ../src/responses/changes.hpp
     ../src/services/changes_service.hpp
     ../src/http_request.hpp
 )

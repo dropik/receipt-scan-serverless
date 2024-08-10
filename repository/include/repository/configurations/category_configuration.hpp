@@ -21,7 +21,6 @@ class repository_configuration<models::category>
     HAS_BOOL(is_deleted) WITH_COLUMN("is_deleted");
 
     HAS_VERSION();
-    HAS_TRACKING(id, user_id) WITH_ENTITY_NAME("category");
   }
 };
 

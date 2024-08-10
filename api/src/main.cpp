@@ -48,7 +48,6 @@ int main(int argc, char** argv) {
           scoped<http_request>,
 
           transient<t_user_service, user_service<>>,
-          transient<t_device_service, device_service<>>,
           transient<t_budget_service, budget_service<>>,
           transient<t_category_service, category_service<>>,
           transient<t_file_service, file_service<>>,

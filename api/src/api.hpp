@@ -16,7 +16,6 @@
 #include "services/file_service.hpp"
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
-#include "services/device_service.hpp"
 #include "services/budget_service.hpp"
 
 namespace api {
@@ -101,10 +100,6 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       user.get("/")([&c]() {
         return c.template get<services::t_user_service>()->get_user();
       });
-    });
-
-    v1.put<parameters::put_device>("/devices")([&c](const auto &request) {
-      return c.template get<services::t_device_service>()->register_device(request);
     });
 
     v1.any("/budgets")([&c](api_resource &budgets) {

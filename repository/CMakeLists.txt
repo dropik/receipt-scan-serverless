@@ -31,11 +31,6 @@ add_library(repository STATIC
     include/repository/configurations/common/version_configuration.hpp
     include/repository/models/budget.hpp
     include/repository/configurations/budget_configuration.hpp
-    include/repository/models/user_device.hpp
-    include/repository/configurations/user_device_configuration.hpp
-    include/repository/models/entity_event.hpp
-    include/repository/configurations/entity_event_configuration.hpp
-    include/repository/configurations/common/tracking_configuration.hpp
     include/repository/exceptions.hpp
 )
 

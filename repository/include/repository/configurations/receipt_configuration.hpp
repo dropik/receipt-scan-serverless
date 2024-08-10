@@ -28,7 +28,6 @@ class repository_configuration<models::receipt>
     HAS_BOOL(is_deleted) WITH_COLUMN("is_deleted");
 
     HAS_VERSION();
-    HAS_TRACKING(id, user_id) WITH_ENTITY_NAME("receipt");
   }
 };
 
