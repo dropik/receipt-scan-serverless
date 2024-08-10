@@ -130,6 +130,10 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       categories.del<guid_t>()([&c](const guid_t &category_id) {
         return c.template get<services::t_category_service>()->delete_category(category_id);
       });
+      categories.get("/changes")([&c]() {
+        auto request = c.template get<http_request>()->current;
+        return c.template get<services::t_category_service>()->get_changes(request.query_string_parameters["from"]);
+      });
     });
 
     v1.any("/receipts")([&c](api_resource &receipts) {

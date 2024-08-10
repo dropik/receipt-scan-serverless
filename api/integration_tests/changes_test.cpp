@@ -25,54 +25,6 @@ static aws::lambda_runtime::invocation_request create_request(const std::string 
   return create_request("POST", "/v1/changes", R"({"device_id":")" + device_id + R"("})");
 }
 
-TEST_F(changes_test, should_aggregate_delete) {
-  init_user();
-  create_device();
-  auto b = create_budget();
-  auto repo = services.get<repository::t_client>();
-  b.amount = 1200.0;
-  repo->update(b);
-  b.version++;
-  repo->update(b);
-  repo->drop(b);
-
-  auto response = (*api)(create_request());
-  assert_response(response, "200", R"({"budgets":[
-{
-  "action": "delete",
-  "body": null,
-  "id": ")" TEST_BUDGET R"("
-}], "categories": [], "receipts": []})");
-
-  // events should be cleared
-  auto entity_events = repo->select<repository::models::entity_event>("select * from entity_events").all();
-  ASSERT_EQ(entity_events->size(), 0);
-}
-
-TEST_F(changes_test, should_return_categories_list) {
-  init_user();
-  create_device();
-  create_category();
-
-  auto response = (*api)(create_request());
-  assert_response(response, "200", R"({"budgets":[], "categories": [
-{
-  "action": "create",
-  "body": {
-    "color":29,
-    "id": ")" TEST_CATEGORY R"(",
-    "name": "category",
-    "version":0
-  },
-  "id": ")" TEST_CATEGORY R"("
-}], "receipts": []})");
-
-  // events should be cleared
-  auto repo = services.get<repository::t_client>();
-  auto entity_events = repo->select<repository::models::entity_event>("select * from entity_events").all();
-  ASSERT_EQ(entity_events->size(), 0);
-}
-
 TEST_F(changes_test, should_return_receipts_list) {
   init_user();
   create_device();

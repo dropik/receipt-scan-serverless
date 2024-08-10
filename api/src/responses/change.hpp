@@ -2,6 +2,8 @@
 // Created by Daniil Ryzhkov on 07/08/2024.
 //
 
+#pragma once
+
 #include <string>
 #include <lambda/nullable.hpp>
 #include <lambda/json.hpp>
@@ -12,9 +14,9 @@ namespace responses {
 
 namespace change_action {
 
-const std::string create = "create";
-const std::string update = "update";
-const std::string remove = "remove";
+static constexpr auto create = "create";
+static constexpr auto update = "update";
+static constexpr auto del = "delete";
 
 }
 

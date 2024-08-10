@@ -156,5 +156,72 @@ TEST_F(category_test, delete_category_not_found) {
   assert_response(response, "404", "");
 }
 
+TEST_F(category_test, get_changes_should_return_empty_list) {
+  init_user();
+
+  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  assert_response(response, "200", R"([])");
+}
+
+TEST_F(category_test, get_changes_should_return_categories) {
+  init_user();
+  create_category();
+
+  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  assert_response(response, "200", R"([
+{
+  "action": "create",
+  "body": {
+    "color":29,
+    "id": ")" TEST_CATEGORY R"(",
+    "name": "category",
+    "version":0
+  },
+  "id": ")" TEST_CATEGORY R"("
+}])");
+}
+
+TEST_F(category_test, get_changes_should_return_update) {
+  init_user();
+  auto c = create_category();
+  auto repo = services.get<repository::t_client>();
+  c.color = 30;
+  repo->update(c);
+  c.version++;
+  repo->update(c);
+
+  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  assert_response(response, "200", R"([
+{
+  "action": "update",
+  "body": {
+    "color":30,
+    "id": ")" TEST_CATEGORY R"(",
+    "name": "category",
+    "version":2
+  },
+  "id": ")" TEST_CATEGORY R"("
+}])");
+}
+
+TEST_F(category_test, get_changes_should_return_delete) {
+  init_user();
+  auto c = create_category();
+  auto repo = services.get<repository::t_client>();
+  c.color = 30;
+  repo->update(c);
+  c.version++;
+  c.is_deleted = true;
+  repo->update(c);
+
+  auto response = (*api)(create_request("GET", ENDPOINT "/changes?from=2024-08-04T00:00:00Z", ""));
+  assert_response(response, "200", R"([
+{
+  "action": "delete",
+  "body": null,
+  "id": ")" TEST_CATEGORY R"("
+}])");
+}
+
 }
 }

@@ -54,6 +54,21 @@ class category_repository {
     m_repository->template update(*existing_category);
   }
 
+  std::vector<models::category> get_changed(const std::string &since) {
+    auto categories = m_repository->template select<models::category>(
+            "select * from categories where modified_timestamp > ?")
+        .with_param(since)
+        .all();
+
+    std::vector<models::category> result;
+    result.reserve(categories->size());
+    for (const auto &c : *categories) {
+      result.push_back(*c);
+    }
+
+    return result;
+  }
+
  private:
   TRepository m_repository;
 
