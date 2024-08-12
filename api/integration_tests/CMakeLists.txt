@@ -1,6 +1,3 @@
-find_package(ZLIB REQUIRED)
-find_package(AWSSDK COMPONENTS core ssm)
-
 add_executable(api_integration_tests
     ../src/responses/category.hpp
     ../src/responses/file.hpp
@@ -61,7 +58,9 @@ target_link_libraries(api_integration_tests
     repository
     lambda
     rest
-    ${AWSSDK_LINK_LIBRARIES}
+    aws-cpp-sdk-core
+    aws-cpp-sdk-ssm
+    aws-cpp-sdk-s3
     gtest
     integration_tests_common
 )

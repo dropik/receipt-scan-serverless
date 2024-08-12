@@ -1,6 +1,3 @@
-find_package(ZLIB REQUIRED)
-find_package(AWSSDK COMPONENTS core)
-
 add_executable(rest_tests
     api_root_test.cpp
 )
@@ -12,9 +9,6 @@ target_include_directories(rest_tests PUBLIC
 
 target_link_libraries(rest_tests
     rest
-    lambda
-    ${AWSSDK_LINK_LIBRARIES}
-    aws-lambda-cpp-common
     gtest
     gtest_main)
 

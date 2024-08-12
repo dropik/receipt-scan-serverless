@@ -1,6 +1,3 @@
-find_package(ZLIB REQUIRED)
-find_package(AWSSDK COMPONENTS core)
-
 add_library(lambda STATIC
     include/lambda/lambda.hpp
     src/lambda.cpp
@@ -14,7 +11,7 @@ add_library(lambda STATIC
 target_include_directories(lambda PUBLIC
     "include"
     "${PROJECT_SOURCE_DIR}/di/include"
-    ${AWSSDK_LINK_LIBRARIES}
+    aws-sdk-cpp-core
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

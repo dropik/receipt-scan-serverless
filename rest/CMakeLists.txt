@@ -1,7 +1,3 @@
-find_package(ZLIB REQUIRED)
-find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core)
-
 add_library(rest STATIC
     include/rest/api_exception.hpp
     include/rest/api_resource.hpp
@@ -24,9 +20,9 @@ target_include_directories(rest PUBLIC
 
 target_link_libraries(rest PUBLIC
     lambda
+    aws-cpp-sdk-core
     AWS::aws-lambda-runtime
-    ${AWSSDK_LINK_LIBRARIES}
-    aws-lambda-cpp-common
+    ${aws-lambda-cpp-common}
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

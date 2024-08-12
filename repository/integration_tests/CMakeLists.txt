@@ -1,6 +1,3 @@
-find_package(ZLIB REQUIRED)
-find_package(AWSSDK COMPONENTS core ssm)
-
 add_executable(repository_integration_tests
     receipt_repository_test.cpp
     ../../integration_tests_common/include/integration_tests_common/repository_integration_test.hpp
@@ -26,7 +23,6 @@ target_include_directories(repository_integration_tests PUBLIC
 target_link_libraries(repository_integration_tests
     repository
     lambda
-    ${AWSSDK_LINK_LIBRARIES}
     gtest
     integration_tests_common
 )

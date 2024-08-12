@@ -1,10 +1,6 @@
 set(FUNCTION_NAME "api")
 set(LAMBDA_ID "LApi")
 
-find_package(ZLIB REQUIRED)
-find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3)
-
 add_executable(${FUNCTION_NAME}
     src/main.cpp
     src/responses/file.hpp
@@ -53,8 +49,9 @@ target_include_directories(${FUNCTION_NAME} PUBLIC
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
     AWS::aws-lambda-runtime
-    ${AWSSDK_LINK_LIBRARIES}
-    aws-lambda-cpp-common
+    aws-cpp-sdk-core
+    aws-cpp-sdk-s3
+    ${aws-lambda-cpp-common}
     repository
     rest
     lambda
