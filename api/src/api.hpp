@@ -39,9 +39,20 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
 
     auto i = c.template get<identity>();
     i->user_id = user_id;
+
+    if (request.path == "/v1/user") return next(request);
+    auto repo = c.template get<repository::t_client>();
+    auto users = repo->template select<repository::models::user>("select * from users where id = ?")
+        .with_param(user_id)
+        .all();
+    if (users->size() == 0) {
+      return rest::bad_request(rest::api_exception(user_not_initialized, "User is not initialized"));
+    }
+
     return next(request);
   });
 
+  // Logging
   api->use_logging();
 
   // Version
@@ -50,27 +61,14 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
     return next(request);
   });
 
+  // Http request storage
   api->use([&c](const auto &request, const auto &next) {
     auto r = c.template get<http_request>();
     r->current = request;
     return next(request);
   });
 
-  api->use([&c](const auto &request, const auto &next) {
-    if (request.path == "/v1/user") return next(request);
-
-    auto repo = c.template get<repository::t_client>();
-    auto id = c.template get<identity>();
-    auto users = repo->template select<repository::models::user>("select * from users where id = ?")
-        .with_param(id->user_id)
-        .all();
-    if (users->size() == 0) {
-      throw rest::api_exception(user_not_initialized, "User is not initialized");
-    }
-
-    return next(request);
-  });
-
+  // Error handling
   api->use([](const auto &request, const auto &next) {
     try {
       return next(request);

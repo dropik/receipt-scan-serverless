@@ -9,8 +9,7 @@
 
 #include "../model_types.hpp"
 
-namespace api {
-namespace parameters {
+namespace api::parameters {
 
 struct put_budget {
   guid_t id;
@@ -25,8 +24,7 @@ struct put_budget {
       JSON_PROPERTY("version", version)
   JSON_END_SERIALIZER()
 
-  repository::models::budget to_repo(const std::string &user_id) const;
+  [[nodiscard]] repository::models::budget to_repo(const std::string &user_id) const;
 };
 
-}
 }

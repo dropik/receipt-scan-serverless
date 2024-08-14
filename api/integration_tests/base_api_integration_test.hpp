@@ -29,8 +29,7 @@
 #define TEST_CATEGORY "d394a832-4011-7023-c519-afe3adaf0233"
 #define TEST_RECEIPT "d394a832-4011-7023-c519-afe3adaf0233"
 
-namespace api {
-namespace integration_tests {
+namespace api::integration_tests {
 
 class base_api_integration_test : public repository_integration_test {
  protected:
@@ -74,5 +73,4 @@ std::string make_body(const std::string &body);
 std::string pretty_json(const std::string &json);
 std::string compact_json(const std::string &json);
 
-}
 }

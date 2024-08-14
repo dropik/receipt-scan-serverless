@@ -9,8 +9,7 @@
 
 using namespace lambda;
 
-namespace api {
-namespace integration_tests {
+namespace api::integration_tests {
 
 std::shared_ptr<sql::Connection> base_api_integration_test::get_connection() {
   return services.get<repository::t_client>()->get_connection();
@@ -22,7 +21,10 @@ void base_api_integration_test::SetUp() {
 }
 
 void base_api_integration_test::init_user() {
-  (*api)(create_request("POST", "/v1/user", ""));
+  auto repo = services.get<repository::t_client>();
+  repo->create(repository::models::user {
+    .id = USER_ID
+  });
 }
 
 repository::models::budget base_api_integration_test::create_budget(const lambda::nullable<int>& version) {
@@ -203,4 +205,4 @@ std::string compact_json(const std::string &json) {
 }
 
 }
-}
+

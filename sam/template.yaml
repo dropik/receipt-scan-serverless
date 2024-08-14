@@ -8,10 +8,10 @@ Globals:
     Timeout: 30
     MemorySize: 128
     Handler: bootstrap
-    Runtime: provided.al2
+    Runtime: provided.al2023
     RuntimeManagementConfig:
       UpdateRuntimeOn: Manual
-      RuntimeVersionArn: arn:aws:lambda:eu-central-1::runtime:c2f9d23694707c1161c0d3fbc0673f4ee14150265f4f3081161948aa71fad0a0
+      RuntimeVersionArn: arn:aws:lambda:eu-central-1::runtime:13b77b3272d72df1bcc3c48d6501f824a5aa198e9fa4b04966037ef97449a036
     Architectures:
       - arm64
 

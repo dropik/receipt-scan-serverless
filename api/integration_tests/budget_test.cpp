@@ -9,8 +9,7 @@
 
 using namespace repository;
 
-namespace api {
-namespace integration_tests {
+namespace api::integration_tests {
 
 class budget_test : public base_api_integration_test {};
 
@@ -164,5 +163,4 @@ TEST_F(budget_test, get_changes_should_return_update) {
 }])");
 }
 
-}
 }
