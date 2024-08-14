@@ -4,7 +4,7 @@
 #include <lambda/json.hpp>
 
 namespace api {
-namespace models {
+namespace responses {
 
 class file {
  public:

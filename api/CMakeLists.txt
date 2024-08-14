@@ -1,28 +1,42 @@
 set(FUNCTION_NAME "api")
 set(LAMBDA_ID "LApi")
 
-find_package(ZLIB REQUIRED)
-find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3)
-
 add_executable(${FUNCTION_NAME}
     src/main.cpp
-    src/models/upload_file_params.hpp
-    src/models/file.hpp
+    src/responses/file.hpp
     src/api.hpp
     src/services/file_service.hpp
     src/api_errors.hpp
-    src/models/identity.hpp
+    src/identity.hpp
     src/services/user_service.hpp
-    src/models/receipt_detail.hpp
-    src/models/model_types.hpp
+    src/responses/receipt.hpp
+    src/model_types.hpp
     src/services/receipt_service.hpp
-    src/models/receipt_list_item.hpp
     src/services/category_service.hpp
-    src/models/category.hpp
-    src/models/receipt_put_params.hpp
+    src/responses/category.hpp
+    src/parameters/put_receipt.hpp
     src/factories.hpp
-    src/models/s3_settings.hpp
+    src/s3_settings.hpp
+    src/responses/user.hpp
+    src/responses/user.cpp
+    src/parameters/put_device.hpp
+    src/services/budget_service.hpp
+    src/parameters/put_budget.hpp
+    src/parameters/put_budget.cpp
+    src/responses/budget.hpp
+    src/responses/budget.cpp
+    src/parameters/put_category.hpp
+    src/parameters/put_category.cpp
+    src/responses/category.cpp
+    src/parameters/put_receipt.cpp
+    src/parameters/put_receipt_item.hpp
+    src/parameters/put_receipt_item.cpp
+    src/responses/receipt_item.hpp
+    src/responses/receipt.cpp
+    src/responses/receipt_item.cpp
+    src/responses/change.hpp
+    src/services/changes_service.hpp
+    src/http_request.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
@@ -35,8 +49,9 @@ target_include_directories(${FUNCTION_NAME} PUBLIC
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
     AWS::aws-lambda-runtime
-    ${AWSSDK_LINK_LIBRARIES}
-    aws-lambda-cpp-common
+    aws-cpp-sdk-core
+    aws-cpp-sdk-s3
+    ${aws-lambda-cpp-common}
     repository
     rest
     lambda
@@ -51,3 +66,7 @@ file(WRITE "${PROJECT_BINARY_DIR}/${FUNCTION_NAME}/Makefile"
     "\tmkdir -p $(ARTIFACTS_DIR)/bin\n"
     "\tcp ${FUNCTION_NAME} $(ARTIFACTS_DIR)/bin\n"
     "\tln -sf bin/${FUNCTION_NAME} $(ARTIFACTS_DIR)/bootstrap\n")
+
+if(WITH_TESTS)
+  add_subdirectory(integration_tests)
+endif()

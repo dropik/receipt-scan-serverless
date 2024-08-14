@@ -9,6 +9,7 @@
 #include <aws/textract/TextractClient.h>
 #include <aws/textract/model/AnalyzeExpenseRequest.h>
 #include "repository/models/receipt.hpp"
+#include "lambda/utils.hpp"
 
 namespace scanner {
 namespace services {
@@ -20,7 +21,7 @@ class receipt_extractor : t_receipt_extractor {
  public:
   explicit receipt_extractor(TTextractClient textract_client) : m_textract_client(std::move(textract_client)) {}
 
-  std::vector<repository::models::receipt> extract(const std::string &bucket, const std::string &key) const {
+  lambda::nullable<repository::models::receipt> extract(const std::string &bucket, const std::string &key) const {
 
     std::regex file_regex("users/" GUID_REGEX "/receipts/.*",
                           std::regex_constants::extended);
@@ -34,9 +35,9 @@ class receipt_extractor : t_receipt_extractor {
     auto users_delimiter = key_parted.find('/');
     guid user_id = key_parted.substr(0, users_delimiter);
     key_parted.erase(0, users_delimiter + 10);
-    std::string file_name = key_parted;
+    std::string image_name = key_parted;
 
-    lambda::log.info("Processing request %s of user %s", file_name.c_str(),
+    lambda::log.info("Processing request %s of user %s", image_name.c_str(),
                      user_id.c_str());
 
     Aws::Textract::Model::S3Object s3_object;
@@ -50,31 +51,29 @@ class receipt_extractor : t_receipt_extractor {
     if (!outcome.IsSuccess()) {
       lambda::log.error("Error occurred while analyzing expense: %s",
                         outcome.GetError().GetMessage().c_str());
-      return {};
+      return create_failed(user_id, image_name);
     }
 
     auto &expense_result = outcome.GetResult();
 
     auto &expense_documents = expense_result.GetExpenseDocuments();
-    std::vector<receipt> results;
-    for (auto &doc : expense_documents) {
-      receipt receipt;
-      receipt.id = utils::gen_uuid();
-      receipt.user_id = user_id;
-      receipt.state = receipt::processing;
-
-      receipt.file = receipt_file{utils::gen_uuid(), receipt.id, file_name, doc.GetExpenseIndex()};
-
-      parse_document(doc, receipt);
-
-      results.push_back(receipt);
+    if (expense_documents.empty()) {
+      lambda::log.warning("No expense documents found in the request.");
+      return create_failed(user_id, image_name);
     }
 
-    lambda::log.info("Successfully extracted %d of %d documents from the request.",
-                     results.size(),
-                     expense_documents.size());
+    auto doc = expense_documents[0];
+    receipt receipt;
+    receipt.id = utils::gen_uuid();
+    receipt.user_id = user_id;
+    receipt.image_name = image_name;
+    receipt.state = receipt::processing;
 
-    return results;
+    parse_document(doc, receipt);
+
+    lambda::log.info("Successfully extracted document from the request.");
+
+    return receipt;
   }
 
  private:
@@ -85,7 +84,6 @@ class receipt_extractor : t_receipt_extractor {
   using guid = std::string;
   using receipt = repository::models::receipt;
   using receipt_item = repository::models::receipt_item;
-  using receipt_file = repository::models::receipt_file;
 
   static constexpr auto receipt_name = "NAME";
   static constexpr auto receipt_vendor_name = "VENDOR_NAME";
@@ -271,7 +269,7 @@ class receipt_extractor : t_receipt_extractor {
         } else {
           lambda::log.info("Unable to parse found receipt date string %s.",
                            value.c_str());
-          receipt.date = "";
+          receipt.date = lambda::utils::today();
         }
       } else if ((field_type == receipt_amount || field_type == receipt_total) &&
           best_total_confidence < confidence) {
@@ -390,6 +388,21 @@ class receipt_extractor : t_receipt_extractor {
     if (receipt_item.amount == 0) {
       receipt_item.amount = quantity * unit_price;
     }
+  }
+
+  static receipt create_failed(const std::string &user_id, const std::string &image_name) {
+    return receipt{
+        .id = utils::gen_uuid(),
+        .user_id = user_id,
+        .date = lambda::utils::today(),
+        .total_amount = 0,
+        .currency = "EUR",
+        .store_name = "-",
+        .category = "",
+        .state = receipt::failed,
+        .image_name = image_name,
+        .version = 0,
+    };
   }
 };
 

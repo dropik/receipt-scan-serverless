@@ -1,10 +1,6 @@
 set(FUNCTION_NAME "scanner")
 set(LAMBDA_ID "LScanner")
 
-find_package(ZLIB REQUIRED)
-find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime)
-
 add_executable(${FUNCTION_NAME}
     src/main.cpp
     src/handler.hpp
@@ -26,7 +22,10 @@ target_include_directories(${FUNCTION_NAME} PUBLIC
 
 target_link_libraries(${FUNCTION_NAME} PUBLIC
     AWS::aws-lambda-runtime
-    ${AWSSDK_LINK_LIBRARIES}
+    aws-cpp-sdk-core
+    aws-cpp-sdk-s3
+    aws-cpp-sdk-textract
+    aws-cpp-sdk-bedrock-runtime
     repository
     lambda
 )
@@ -42,5 +41,5 @@ file(WRITE "${PROJECT_BINARY_DIR}/${FUNCTION_NAME}/Makefile"
     "\tln -sf bin/${FUNCTION_NAME} $(ARTIFACTS_DIR)/bootstrap\n")
 
 if(WITH_TESTS)
-  add_subdirectory(tests)
+  add_subdirectory(integration_tests)
 endif()

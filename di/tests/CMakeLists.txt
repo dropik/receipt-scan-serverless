@@ -1,4 +1,4 @@
-add_executable(di_tests_run
+add_executable(di_tests
     di_test.cpp
     ../include/di/service_factory.hpp
     ../include/di/transient.hpp
@@ -7,15 +7,15 @@ add_executable(di_tests_run
     ../include/di/container.hpp
 )
 
-target_include_directories(di_tests_run PUBLIC
+target_include_directories(di_tests PUBLIC
     ${PROJECT_SOURCE_DIR}/di/include
     ${gtest_SOURCE_DIR}/include
     ${gtest_SOURCE_DIR})
 
-target_link_libraries(di_tests_run
+target_link_libraries(di_tests
     gtest
     gtest_main)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_definitions(di_tests_run PRIVATE DEBUG)
+  target_compile_definitions(di_tests PRIVATE DEBUG)
 endif()

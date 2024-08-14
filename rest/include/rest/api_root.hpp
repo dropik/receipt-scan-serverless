@@ -26,7 +26,6 @@ class api_root : public api_resource {
       return middleware(request, next);
     };
   }
-  void use_exception_filter();
   void use_logging();
 
   api_response_t operator()(const api_request_t &request);

@@ -8,80 +8,108 @@
 
 #include "config.h"
 
-#include "models/identity.hpp"
-#include "models/model_types.hpp"
-#include "models/upload_file_params.hpp"
+#include "identity.hpp"
+#include "http_request.hpp"
+#include "model_types.hpp"
 
 #include "services/user_service.hpp"
 #include "services/file_service.hpp"
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
+#include "services/budget_service.hpp"
 
 namespace api {
 
 using api_root = rest::api_root;
 using api_resource = rest::api_resource;
-using guid_t = models::guid_t;
 
 template<typename TServiceContainer>
-api_root create_api(TServiceContainer &c) {
-  api_root api;
+std::unique_ptr<api_root> create_api(TServiceContainer &c) {
+  std::unique_ptr<api_root> api = std::make_unique<api_root>();
 
   // Middleware
 
   // Identity
-  api.use([&c](const auto &request, const auto &next) {
+  api->use([&c](const auto &request, const auto &next) {
     auto auth = request.request_context.authorizer;
     auto user_id = auth.claims["sub"];
     if (user_id.empty()) {
       return rest::unauthorized();
     }
 
-    auto identity = c.template get<models::identity>();
-    identity->user_id = user_id;
+    auto i = c.template get<identity>();
+    i->user_id = user_id;
+
+    if (request.path == "/v1/user") return next(request);
+    auto repo = c.template get<repository::t_client>();
+    auto users = repo->template select<repository::models::user>("select * from users where id = ?")
+        .with_param(user_id)
+        .all();
+    if (users->size() == 0) {
+      return rest::bad_request(rest::api_exception(user_not_initialized, "User is not initialized"));
+    }
+
     return next(request);
   });
 
-  api.use_logging();
+  // Logging
+  api->use_logging();
 
   // Version
-  api.use([](const auto &request, const auto &next) {
+  api->use([](const auto &request, const auto &next) {
     lambda::log.info("App Version: %s", APP_VERSION);
     return next(request);
   });
 
-  api.use_exception_filter();
+  // Http request storage
+  api->use([&c](const auto &request, const auto &next) {
+    auto r = c.template get<http_request>();
+    r->current = request;
+    return next(request);
+  });
+
+  // Error handling
+  api->use([](const auto &request, const auto &next) {
+    try {
+      return next(request);
+    } catch (rest::api_exception &e) {
+      lambda::log.info("API Exception: %d %s", e.error, e.message.c_str());
+      if (e.error == not_found) {
+        return rest::not_found();
+      }
+      return bad_request(e);
+    } catch (repository::entity_not_found_exception &e) {
+      return rest::not_found();
+    } catch (repository::concurrency_exception &e) {
+      return rest::conflict();
+    } catch (std::exception &e) {
+      lambda::log.error("Internal error: %s", e.what());
+      return rest::internal_server_error();
+    }
+  });
 
   // Routes
 
-  api.any("/v1")([&c](api_resource &v1) {
-    v1.post("/user")([&c]() {
-      return c.template get<services::t_user_service>()->init_user();
-    });
-
-    v1.any("/files")([&c](api_resource &files) {
-      files.post<models::upload_file_params>("/")([&c](const auto &request) {
-        return c.template get<services::t_file_service>()->get_upload_file_url(request);
+  api->any("/v1")([&c](api_resource &v1) {
+    v1.any("/user")([&c](api_resource &user) {
+      user.post("/")([&c]() {
+        return c.template get<services::t_user_service>()->init_user();
+      });
+      user.get("/")([&c]() {
+        return c.template get<services::t_user_service>()->get_user();
       });
     });
 
-    v1.any("/receipts")([&c](api_resource &receipts) {
-      receipts.get("/")([&c]() {
-        return c.template get<services::t_receipt_service>()->get_receipts();
+    v1.any("/budgets")([&c](api_resource &budgets) {
+      budgets.get("/")([&c]() {
+        return c.template get<services::t_budget_service>()->get_budgets();
       });
-      receipts.any<guid_t>()([&c](const guid_t &receipt_id, api_resource &receipt) {
-        receipt.get("/")([&c, &receipt_id]() {
-          return c.template get<services::t_receipt_service>()->get_receipt(receipt_id);
-        });
-        receipt.get("/file")([&c, &receipt_id]() {
-          return c.template get<services::t_receipt_service>()->get_receipt_file(receipt_id);
-        });
+      budgets.put<parameters::put_budget>("/")([&c](const auto &request) {
+        return c.template get<services::t_budget_service>()->store_budget(request);
       });
-      receipts.put<models::receipt_put_params>("/")([&c](const auto &request) {
-        return c.template get<services::t_receipt_service>()->put_receipt(request);
-      });
-      receipts.del<guid_t>()([&c](const guid_t &receipt_id) {
-        return c.template get<services::t_receipt_service>()->delete_receipt(receipt_id);
+      budgets.get("/changes")([&c]() {
+        auto request = c.template get<http_request>()->current;
+        return c.template get<services::t_budget_service>()->get_changes(request.query_string_parameters["from"]);
       });
     });
 
@@ -89,16 +117,50 @@ api_root create_api(TServiceContainer &c) {
       categories.get("/")([&c]() {
         return c.template get<services::t_category_service>()->get_categories();
       });
-      categories.put<models::category>("/")([&c](const auto &request) {
+      categories.put<parameters::put_category>("/")([&c](const auto &request) {
         return c.template get<services::t_category_service>()->put_category(request);
       });
       categories.del<guid_t>()([&c](const guid_t &category_id) {
         return c.template get<services::t_category_service>()->delete_category(category_id);
       });
+      categories.get("/changes")([&c]() {
+        auto request = c.template get<http_request>()->current;
+        return c.template get<services::t_category_service>()->get_changes(request.query_string_parameters["from"]);
+      });
+    });
+
+    v1.any("/receipts")([&c](api_resource &receipts) {
+      receipts.any("/years")([&c](api_resource &years) {
+        years.any<int>()([&c](const int &y, api_resource &year) {
+          year.any("/months")([&c, &y](api_resource &months) {
+            months.get<int>()([&c, &y](const int &m) {
+              return c.template get<services::t_receipt_service>()->get_receipts(y, m);
+            });
+          });
+        });
+      });
+      receipts.any<guid_t>()([&c](const guid_t &receipt_id, api_resource &receipt) {
+        receipt.get("/image")([&c, &receipt_id]() {
+          return c.template get<services::t_receipt_service>()->get_receipt_get_image_url(receipt_id);
+        });
+        receipt.post("/image")([&c, &receipt_id]() {
+          return c.template get<services::t_receipt_service>()->get_receipt_put_image_url(receipt_id);
+        });
+      });
+      receipts.put<parameters::put_receipt>("/")([&c](const auto &request) {
+        return c.template get<services::t_receipt_service>()->put_receipt(request);
+      });
+      receipts.del<guid_t>()([&c](const guid_t &receipt_id) {
+        return c.template get<services::t_receipt_service>()->delete_receipt(receipt_id);
+      });
+      receipts.get("/changes")([&c]() {
+        auto request = c.template get<http_request>()->current;
+        return c.template get<services::t_receipt_service>()->get_changes(request.query_string_parameters["from"]);
+      });
     });
   });
 
-  return api;
+  return std::move(api);
 }
 
 }

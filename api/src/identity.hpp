@@ -7,11 +7,9 @@
 #include <string>
 
 namespace api {
-namespace models {
 
 struct identity {
   std::string user_id;
 };
 
-}
 }

@@ -13,20 +13,6 @@ api_root::api_root() {
   };
 }
 
-void api_root::use_exception_filter() {
-  use([](const api_request_t &request, const auto &next) {
-    try {
-      return next(request);
-    } catch (api_exception &e) {
-      lambda::log.info("API Exception: %d %s", e.error, e.message.c_str());
-      return bad_request(e);
-    } catch (std::exception &e) {
-      lambda::log.error("Internal error: %s", e.what());
-      return internal_server_error();
-    }
-  });
-}
-
 void api_root::use_logging() {
   use([](const api_request_t &request, const auto &next) {
     lambda::log.info("Request: %s %s", request.http_method.c_str(), request.path.c_str());

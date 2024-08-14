@@ -3,7 +3,6 @@
 #include <aws/core/Aws.h>
 #include <aws/core/client/ClientConfiguration.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include <aws/core/utils/memory/stl/AWSAllocator.h>
 #include <aws/textract/TextractClient.h>
 #include <aws/bedrock-runtime/BedrockRuntimeClient.h>
 
@@ -13,7 +12,6 @@
 
 #ifdef DEBUG
 #include <lambda/runtime.hpp>
-#include <config.h>
 #else
 #include <aws/lambda-runtime/runtime.h>
 #endif

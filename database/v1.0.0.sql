@@ -168,3 +168,105 @@ create table receipt_files (
 # 2024-06-10: add state to receipts
 alter table receipts
 add column state enum('processing', 'done') not null default 'processing';
+
+# v1.1.0
+# 2024-07-31: delete default categories
+delete from categories where user_id is null;
+
+# 2024-07-31: add budgets table
+create table budgets (
+  id char(36) not null primary key,
+  user_id char(36) not null,
+  month date not null,
+  amount decimal(10, 2) not null default 0,
+  version int not null default 0,
+
+  unique index ix_user_id_month (user_id, month),
+  index ix_user_id (user_id),
+
+  constraint fk_user_budget foreign key (user_id)
+    references users(id)
+    on delete restrict
+    on update restrict
+);
+
+# 2024-07-31: add color to categories
+alter table categories
+add column color int not null default 0;
+
+# 2024-07-31: add version to categories and receipts
+alter table categories
+add column version int not null default 0;
+
+alter table receipts
+add column version int not null default 0;
+
+# 2024-07-31: add user devices table
+create table user_devices (
+  id char(36) not null primary key,
+  user_id char(36) not null,
+
+  index ix_user_id (user_id),
+
+  constraint fk_user_device foreign key (user_id)
+    references users(id)
+    on delete cascade
+    on update restrict
+);
+
+# 2024-07-31: add entity events table
+create table entity_events (
+  id char(36) not null primary key,
+  device_id char(36) not null,
+  entity_type varchar(100) not null,
+  entity_id char(36) not null,
+  event_type enum('create', 'update', 'delete') not null,
+  event_timestamp timestamp not null default current_timestamp,
+
+  index ix_device_id (device_id),
+
+  constraint fk_device_entity_event foreign key (device_id)
+    references user_devices(id)
+    on delete cascade
+    on update restrict
+);
+
+# 2024-08-04: drop receipt_files table
+drop table receipt_files;
+
+# 2024-08-04: add column image_name to receipts
+alter table receipts
+add column image_name varchar(100) not null default '';
+
+# 2024-08-04: add index on image_name
+alter table receipts
+add index ix_receipt_image_name(image_name);
+
+# 2024-08-05: add state 'failed' to receipt state
+alter table receipts
+drop column state;
+
+alter table receipts
+add column state enum('processing', 'done', 'failed') not null default 'processing';
+
+# 2024-08-07: add timestamp and is_deleted to receipts
+alter table receipts
+add column modified_timestamp timestamp not null default current_timestamp on update current_timestamp;
+
+alter table receipts
+add column is_deleted boolean not null default false;
+
+# 2024-08-07: add timestamp and is_deleted to categories
+alter table categories
+add column modified_timestamp timestamp not null default current_timestamp on update current_timestamp;
+
+alter table categories
+add column is_deleted boolean not null default false;
+
+# 2024-08-07: add timestamp to budgets
+alter table budgets
+add column modified_timestamp timestamp not null default current_timestamp on update current_timestamp;
+
+# 2024-08-10: drop entity_events and user_devices tables
+drop table entity_events;
+drop table user_devices;

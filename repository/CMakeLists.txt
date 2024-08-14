@@ -1,5 +1,4 @@
-find_package(ZLIB REQUIRED)
-find_package(AWSSDK COMPONENTS core ssm)
+find_package(mariadb)
 
 add_library(repository STATIC
     include/repository/client.hpp
@@ -23,13 +22,15 @@ add_library(repository STATIC
     include/repository/base_query.hpp
     src/base_query.cpp
     src/statement.cpp
-    include/repository/models/receipt_file.hpp
-    include/repository/configurations/receipt_file_configuration.hpp
     include/repository/connection_settings.hpp
     include/repository/factories.hpp
     include/repository/receipt_repository.hpp
     include/repository/configurations/registry.hpp
     include/repository/category_repository.hpp
+    include/repository/configurations/common/version_configuration.hpp
+    include/repository/models/budget.hpp
+    include/repository/configurations/budget_configuration.hpp
+    include/repository/exceptions.hpp
 )
 
 target_include_directories(repository PUBLIC
@@ -40,12 +41,13 @@ target_include_directories(repository PUBLIC
 
 target_link_libraries(repository PUBLIC
     lambda
-    ${AWSSDK_LINK_LIBRARIES}
-    "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadbcpp.a"
-    "${CMAKE_SYSROOT}/usr/local/lib/mariadb/libmariadb.a"
-    aws-lambda-cpp-common
-    gssapi_krb5
+    aws-cpp-sdk-core
+    aws-cpp-sdk-ssm
+    ${MARIADB_LIBS}
+    ${aws-lambda-cpp-common}
+    ${gssapi_krb5}
     ssl
+    ${ZSTD_LIBRARIES}
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

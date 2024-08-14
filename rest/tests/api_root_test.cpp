@@ -595,32 +595,3 @@ TEST(api_root, middleware_should_be_executed_in_order) {
   std::vector<int> expected_values = {1, 2};
   EXPECT_EQ(values, expected_values);
 }
-
-TEST(api_root, api_should_return_500_on_generic_exception) {
-  api_root api;
-  api.get("/")([]() {
-    throw std::runtime_error("error");
-    return test_response{.value = "123"};
-  });
-  api.use_exception_filter();
-  api_request_t request;
-  request.path = "/";
-  request.http_method = "GET";
-  auto response = api(request);
-  EXPECT_EQ(response.status_code, 500);
-}
-
-TEST(api_root, api_should_return_400_if_api_exception_occured) {
-  api_root api;
-  api.get("/")([]() {
-    throw api_exception(0, "Handled API error");
-    return test_response{.value = "123"};
-  });
-  api.use_exception_filter();
-  api_request_t request;
-  request.path = "/";
-  request.http_method = "GET";
-  auto response = api(request);
-  EXPECT_EQ(response.status_code, 400);
-  EXPECT_EQ(response.body, R"({"error":0,"message":"Handled API error"})");
-}

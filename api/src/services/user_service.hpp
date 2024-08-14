@@ -7,7 +7,9 @@
 #include <memory>
 
 #include <repository/client.hpp>
-#include "../models/identity.hpp"
+#include "../identity.hpp"
+#include "../api_errors.hpp"
+#include "../responses/user.hpp"
 
 namespace api {
 namespace services {
@@ -16,7 +18,7 @@ struct t_user_service {};
 
 template<
     typename TRepository = repository::t_client,
-    typename TIdentity = const models::identity>
+    typename TIdentity = const identity>
 class user_service {
   using user = repository::models::user;
 
@@ -36,13 +38,16 @@ class user_service {
 
     user user{.id = user_id};
     m_repository->create(user);
+  }
 
-    m_repository->execute(
-            "insert into categories (id, user_id, name) "
-            "select uuid_v4(), ?, name from categories "
-            "where user_id is null;")
-        .with_param(user_id)
-        .go();
+  responses::user get_user() {
+    auto users = m_repository->template select<user>("select * from users where id = ?")
+        .with_param(m_identity->user_id)
+        .all();
+    if (users->empty()) {
+      throw rest::api_exception(not_found, "User not found");
+    }
+    return responses::user::from_repository(*users->at(0));
   }
 
  private:

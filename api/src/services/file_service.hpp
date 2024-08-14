@@ -8,10 +8,9 @@
 #include <aws/s3/model/DeleteObjectRequest.h>
 #include <rest/api_exception.hpp>
 
-#include "../models/file.hpp"
-#include "../models/upload_file_params.hpp"
-#include "../models/identity.hpp"
-#include "../models/s3_settings.hpp"
+#include "../responses/file.hpp"
+#include "../identity.hpp"
+#include "../s3_settings.hpp"
 #include "../api_errors.hpp"
 
 namespace api {
@@ -21,51 +20,49 @@ class t_file_service {};
 
 template<
     typename TS3Client = Aws::S3::S3Client,
-    typename TS3Settings = const models::s3_settings,
-    typename TIdentity = const models::identity>
+    typename TS3Settings = const s3_settings,
+    typename TIdentity = const identity>
 class file_service {
  public:
-  using file = models::file;
-
   explicit file_service(TS3Client s3_client, TS3Settings s3_settings, TIdentity identity)
       : m_s3_client(std::move(s3_client)),
         m_bucket(std::move(s3_settings->bucket)),
         m_identity(std::move(identity)) {}
 
-  file get_upload_file_url(const models::upload_file_params &params) {
-    if (params.name.empty()) {
+  responses::file get_upload_receipt_image_url(const std::string &image_name) {
+    if (image_name.empty()) {
       throw rest::api_exception(invalid_argument, "Name is required");
     }
 
-    auto key = get_key(m_identity->user_id, params.name);
+    auto key = get_receipt_image_key(m_identity->user_id, image_name);
 
     std::string presignedUrl = m_s3_client->GeneratePresignedUrlWithSSES3(m_bucket,
                                                                           key,
                                                                           Aws::Http::HttpMethod::HTTP_PUT);
 
-    return file{presignedUrl};
+    return responses::file{presignedUrl};
   }
 
-  models::file get_download_file_url(const std::string &name) {
-    if (name.empty()) {
+  responses::file get_download_receipt_image_url(const std::string &image_name) {
+    if (image_name.empty()) {
       throw rest::api_exception(invalid_argument, "Name is required");
     }
 
-    auto key = get_key(m_identity->user_id, name);
+    auto key = get_receipt_image_key(m_identity->user_id, image_name);
 
     std::string presignedUrl = m_s3_client->GeneratePresignedUrl(m_bucket,
                                                                  key,
                                                                  Aws::Http::HttpMethod::HTTP_GET);
 
-    return file{presignedUrl};
+    return responses::file{presignedUrl};
   }
 
-  void delete_file(const std::string &name) {
-    if (name.empty()) {
+  void delete_receipt_image(const std::string &image_name) {
+    if (image_name.empty()) {
       throw rest::api_exception(invalid_argument, "Name is required");
     }
 
-    auto key = get_key(m_identity->user_id, name);
+    auto key = get_receipt_image_key(m_identity->user_id, image_name);
 
     Aws::S3::Model::DeleteObjectRequest request;
     request.WithBucket(m_bucket.c_str()).WithKey(key.c_str());
@@ -81,7 +78,7 @@ class file_service {
   std::string m_bucket;
   TIdentity m_identity;
 
-  static std::string get_key(const std::string &user_id, const std::string &name) {
+  static std::string get_receipt_image_key(const std::string &user_id, const std::string &name) {
     return lambda::string::format("users/%s/receipts/%s", user_id.c_str(), name.c_str());
   }
 };
