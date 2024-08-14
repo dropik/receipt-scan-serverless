@@ -49,20 +49,27 @@ cmake --build .
 8. Now to make requests to the application API you need to provide the `access_token` in the `Authorization` header (without `Bearer`).
 
 ## API
+Please note, that all endpoints except `POST /user` will return `400` if user was not initialized with `POST /user` endpoint.
+
 ### User
 - `POST /user` - Init a new user. Only id is taken from `access_token`. No body required. Returns `200` if successful. Noop if user already exists.
+- `GET /user` - Get user id. Returns `200` with user id. Returns `404` if user was not initialized with `POST` endpoint.
 
-### File
-- `POST /files` - Get a pre-signed url to upload a receipt image. Returns `200` with url.
+### Budgets
+- `GET /budgets` - Get all budgets. Returns `200` with list of budgets.
+- `PUT /budgets` - Add a new budget or update an existing one. Returns `200` if successful. Returns `409` if optimistic concurrency error occurs on trying to update a budget.
+- `GET /budgets/changes?from=<changes-from>` - Get all budget changes from given timestamp. Returns `200` with list of budget changes.
 
-### Receipt
-- `GET /receipts` - Get all receipts. Returns `200` with list of receipts.
-- `GET /receipts/{id}` - Get a receipt by id. Returns `200` with receipt.
-- `PUT /receipts` - Add a new receipt or update an existing one. This endpoint permits to modify manually receipt information, or even add a totally manually inserted receipt. Returns `200` if successful.
-- `DELETE /receipts/{id}` - Delete a receipt by id. Returns `200` if successful.
-- `GET /receipts/{if}/file` - Get a pre-signed url to obtain the receipt image. Returns `200` with url.
-
-### Category
+### Categories
 - `GET /categories` - Get all categories. Returns `200` with list of categories.
-- `PUT /categories` - Add a new category or update an existing one. Returns `200` if successful.
-- `DELETE /categories/{id}` - Delete a category by id. Returns `200` if successful.
+- `PUT /categories` - Add a new category or update an existing one. Returns `200` if successful. Returns `409` if optimistic concurrency error occurs on trying to update a category.
+- `DELETE /categories/{id}` - Delete a category by id. Returns `200` if successful. Returns `404` if category was not found.
+- `GET /categories/changes?from=<changes-from>` - Get all category changes from given timestamp. Returns `200` with list of category changes.
+
+### Receipts
+- `GET /receipts/years/{year}/months/{month}` - Get all receipts for given year and month. Returns `200` with list of receipts.
+- `PUT /receipts` - Add a new receipt or update an existing one. This endpoint permits to modify manually receipt information, or even add a totally manually inserted receipt. Returns `200` if successful. Returns `409` if optimistic concurrency error occurs on trying to update a receipt.
+- `DELETE /receipts/{id}` - Delete a receipt by id. Returns `200` if successful. Returns `404` if receipt was not found.
+- `GET /receipts/{id}/image` - Get a pre-signed url to obtain the receipt image. Returns `200` with url. Returns `404` if receipt was not found.
+- `PUT /receipts/{id}/image` - Upload a receipt image. This endpoint is used to start receipt image scan asynchronously. When scanning is done, the receipt state will pass to `done` and new version of receipt will be generated. Returns `200` if successful. Returns `404` if receipt was not found.
+- `GET /receipts/changes?from=<changes-from>` - Get all receipt changes from given timestamp. Returns `200` with list of receipt changes.
