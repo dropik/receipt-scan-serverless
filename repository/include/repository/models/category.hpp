@@ -4,8 +4,7 @@
 
 #include "common.hpp"
 
-namespace repository {
-namespace models {
+namespace repository::models {
 
 struct category {
   guid id;
@@ -16,5 +15,4 @@ struct category {
   bool is_deleted = false;
 };
 
-}  // namespace models
-}  // namespace repository
+} // namespace repository::models

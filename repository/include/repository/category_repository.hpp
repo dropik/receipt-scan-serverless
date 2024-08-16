@@ -50,6 +50,7 @@ class category_repository {
       throw entity_not_found_exception();
     }
 
+    existing_category->version++;
     existing_category->is_deleted = true;
     m_repository->template update(*existing_category);
   }

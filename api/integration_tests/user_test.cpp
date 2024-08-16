@@ -9,8 +9,7 @@
 
 using namespace repository;
 
-namespace api {
-namespace integration_tests {
+namespace api::integration_tests {
 
 class user_test : public base_api_integration_test {};
 
@@ -46,5 +45,4 @@ TEST_F(user_test, get_user) {
   assert_response(response, "200", R"({"id":")" USER_ID R"("})");
 }
 
-}
 }

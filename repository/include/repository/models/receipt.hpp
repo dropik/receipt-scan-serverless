@@ -4,8 +4,7 @@
 #include <lambda/nullable.hpp>
 #include "receipt_item.hpp"
 
-namespace repository {
-namespace models {
+namespace repository::models {
 
 struct receipt {
   guid id;
@@ -22,10 +21,9 @@ struct receipt {
 
   std::vector<receipt_item> items;
 
-  static constexpr auto processing = "processing";
-  static constexpr auto done = "done";
-  static constexpr auto failed = "failed";
+  inline static constexpr auto processing = "processing";
+  inline static constexpr auto done = "done";
+  inline static constexpr auto failed = "failed";
 };
 
-}  // namespace models
-}  // namespace repository
+} // namespace repository::models
