@@ -10,14 +10,9 @@
 
 using namespace repository;
 
-namespace api {
-namespace integration_tests {
+namespace api::integration_tests {
 
-class receipt_test : public base_api_integration_test {
- protected:
-
-  const std::string receipt_done = ::models::receipt::done;
-};
+class receipt_test : public base_api_integration_test {};
 
 TEST_F(receipt_test, put_receipt) {
   // should not be created until user is created
@@ -84,7 +79,7 @@ TEST_F(receipt_test, put_receipt) {
   ASSERT_EQ(r->currency, "EUR");
   ASSERT_EQ(r->store_name, "store");
   ASSERT_EQ(r->category, "");
-  ASSERT_EQ(r->state, receipt_done);
+  ASSERT_EQ(r->state, ::models::receipt::done);
   ASSERT_EQ(r->image_name, "image");
   ASSERT_EQ(r->version, 0);
 
@@ -115,7 +110,7 @@ TEST_F(receipt_test, put_receipt_update) {
   "category": "",
   "state": "done",
   "imageName": "image",
-  "version": 0,
+  "version": 1,
   "items": []
 })"));
   assert_response(response, "200", "");
@@ -132,7 +127,7 @@ TEST_F(receipt_test, put_receipt_update) {
   ASSERT_EQ(r->currency, "EUR");
   ASSERT_EQ(r->store_name, "store");
   ASSERT_EQ(r->category, "");
-  ASSERT_EQ(r->state, receipt_done);
+  ASSERT_EQ(r->state, ::models::receipt::done);
   ASSERT_EQ(r->image_name, "image");
   ASSERT_EQ(r->version, 1);
 
@@ -142,7 +137,7 @@ TEST_F(receipt_test, put_receipt_update) {
 
 TEST_F(receipt_test, put_receipt_update_conflict) {
   init_user();
-  auto r1 = create_receipt(1);
+  auto r1 = create_receipt();
   create_receipt_item(0);
 
   auto response = (*api)(create_request("PUT", ENDPOINT, R"(
@@ -206,6 +201,7 @@ TEST_F(receipt_test, get_receipts_by_month_deleted) {
   auto receipts = repo->select<::models::receipt>("select * from receipts").all();
   auto r = receipts->at(0);
   r->is_deleted = true;
+  r->version++;
   repo->update(*r);
 
   auto response = (*api)(create_request("GET", ENDPOINT "/years/2024/months/8", ""));
@@ -272,6 +268,7 @@ TEST_F(receipt_test, get_receipt_image_deleted) {
   auto repo = services.get<repository::t_client>();
   auto receipts = repo->select<::models::receipt>("select * from receipts").all();
   auto r = receipts->at(0);
+  r->version++;
   r->is_deleted = true;
   repo->update(*r);
 
@@ -348,7 +345,6 @@ TEST_F(receipt_test, get_changes_should_return_update) {
   auto ri = create_receipt_item(0);
   auto repo = services.get<repository::t_client>();
   r.total_amount = 120;
-  repo->update(r);
   r.version++;
   repo->update(r);
 
@@ -374,7 +370,7 @@ TEST_F(receipt_test, get_changes_should_return_update) {
     "state":"done",
     "storeName":"store",
     "totalAmount":120,
-    "version":2
+    "version":1
   },
   "id": ")" TEST_RECEIPT R"("
 }])", ri.id.c_str()));
@@ -386,7 +382,6 @@ TEST_F(receipt_test, get_changes_should_return_delete) {
   create_receipt_item(0);
   auto repo = services.get<repository::t_client>();
   r.total_amount = 120;
-  repo->update(r);
   r.version++;
   r.is_deleted = true;
   repo->update(r);
@@ -402,4 +397,4 @@ TEST_F(receipt_test, get_changes_should_return_delete) {
 }
 
 }
-}
+

@@ -61,7 +61,7 @@ TEST_F(budget_test, put_budget_update) {
   "id": ")" TEST_BUDGET R"(",
   "month": "2024-07-01",
   "amount": 1200.0,
-  "version": 0
+  "version": 1
 })"));
   assert_response(response, "200", "");
 
@@ -76,7 +76,7 @@ TEST_F(budget_test, put_budget_update) {
 
 TEST_F(budget_test, put_budget_update_conflict) {
   init_user();
-  auto b1 = create_budget(1);
+  auto b1 = create_budget();
 
   auto response = (*api)(create_request("PUT", ENDPOINT, R"(
 {
@@ -144,7 +144,6 @@ TEST_F(budget_test, get_changes_should_return_update) {
   auto b = create_budget();
   auto repo = services.get<repository::t_client>();
   b.amount = 1200.0;
-  repo->update(b);
   b.version++;
   repo->update(b);
 
@@ -157,7 +156,7 @@ TEST_F(budget_test, get_changes_should_return_update) {
     "amount":1200.0,
     "id": ")" TEST_BUDGET R"(",
     "month": "2024-07-01",
-    "version":2
+    "version":1
   },
   "id": ")" TEST_BUDGET R"("
 }])");

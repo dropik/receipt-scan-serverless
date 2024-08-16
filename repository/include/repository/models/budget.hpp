@@ -6,8 +6,7 @@
 
 #include "common.hpp"
 
-namespace repository {
-namespace models {
+namespace repository::models {
 
 struct budget {
   guid id;
@@ -17,5 +16,4 @@ struct budget {
   int version = 0;
 };
 
-}
 }

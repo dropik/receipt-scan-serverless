@@ -10,8 +10,7 @@
 
 using namespace repository;
 
-namespace api {
-namespace integration_tests {
+namespace api::integration_tests {
 
 class category_test : public base_api_integration_test {};
 
@@ -64,7 +63,7 @@ TEST_F(category_test, put_category_update) {
   "id": ")" TEST_CATEGORY R"(",
   "name": "category2",
   "color": 30,
-  "version": 0
+  "version": 1
 })"));
   assert_response(response, "200", "");
 
@@ -82,7 +81,7 @@ TEST_F(category_test, put_category_update) {
 
 TEST_F(category_test, put_category_update_conflict) {
   init_user();
-  auto c1 = create_category(1);
+  auto c1 = create_category();
 
   // should not update category
   auto response = (*api)(create_request("PUT", ENDPOINT, R"(
@@ -127,6 +126,7 @@ TEST_F(category_test, get_categories_deleted) {
   init_user();
   auto c = create_category();
   auto repo = services.get<repository::t_client>();
+  c.version++;
   c.is_deleted = true;
   repo->update<::models::category>(c);
 
@@ -189,7 +189,6 @@ TEST_F(category_test, get_changes_should_return_update) {
   auto c = create_category();
   auto repo = services.get<repository::t_client>();
   c.color = 30;
-  repo->update(c);
   c.version++;
   repo->update(c);
 
@@ -202,7 +201,7 @@ TEST_F(category_test, get_changes_should_return_update) {
     "color":30,
     "id": ")" TEST_CATEGORY R"(",
     "name": "category",
-    "version":2
+    "version":1
   },
   "id": ")" TEST_CATEGORY R"("
 }])");
@@ -213,7 +212,6 @@ TEST_F(category_test, get_changes_should_return_delete) {
   auto c = create_category();
   auto repo = services.get<repository::t_client>();
   c.color = 30;
-  repo->update(c);
   c.version++;
   c.is_deleted = true;
   repo->update(c);
@@ -228,5 +226,4 @@ TEST_F(category_test, get_changes_should_return_delete) {
 }])");
 }
 
-}
 }

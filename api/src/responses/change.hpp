@@ -9,14 +9,13 @@
 #include <lambda/json.hpp>
 #include "../model_types.hpp"
 
-namespace api {
-namespace responses {
+namespace api::responses {
 
 namespace change_action {
 
-static constexpr auto create = "create";
-static constexpr auto update = "update";
-static constexpr auto del = "delete";
+inline static constexpr auto create = "create";
+inline static constexpr auto update = "update";
+inline static constexpr auto del = "delete";
 
 }
 
@@ -33,5 +32,4 @@ struct change {
   JSON_END_SERIALIZER()
 };
 
-}
 }

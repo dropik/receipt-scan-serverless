@@ -53,6 +53,7 @@ TEST_F(receipt_repository_test, should_update_receipt) {
   auto r = create_receipt();
   receipt_repository->store(r);
   r.store_name = "new_store_name";
+  r.version++;
   receipt_repository->store(r);
   auto repo = services.get<repository::t_client>();
   auto stored_receipt = repo->get<receipt>(r.id);
@@ -76,6 +77,7 @@ TEST_F(receipt_repository_test, should_delete_old_items) {
   r.items.push_back({ "item_id", r.id, "description", 1.0, "category", 0 });
   receipt_repository->store(r);
   r.items.clear();
+  r.version++;
   receipt_repository->store(r);
   auto repo = services.get<repository::t_client>();
   auto items = repo->select<receipt_item>("select * from receipt_items where receipt_id = ?").with_param(r.id).all();
@@ -112,43 +114,33 @@ TEST_F(receipt_repository_test, should_not_find_receipt_if_image_name_does_not_m
   ASSERT_FALSE(receipt.has_value());
 }
 
-TEST_F(receipt_repository_test, should_store_receipt_version_as_0_when_created) {
+TEST_F(receipt_repository_test, should_store_receipt_with_provided_version) {
   auto receipt_repository = services.get<repository::t_receipt_repository>();
   auto r = create_receipt();
+  r.version = 12;
   receipt_repository->store(r);
   auto repo = services.get<repository::t_client>();
   auto stored_receipt = repo->get<receipt>(r.id);
-  ASSERT_EQ(0, stored_receipt->version);
-}
-
-TEST_F(receipt_repository_test, should_udpate_version_if_receipt_exists) {
-  auto receipt_repository = services.get<repository::t_receipt_repository>();
-  auto r = create_receipt();
-  receipt_repository->store(r);
-  r.store_name = "new_store_name";
-  receipt_repository->store(r);
-  auto repo = services.get<repository::t_client>();
-  auto stored_receipt = repo->get<receipt>(r.id);
-  ASSERT_EQ(1, stored_receipt->version);
+  ASSERT_EQ(12, stored_receipt->version);
 }
 
 TEST_F(receipt_repository_test, should_handle_optimistic_concurrency) {
   auto receipt_repository = services.get<repository::t_receipt_repository>();
   auto r = create_receipt();
+  r.version = 12;
   receipt_repository->store(r);
   auto repo = services.get<repository::t_client>();
   auto stored_receipt = repo->get<receipt>(r.id);
-  stored_receipt->store_name = "new_store_name";
-  receipt_repository->store(*stored_receipt);
-  r.store_name = "new_store_name_2";
   try {
+    stored_receipt->store_name = "new_store_name";
+    // not updating version here yields concurrency error
     receipt_repository->store(r);
     FAIL() << "Expected an exception";
   } catch (const std::exception &e) {}
   
   auto stored_receipt_2 = repo->get<receipt>(r.id);
-  ASSERT_EQ(1, stored_receipt_2->version);
-  ASSERT_EQ("new_store_name", stored_receipt_2->store_name);
+  ASSERT_EQ(12, stored_receipt_2->version);
+  ASSERT_EQ("store_name", stored_receipt_2->store_name);
 }
 
 TEST_F(receipt_repository_test, should_delete_receipt_logically) {
@@ -159,6 +151,7 @@ TEST_F(receipt_repository_test, should_delete_receipt_logically) {
   auto repo = services.get<repository::t_client>();
   auto stored_receipt = repo->get<receipt>(r.id);
   ASSERT_TRUE(stored_receipt->is_deleted);
+  ASSERT_EQ(0, r.version);
 }
 
 TEST_F(receipt_repository_test, should_generate_concurrency_conflict_if_storing_deleted_receipt) {
@@ -167,6 +160,7 @@ TEST_F(receipt_repository_test, should_generate_concurrency_conflict_if_storing_
   receipt_repository->store(r);
   receipt_repository->drop(r);
   try {
+    r.version++;
     receipt_repository->store(r);
     FAIL() << "Expected an exception";
   } catch (const std::exception &e) {}
