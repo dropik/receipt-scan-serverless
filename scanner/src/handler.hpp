@@ -38,8 +38,7 @@ class handler {
     lambda::log.info("Version %s", APP_VERSION);
 
     try {
-      lambda::models::payloads::s3_request s3_request =
-          lambda::json::deserialize<lambda::models::payloads::s3_request>(request.payload);
+      auto s3_request = lambda::json::deserialize<lambda::models::payloads::s3_request>(request.payload);
 
       for (auto &record : s3_request.records) {
         if (!record.is_put()) {
@@ -71,7 +70,7 @@ class handler {
           for (auto &item : receipt.items) {
             item.receipt_id = receipt.id;
           }
-          receipt.version = existing_receipt.get_value().version;
+          receipt.version = existing_receipt.get_value().version + 1;
         }
         m_repository->store(receipt);
       }

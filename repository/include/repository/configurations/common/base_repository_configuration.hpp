@@ -58,9 +58,7 @@
 
 #define WITH_COLUMN(column_name) .with_column_name(column_name)
 
-namespace repository {
-namespace configurations {
-namespace common {
+namespace repository::configurations::common {
 
 template<typename T>
 class base_repository_configuration {
@@ -196,21 +194,21 @@ class base_repository_configuration {
     }
 
     int property_index = 1;
-    int new_version = 0;
+    int entity_version = 0;
     for (size_t i = 0; i < m_properties.size(); i++) {
       if (!m_properties[i]) continue;
       m_properties[i]->configure_statement(property_index, entity, m_update_statement);
       property_index++;
     }
     if (m_version) {
-      new_version = m_version->get_version(entity) + 1;
-      m_version->configure_statement(property_index, new_version, m_update_statement);
+      entity_version = m_version->get_version(entity);
+      m_version->configure_statement(property_index, entity_version, m_update_statement);
       property_index++;
     }
     m_id->configure_statement(property_index, entity, m_update_statement);
     property_index++;
     if (m_version) {
-      m_update_statement->setInt(property_index, new_version);
+      m_version->configure_statement(property_index, entity_version, m_update_statement);
     }
 
     return m_update_statement;
@@ -247,7 +245,7 @@ class base_repository_configuration {
     return m_delete_statement;
   }
 
-  const std::string &get_table_name() const {
+  [[nodiscard]] const std::string &get_table_name() const {
     if (!m_table) {
       throw std::runtime_error("Table is not configured!");
     }
@@ -305,6 +303,4 @@ class base_repository_configuration {
   std::shared_ptr<version_configuration<T>> m_version;
 };
 
-}  // namespace common
-}  // namespace configurations
-}  // namespace repository
+} // namespace repository::configurations::common

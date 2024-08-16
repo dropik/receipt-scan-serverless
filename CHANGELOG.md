@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.1
+- Updating entity version is now responsibility of the client. Therefore, re-updating entity with same version yields to concurrency exception. 
+
 ## v1.1.0
 - Migrated to Amazon Linux 2023 runtime.
 - Migrated to C++23 standard.

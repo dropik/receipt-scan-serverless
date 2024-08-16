@@ -111,7 +111,7 @@ class receipt_repository {
       return;
     }
     existing_receipt->is_deleted = true;
-    existing_receipt->version = receipt.version;
+    existing_receipt->version = receipt.version + 1;
     m_repository->template update<models::receipt>(*existing_receipt);
   }
 

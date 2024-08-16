@@ -58,7 +58,7 @@ struct fake_textract_client {
   std::string currency;
   std::string quantity = "1";
 
-  AnalyzeExpenseOutcome AnalyzeExpense(const AnalyzeExpenseRequest &request) const {
+  [[nodiscard]] AnalyzeExpenseOutcome AnalyzeExpense(const AnalyzeExpenseRequest &request) const {
     if (should_fail) {
       return {
           TextractError(
@@ -133,7 +133,7 @@ struct fake_bedrock_runtime_client {
   bool should_fail = false;
   std::string completion_body = R"({"completion": "Altro\n"})";
 
-  InvokeModelOutcome InvokeModel(const InvokeModelRequest &request) const {
+  [[nodiscard]] InvokeModelOutcome InvokeModel(const InvokeModelRequest &request) const {
     if (should_fail) {
       return {
           BedrockRuntimeError(
@@ -196,8 +196,6 @@ class scanner_test : public repository_integration_test {
 
       transient<t_handler, handler<>>
   > services;
-
-  const std::string receipt_failed = receipt::failed;
 };
 
 TEST_F(scanner_test, should_create_receipt) {
@@ -227,7 +225,7 @@ TEST_F(scanner_test, should_create_receipt) {
   ASSERT_EQ(item->sort_order, 0);
 }
 
-TEST_F(scanner_test, should_ignore_not_receipt_key_patter) {
+TEST_F(scanner_test, should_ignore_not_receipt_key_pattern) {
   auto handler = services.get<t_handler>();
   auto request = create_request("users/" USER_ID "/whatever");
   auto res = handler->operator()(request);
@@ -254,7 +252,7 @@ TEST_F(scanner_test, should_continue_if_textract_fails) {
   ASSERT_EQ(receipts->size(), 1);
   auto receipt = receipts->at(0);
   ASSERT_EQ(receipt->version, 0);
-  ASSERT_EQ(receipt->state, receipt_failed);
+  ASSERT_EQ(receipt->state, receipt::failed);
   ASSERT_EQ(receipt->date, lambda::utils::today());
   ASSERT_EQ(receipt->store_name, "-");
 }

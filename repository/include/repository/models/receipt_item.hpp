@@ -2,8 +2,7 @@
 
 #include <string>
 
-namespace repository {
-namespace models {
+namespace repository::models {
 
 struct receipt_item {
   guid id;
@@ -14,5 +13,4 @@ struct receipt_item {
   int sort_order;
 };
 
-}  // namespace models
-}  // namespace repository
+} // namespace repository::models

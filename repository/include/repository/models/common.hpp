@@ -2,10 +2,8 @@
 
 #include <string>
 
-namespace repository {
-namespace models {
+namespace repository::models {
 
 typedef std::string guid;
 
-}  // namespace models
-}  // namespace repository
+} // namespace repository::models

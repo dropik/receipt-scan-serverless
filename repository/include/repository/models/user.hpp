@@ -6,12 +6,10 @@
 
 #include "common.hpp"
 
-namespace repository {
-namespace models {
+namespace repository::models {
 
 struct user {
   guid id;
 };
 
-}
 }
