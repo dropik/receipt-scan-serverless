@@ -191,6 +191,7 @@ class client {
       lambda::log.error("Unable to establish connection with database!");
       throw std::runtime_error("Unable to establish connection with database!");
     }
+    conn->prepareStatement("set time_zone = '+00:00'")->execute();
     return std::move(conn);
   }
 };
