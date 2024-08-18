@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.2
+- Setting timezone to UTC once connection to database is established. This ensures that all timestamps comparisons are done in UTC. Client should always send timestamps in UTC.
+
 ## v1.1.1
 - Updating entity version is now responsibility of the client. Therefore, re-updating entity with same version yields to concurrency exception. 
 
