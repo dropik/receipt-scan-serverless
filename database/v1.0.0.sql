@@ -275,21 +275,20 @@ drop table user_devices;
 create event set_failed_receipt
 on schedule every 5 minute
 do
-begin
   update receipts
   set state = 'failed',
       version = version + 1
   where state = 'processing' and modified_timestamp < now() - interval 5 minute;
-end;
 
 # 2024-08-25: add event to delete logically deleted categories and receipts last modified greater then 1 month ago
-create event delete_deleted_entities
+create event delete_deleted_categories
 on schedule every 1 month
 do
-begin
   delete from categories
   where is_deleted <> 0 and modified_timestamp < now() - interval 1 month;
 
+create event delete_deleted_receipts
+on schedule every 1 month
+do
   delete from receipts
   where is_deleted <> 0 and modified_timestamp < now() - interval 1 month;
-end;
