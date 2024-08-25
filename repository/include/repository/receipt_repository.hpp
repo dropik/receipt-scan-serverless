@@ -63,45 +63,36 @@ class receipt_repository {
   }
 
   void store(const models::receipt &receipt) {
-    auto existing_receipt = m_repository->template select<models::receipt>(
-            "select * from receipts where id = ?")
-        .with_param(receipt.id)
-        .first_or_default();
-    if (!existing_receipt) {
-      m_repository->template create<models::receipt>(receipt);
-    } else {
-      if (existing_receipt->is_deleted) {
-        throw concurrency_exception();
-      }
-      m_repository->template update<models::receipt>(receipt);
-    }
+    m_repository->execute("start transaction").go();
 
-    auto existing_items = m_repository->template select<models::receipt_item>(
-            "select * from receipt_items where receipt_id = ?")
-        .with_param(receipt.id)
-        .all();
-    std::vector<std::string> delete_items;
-    for (const auto &item : *existing_items) {
-      delete_items.push_back(item->id);
-    }
-
-    for (int i = 0; i < receipt.items.size(); i++) {
-      auto item = receipt.items[i];
-      item.sort_order = i;
-      auto existing_item_id = std::find(delete_items.begin(), delete_items.end(), item.id);
-      if (existing_item_id == delete_items.end()) {
-        m_repository->template create<models::receipt_item>(item);
+    try {
+      auto existing_receipt = m_repository->template select<models::receipt>(
+              "select * from receipts where id = ?")
+          .with_param(receipt.id)
+          .first_or_default();
+      if (!existing_receipt) {
+        m_repository->template create<models::receipt>(receipt);
       } else {
-        m_repository->template update<models::receipt_item>(item);
-        delete_items.erase(existing_item_id);
+        if (existing_receipt->is_deleted) {
+          throw concurrency_exception();
+        }
+        m_repository->template update<models::receipt>(receipt);
       }
-    }
 
-    for (const auto &item_id : delete_items) {
-      m_repository->execute(
-              "delete from receipt_items where id = ?")
-          .with_param(item_id)
+      m_repository->execute("delete from receipt_items where receipt_id = ?")
+          .with_param(receipt.id)
           .go();
+
+      for (int i = 0; i < receipt.items.size(); i++) {
+        auto item = receipt.items[i];
+        item.sort_order = i;
+        m_repository->template create<models::receipt_item>(item);
+      }
+
+      m_repository->execute("commit").go();
+    } catch (std::exception &e) {
+      m_repository->execute("rollback").go();
+      throw;
     }
   }
 
