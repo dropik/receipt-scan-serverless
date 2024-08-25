@@ -63,6 +63,8 @@ class receipt_repository {
   }
 
   void store(const models::receipt &receipt) {
+    m_repository->execute("start transaction").go();
+
     auto existing_receipt = m_repository->template select<models::receipt>(
             "select * from receipts where id = ?")
         .with_param(receipt.id)
@@ -76,33 +78,17 @@ class receipt_repository {
       m_repository->template update<models::receipt>(receipt);
     }
 
-    auto existing_items = m_repository->template select<models::receipt_item>(
-            "select * from receipt_items where receipt_id = ?")
+    m_repository->execute("delete from receipt_items where receipt_id = ?")
         .with_param(receipt.id)
-        .all();
-    std::vector<std::string> delete_items;
-    for (const auto &item : *existing_items) {
-      delete_items.push_back(item->id);
-    }
+        .go();
 
     for (int i = 0; i < receipt.items.size(); i++) {
       auto item = receipt.items[i];
       item.sort_order = i;
-      auto existing_item_id = std::find(delete_items.begin(), delete_items.end(), item.id);
-      if (existing_item_id == delete_items.end()) {
-        m_repository->template create<models::receipt_item>(item);
-      } else {
-        m_repository->template update<models::receipt_item>(item);
-        delete_items.erase(existing_item_id);
-      }
+      m_repository->template create<models::receipt_item>(item);
     }
 
-    for (const auto &item_id : delete_items) {
-      m_repository->execute(
-              "delete from receipt_items where id = ?")
-          .with_param(item_id)
-          .go();
-    }
+    m_repository->execute("commit").go();
   }
 
   void drop(const models::receipt &receipt) {
