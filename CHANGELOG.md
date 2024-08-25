@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.3
+- When receipt contains items with same categories, the response contains list of categories with unique names.
+
 ## v1.1.2
 - Setting timezone to UTC once connection to database is established. This ensures that all timestamps comparisons are done in UTC. Client should always send timestamps in UTC.
 

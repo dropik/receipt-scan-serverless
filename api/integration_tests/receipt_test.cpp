@@ -396,5 +396,44 @@ TEST_F(receipt_test, get_changes_should_return_delete) {
 }])");
 }
 
+TEST_F(receipt_test, get_changes_should_merge_receipt_categories) {
+  init_user();
+  auto r = create_receipt();
+  auto ri1 = create_receipt_item(0);
+  auto ri2 = create_receipt_item(1);
+
+  auto today = lambda::utils::today();
+  auto response = (*api)(create_request("GET", (ENDPOINT "/changes?from=") + today + "T00:00:00Z", ""));
+  assert_response(response, "200", lambda::string::format(R"([
+{
+  "action": "create",
+  "body": {
+    "categories":["supermarket"],
+    "currency":"EUR",
+    "date":"2024-08-04",
+    "id": ")" TEST_RECEIPT R"(",
+    "imageName":"image",
+    "items":[
+      {
+        "amount":100,
+        "category":"supermarket",
+        "description":"item",
+        "id": "%s"
+      },
+      {
+        "amount":100,
+        "category":"supermarket",
+        "description":"item",
+        "id": "%s"
+      }
+    ],
+    "state":"done",
+    "storeName":"store",
+    "totalAmount":100,
+    "version":0
+  },
+  "id": ")" TEST_RECEIPT R"("
+}])", ri1.id.c_str(), ri2.id.c_str()));
 }
 
+}
