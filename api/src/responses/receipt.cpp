@@ -4,8 +4,7 @@
 
 #include "receipt.hpp"
 
-namespace api {
-namespace responses {
+namespace api::responses {
 
 receipt receipt::from_repo(const repository::models::receipt &receipt) {
   std::vector<std::string> categories;
@@ -19,7 +18,9 @@ receipt receipt::from_repo(const repository::models::receipt &receipt) {
 
   for (const auto &item : receipt.items) {
     items.push_back(receipt_item::from_repo(item));
-    categories.push_back(item.category);
+    if (std::find(categories.begin(), categories.end(), item.category) == categories.end()) {
+      categories.push_back(item.category);
+    }
   }
 
   return {
@@ -36,5 +37,4 @@ receipt receipt::from_repo(const repository::models::receipt &receipt) {
   };
 }
 
-}
 }

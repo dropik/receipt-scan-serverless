@@ -15,8 +15,7 @@
 #include "file_service.hpp"
 #include "../responses/change.hpp"
 
-namespace api {
-namespace services {
+namespace api::services {
 
 class t_receipt_service {};
 
@@ -98,5 +97,4 @@ class receipt_service {
   }
 };
 
-}
 }
