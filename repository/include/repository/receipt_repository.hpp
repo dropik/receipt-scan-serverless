@@ -65,30 +65,35 @@ class receipt_repository {
   void store(const models::receipt &receipt) {
     m_repository->execute("start transaction").go();
 
-    auto existing_receipt = m_repository->template select<models::receipt>(
-            "select * from receipts where id = ?")
-        .with_param(receipt.id)
-        .first_or_default();
-    if (!existing_receipt) {
-      m_repository->template create<models::receipt>(receipt);
-    } else {
-      if (existing_receipt->is_deleted) {
-        throw concurrency_exception();
+    try {
+      auto existing_receipt = m_repository->template select<models::receipt>(
+              "select * from receipts where id = ?")
+          .with_param(receipt.id)
+          .first_or_default();
+      if (!existing_receipt) {
+        m_repository->template create<models::receipt>(receipt);
+      } else {
+        if (existing_receipt->is_deleted) {
+          throw concurrency_exception();
+        }
+        m_repository->template update<models::receipt>(receipt);
       }
-      m_repository->template update<models::receipt>(receipt);
+
+      m_repository->execute("delete from receipt_items where receipt_id = ?")
+          .with_param(receipt.id)
+          .go();
+
+      for (int i = 0; i < receipt.items.size(); i++) {
+        auto item = receipt.items[i];
+        item.sort_order = i;
+        m_repository->template create<models::receipt_item>(item);
+      }
+
+      m_repository->execute("commit").go();
+    } catch (std::exception &e) {
+      m_repository->execute("rollback").go();
+      throw;
     }
-
-    m_repository->execute("delete from receipt_items where receipt_id = ?")
-        .with_param(receipt.id)
-        .go();
-
-    for (int i = 0; i < receipt.items.size(); i++) {
-      auto item = receipt.items[i];
-      item.sort_order = i;
-      m_repository->template create<models::receipt_item>(item);
-    }
-
-    m_repository->execute("commit").go();
   }
 
   void drop(const models::receipt &receipt) {
