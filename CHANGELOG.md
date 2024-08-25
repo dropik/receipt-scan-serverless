@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.4
+- Deleting all receipt items, when updating a receipt.
+- Using transactions when storing receipt.
+
 ## v1.1.3
 - When receipt contains items with same categories, the response contains list of categories with unique names.
 
