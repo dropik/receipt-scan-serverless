@@ -3,8 +3,7 @@
 #include <repository/models/category.hpp>
 #include "repository_configuration.hpp"
 
-namespace repository {
-namespace configurations {
+namespace repository::configurations {
 
 template <>
 class repository_configuration<models::category>
@@ -18,11 +17,11 @@ class repository_configuration<models::category>
     HAS_STRING(user_id) WITH_COLUMN("user_id");
     HAS_STRING(name) WITH_COLUMN("name");
     HAS_INT(color) WITH_COLUMN("color");
+    HAS_INT(icon) WITH_COLUMN("icon");
     HAS_BOOL(is_deleted) WITH_COLUMN("is_deleted");
 
     HAS_VERSION();
   }
 };
 
-}  // namespace configurations
-}  // namespace repository
+} // namespace repository::configurations

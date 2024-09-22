@@ -15,7 +15,7 @@ class category_repository {
  public:
   explicit category_repository(TRepository repository) : m_repository(std::move(repository)) {}
 
-  std::vector<models::category> get_all(const std::string &user_id) const {
+  [[nodiscard]] std::vector<models::category> get_all(const std::string &user_id) const {
     auto res = m_repository->template select<models::category>(
             "select * from categories where user_id = ? and is_deleted = 0 order by name")
         .with_param(user_id)
