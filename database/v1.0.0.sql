@@ -292,3 +292,7 @@ on schedule every 1 month
 do
   delete from receipts
   where is_deleted <> 0 and modified_timestamp < now() - interval 1 month;
+
+# 2024-09-22: add icon to category
+alter table categories
+add column icon int not null default 0;

@@ -11,8 +11,7 @@
 #include "../parameters/put_category.hpp"
 #include "../responses/change.hpp"
 
-namespace api {
-namespace services {
+namespace api::services {
 
 class t_category_service {};
 
@@ -71,5 +70,4 @@ class category_service {
   TIdentity m_identity;
 };
 
-}
 }
