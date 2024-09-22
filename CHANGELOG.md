@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.1.5
+- Added icon field to category.
+
 ## v1.1.4
 - Deleting all receipt items, when updating a receipt.
 - Using transactions when storing receipt.
