@@ -115,6 +115,7 @@ TEST_F(category_test, get_categories) {
 [
   {
     "color": 29,
+    "icon": 62345,
     "id": ")" TEST_CATEGORY R"(",
     "name": "category",
     "version": 0
@@ -176,6 +177,7 @@ TEST_F(category_test, get_changes_should_return_categories) {
   "action": "create",
   "body": {
     "color":29,
+    "icon": 62345,
     "id": ")" TEST_CATEGORY R"(",
     "name": "category",
     "version":0
@@ -199,6 +201,7 @@ TEST_F(category_test, get_changes_should_return_update) {
   "action": "update",
   "body": {
     "color":30,
+    "icon": 62345,
     "id": ")" TEST_CATEGORY R"(",
     "name": "category",
     "version":1

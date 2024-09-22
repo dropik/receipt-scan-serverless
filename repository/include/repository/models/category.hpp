@@ -11,6 +11,7 @@ struct category {
   guid user_id;
   std::string name;
   int color;
+  int icon = 0;
   int version = 0;
   bool is_deleted = false;
 };

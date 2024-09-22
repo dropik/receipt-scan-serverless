@@ -47,6 +47,7 @@ repository::models::category base_api_integration_test::create_category(const la
       .user_id = USER_ID,
       .name = "category",
       .color = 29,
+      .icon = 62345,
       .version = version.has_value() ? version.get_value() : 0,
   };
   repo->create<repository::models::category>(c);
