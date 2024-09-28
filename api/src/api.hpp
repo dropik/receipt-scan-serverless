@@ -98,6 +98,9 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       user.get("/")([&c]() {
         return c.template get<services::t_user_service>()->get_user();
       });
+      user.del("/")([&c]() {
+        return c.template get<services::t_user_service>()->delete_user();
+      });
     });
 
     v1.any("/budgets")([&c](api_resource &budgets) {

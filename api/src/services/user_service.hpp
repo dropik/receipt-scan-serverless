@@ -11,8 +11,7 @@
 #include "../api_errors.hpp"
 #include "../responses/user.hpp"
 
-namespace api {
-namespace services {
+namespace api::services {
 
 struct t_user_service {};
 
@@ -50,10 +49,23 @@ class user_service {
     return responses::user::from_repository(*users->at(0));
   }
 
+  void delete_user() {
+    auto user_id = m_identity->user_id;
+
+    try {
+      m_repository->execute("delete from receipts where user_id = ?").with_param(user_id).go();
+      m_repository->execute("delete from categories where user_id = ?").with_param(user_id).go();
+      m_repository->execute("delete from budgets where user_id = ?").with_param(user_id).go();
+      m_repository->execute("delete from users where id = ?").with_param(user_id).go();
+    } catch (const std::exception &e) {
+      lambda::log.error("Failed to delete user data: %s", e.what());
+      throw rest::api_exception(internal, "Failed to delete user data");
+    }
+  }
+
  private:
   TRepository m_repository;
   TIdentity m_identity;
 };
 
-}
 }
