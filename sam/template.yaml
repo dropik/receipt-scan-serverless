@@ -91,6 +91,13 @@ Resources:
               Resource:
                 - !Sub "arn:aws:s3:::${ImagesBucket}"
                 - !Sub "arn:aws:s3:::${ImagesBucket}/*"
+            - Sid: CognitoDeleteUserAccess
+              Effect: Allow
+              Action:
+                - "cognito-idp:AdminGetUser"
+                - "cognito-idp:AdminDeleteUser"
+              Resource:
+                - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPoolId}"
 
   LScanner:
     Type: AWS::Serverless::Function
