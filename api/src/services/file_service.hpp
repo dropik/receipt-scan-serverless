@@ -107,7 +107,7 @@ class file_service {
 
           auto delete_outcome = m_s3->DeleteObjects(delete_request);
           if (!delete_outcome.IsSuccess()) {
-            lambda::log.error("Failed to delete s3 objects: %s", delete_outcome.GetError().GetMessage());
+            lambda::log.error("Failed to delete s3 objects: %s", delete_outcome.GetError().GetMessage().c_str());
             throw rest::api_exception(internal, "Failed to delete user s3 objects");
           }
         }
@@ -118,7 +118,7 @@ class file_service {
           list_request.SetContinuationToken(result.GetNextContinuationToken());
         }
       } else {
-        lambda::log.error("Failed to list s3 objects: %s", list_outcome.GetError().GetMessage());
+        lambda::log.error("Failed to list s3 objects: %s", list_outcome.GetError().GetMessage().c_str());
         throw rest::api_exception(internal, "Failed to list user s3 objects");
       }
     }

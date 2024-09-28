@@ -17,7 +17,7 @@ message("Found aws-lambda-cpp-common: ${aws-lambda-cpp-common}")
 find_library(gssapi_krb5 gssapi_krb5)
 message("Found gssapi_krb5: ${gssapi_krb5}")
 find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime ssm)
+find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime ssm cognito-idp)
 
 if(WITH_TESTS)
     add_subdirectory(dependencies/test/googletest-1.14.0)

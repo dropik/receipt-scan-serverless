@@ -5,6 +5,7 @@
 #pragma once
 
 #include <aws/core/client/ClientConfiguration.h>
+#include <aws/cognito-idp/CognitoIdentityProviderClient.h>
 #include <aws/s3/S3Client.h>
 
 #include "integration_tests_common/repository_integration_test.hpp"
@@ -14,6 +15,7 @@
 #include "rest/api_root.hpp"
 
 #include "../src/s3_settings.hpp"
+#include "../src/cognito_settings.hpp"
 #include "../src/identity.hpp"
 #include "../src/services/user_service.hpp"
 #include "../src/services/file_service.hpp"
@@ -21,6 +23,7 @@
 #include "../src/services/category_service.hpp"
 
 #include "mocks/mock_s3_client.hpp"
+#include "mocks/mock_cognito_idp_client.hpp"
 #include "../src/services/budget_service.hpp"
 #include "../src/http_request.hpp"
 
@@ -38,9 +41,14 @@ class base_api_integration_test : public repository_integration_test {
   std::unique_ptr<rest::api_root> api;
   di::container<
       di::singleton<Aws::Client::ClientConfiguration>,
+
       di::singleton<repository::connection_settings>,
       di::singleton<s3_settings>,
+      di::singleton<cognito_settings>,
+
       di::singleton<Aws::S3::S3Client, mocks::mock_s3_client>,
+      di::singleton<Aws::CognitoIdentityProvider::CognitoIdentityProviderClient, mocks::mock_cognito_idp_client>,
+
       di::singleton<repository::t_client, repository::client<>>,
       di::transient<repository::t_category_repository, repository::category_repository<>>,
       di::transient<repository::t_receipt_repository, repository::receipt_repository<>>,

@@ -25,6 +25,8 @@ Parameters:
       - prod
   CognitoUserPool:
     Type: String
+  CognitoUserPoolId:
+    Type: String
 
 Resources:
   RESTApi:
@@ -58,6 +60,7 @@ Resources:
       Environment:
         Variables:
           IMAGES_BUCKET: !Ref ImagesBucket
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
       Events:
         Api:
           Type: Api
