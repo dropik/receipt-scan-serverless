@@ -10,6 +10,7 @@
 #include "../identity.hpp"
 #include "../api_errors.hpp"
 #include "../responses/user.hpp"
+#include "file_service.hpp"
 
 namespace api::services {
 
@@ -17,13 +18,14 @@ struct t_user_service {};
 
 template<
     typename TRepository = repository::t_client,
-    typename TIdentity = const identity>
+    typename TIdentity = const identity,
+    typename TFileService = t_file_service>
 class user_service {
   using user = repository::models::user;
 
  public:
-  user_service(TRepository repository, TIdentity identity)
-      : m_repository(std::move(repository)), m_identity(std::move(identity)) {}
+  user_service(TRepository repository, TIdentity identity, TFileService file_service)
+      : m_repository(std::move(repository)), m_identity(std::move(identity)), m_file_service(std::move(file_service)) {}
 
   void init_user() {
     auto user_id = m_identity->user_id;
@@ -50,8 +52,17 @@ class user_service {
   }
 
   void delete_user() {
-    auto user_id = m_identity->user_id;
+    delete_data_from_database();
+    m_file_service->delete_receipt_images(m_identity->user_id);
+  }
 
+ private:
+  TRepository m_repository;
+  TIdentity m_identity;
+  TFileService m_file_service;
+
+  void delete_data_from_database() {
+    auto user_id = m_identity->user_id;
     try {
       m_repository->execute("delete from receipts where user_id = ?").with_param(user_id).go();
       m_repository->execute("delete from categories where user_id = ?").with_param(user_id).go();
@@ -62,10 +73,6 @@ class user_service {
       throw rest::api_exception(internal, "Failed to delete user data");
     }
   }
-
- private:
-  TRepository m_repository;
-  TIdentity m_identity;
 };
 
 }
