@@ -71,6 +71,13 @@ Resources:
               Ref: RESTApi
             Auth:
               Authorizer: CognitoAuthorizer
+        ApiOptions:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: OPTIONS
+            RestApiId:
+              Ref: RESTApi
       Policies:
         - Version: 2012-10-17
           Statement:

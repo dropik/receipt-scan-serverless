@@ -90,8 +90,11 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
 
   // CORS
   api->use([&c](const auto &request, const auto &next) {
-    auto response = next(request);
+    if (request.http_method != "OPTIONS") {
+      return next(request);
+    }
 
+    auto response = rest::no_content();
     auto allowed_origins = std::vector<std::string>{"https://speza.it", "http://localhost:5173"};
     auto origin = request.headers.find("origin");
     if (origin == request.headers.end()) {
