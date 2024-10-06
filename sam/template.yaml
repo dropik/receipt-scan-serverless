@@ -78,6 +78,8 @@ Resources:
             Method: OPTIONS
             RestApiId:
               Ref: RESTApi
+            Auth:
+              Authorizer: NONE
       Policies:
         - Version: 2012-10-17
           Statement:
