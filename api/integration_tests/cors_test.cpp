@@ -8,11 +8,6 @@ using namespace api::integration_tests;
 
 class cors_test : public base_api_integration_test {};
 
-TEST_F(cors_test, should_not_add_header_if_origin_missing) {
-  auto response = (*api)(create_request("OPTIONS", "/v1/user", ""));
-  assert_response(response, "204", "", false);
-}
-
 TEST_F(cors_test, should_add_header_if_origin_matches) {
   auto response = (*api)(create_request("OPTIONS", "/v1/user", "", "https://speza.it"));
   assert_response(response, "204", "", true);

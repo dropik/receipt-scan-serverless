@@ -90,17 +90,16 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
 
   // CORS
   api->use([&c](const auto &request, const auto &next) {
-    if (request.http_method != "OPTIONS") {
-      return next(request);
-    }
+    auto response = request.http_method == "OPTIONS"
+        ? rest::no_content()
+        : next(request);
 
-    auto response = rest::no_content();
     auto allowed_origins = std::vector<std::string>{"https://speza.it", "http://localhost:5173"};
     auto origin = request.headers.find("origin");
     if (origin == request.headers.end()) {
       origin = request.headers.find("Origin");
     }
-    if (origin != request.headers.end() && std::find(allowed_origins.begin(), allowed_origins.end(), origin->second) != allowed_origins.end()) {
+    if (origin != request.headers.end() && !origin->second.empty() && std::find(allowed_origins.begin(), allowed_origins.end(), origin->second) != allowed_origins.end()) {
       response.headers["Access-Control-Allow-Headers"] = "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token";
       response.headers["Access-Control-Allow-Methods"] = "OPTIONS,GET,POST,PUT,DELETE,PATCH";
       response.headers["Access-Control-Allow-Origin"] = origin->second;

@@ -73,12 +73,12 @@ class base_api_integration_test : public repository_integration_test {
 aws::lambda_runtime::invocation_request create_request(const std::string &method,
                                                        const std::string &path,
                                                        const std::string &body,
-                                                       const std::string &origin = "");
+                                                       const std::string &origin = "https://speza.it");
 void assert_response(const aws::lambda_runtime::invocation_response &response,
                      const std::string &expected_status,
                      const std::string &expected_body,
-                     bool expect_cors = false);
-std::string expected_response(const std::string &status, const std::string &body = "", bool expect_cors = false);
+                     bool expect_cors = true);
+std::string expected_response(const std::string &status, const std::string &body = "", bool expect_cors = true);
 std::string make_body(const std::string &body);
 std::string pretty_json(const std::string &json);
 std::string compact_json(const std::string &json);
