@@ -45,6 +45,7 @@ add_executable(api_integration_tests
     ../src/cognito_settings.hpp
     mocks/mock_cognito_idp_client.cpp
     mocks/mock_cognito_idp_client.hpp
+    cors_test.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC
