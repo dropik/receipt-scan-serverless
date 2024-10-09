@@ -203,6 +203,32 @@ class api_resource {
     };
   }
 
+  auto del(const std::string &path) {
+    validate_path(path);
+
+    return [this, path](const auto &&h) {
+      this->m_routes.push_back([h, path](const api_request_t &request, const std::string &p) {
+        auto next_segment = get_next_segment(p);
+
+        if (next_segment != path) {
+          return not_found();
+        }
+
+        if (next_segment.size() != p.size()) {
+          // this is indeed not found, because a non ANY route should not have any segments after the path
+          return not_found();
+        }
+
+        if (request.http_method != "DELETE") {
+          return method_not_allowed();
+        }
+
+        h();
+        return ok();
+      });
+    };
+  }
+
   template<typename TParam>
   auto any() {
     using TRawParam = typename std::decay<TParam>::type;

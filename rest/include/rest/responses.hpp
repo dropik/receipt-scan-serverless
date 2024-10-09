@@ -10,6 +10,7 @@
 namespace rest {
 
 api_response_t ok();
+api_response_t no_content();
 api_response_t bad_request();
 api_response_t bad_request(const api_exception &e);
 api_response_t unauthorized();

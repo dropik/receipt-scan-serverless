@@ -3,4 +3,4 @@ set -e
 sam build
 stackname=receipt-scan-$1
 shift
-sam deploy --confirm-changeset --stack-name $stackname $@ 
+sam deploy --confirm-changeset --stack-name "$stackname" "$@"

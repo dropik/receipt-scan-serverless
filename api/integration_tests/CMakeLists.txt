@@ -42,6 +42,10 @@ add_executable(api_integration_tests
     ../src/responses/change.hpp
     ../src/services/changes_service.hpp
     ../src/http_request.hpp
+    ../src/cognito_settings.hpp
+    mocks/mock_cognito_idp_client.cpp
+    mocks/mock_cognito_idp_client.hpp
+    cors_test.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC
@@ -61,6 +65,7 @@ target_link_libraries(api_integration_tests
     aws-cpp-sdk-core
     aws-cpp-sdk-ssm
     aws-cpp-sdk-s3
+    aws-cpp-sdk-cognito-idp
     gtest
     integration_tests_common
 )

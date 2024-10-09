@@ -37,6 +37,7 @@ add_executable(${FUNCTION_NAME}
     src/responses/change.hpp
     src/services/changes_service.hpp
     src/http_request.hpp
+    src/cognito_settings.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
@@ -51,6 +52,7 @@ target_link_libraries(${FUNCTION_NAME} PUBLIC
     AWS::aws-lambda-runtime
     aws-cpp-sdk-core
     aws-cpp-sdk-s3
+    aws-cpp-sdk-cognito-idp
     ${aws-lambda-cpp-common}
     repository
     rest

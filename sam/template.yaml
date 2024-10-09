@@ -25,6 +25,8 @@ Parameters:
       - prod
   CognitoUserPool:
     Type: String
+  CognitoUserPoolId:
+    Type: String
 
 Resources:
   RESTApi:
@@ -58,6 +60,7 @@ Resources:
       Environment:
         Variables:
           IMAGES_BUCKET: !Ref ImagesBucket
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
       Events:
         Api:
           Type: Api
@@ -68,6 +71,15 @@ Resources:
               Ref: RESTApi
             Auth:
               Authorizer: CognitoAuthorizer
+        ApiOptions:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: OPTIONS
+            RestApiId:
+              Ref: RESTApi
+            Auth:
+              Authorizer: NONE
       Policies:
         - Version: 2012-10-17
           Statement:
@@ -85,9 +97,17 @@ Resources:
                 - "s3:PutObject"
                 - "s3:GetObject"
                 - "s3:DeleteObject"
+                - "s3:ListBucket"
               Resource:
                 - !Sub "arn:aws:s3:::${ImagesBucket}"
                 - !Sub "arn:aws:s3:::${ImagesBucket}/*"
+            - Sid: CognitoDeleteUserAccess
+              Effect: Allow
+              Action:
+                - "cognito-idp:AdminGetUser"
+                - "cognito-idp:AdminDeleteUser"
+              Resource:
+                - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPoolId}"
 
   LScanner:
     Type: AWS::Serverless::Function

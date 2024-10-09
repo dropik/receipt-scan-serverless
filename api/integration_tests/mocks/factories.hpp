@@ -17,4 +17,12 @@ struct service_factory<api::integration_tests::mocks::mock_s3_client> {
   }
 };
 
+template<>
+struct service_factory<api::integration_tests::mocks::mock_cognito_idp_client> {
+  template<typename TContainer, typename TPointerFactory>
+  static auto create(TContainer &container, TPointerFactory &&factory) {
+    return std::move(factory(*container.template get<Aws::Client::ClientConfiguration>()));
+  }
+};
+
 }
