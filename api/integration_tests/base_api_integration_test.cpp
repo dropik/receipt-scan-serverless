@@ -88,7 +88,8 @@ repository::models::receipt_item base_api_integration_test::create_receipt_item(
 
 aws::lambda_runtime::invocation_request create_request(const std::string &method,
                                                        const std::string &path,
-                                                       const std::string &body) {
+                                                       const std::string &body,
+                                                       const std::string &origin) {
   std::map<std::string, std::string> query_string_parameters;
   auto endpoint = path;
   if (path.find_first_of('?') != std::string::npos) {
@@ -127,7 +128,8 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
     "Accept-Encoding": "gzip, deflate, sdch",
     "Accept-Language": "en-US,en;q=0.8",
     "Cache-Control": "max-age=0",
-    "User-Agent": "Custom User Agent String"
+    "User-Agent": "Custom User Agent String",
+    "Origin": "%s"
   },
   "requestContext": {
     "accountId": "123456789012",
@@ -167,6 +169,7 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
                                 method.c_str(),
                                 endpoint.c_str(),
                                 query_string_params_str.c_str(),
+                                origin.c_str(),
                                 USER_ID,
                                 endpoint.c_str(),
                                 method.c_str()),
@@ -175,20 +178,29 @@ aws::lambda_runtime::invocation_request create_request(const std::string &method
 
 void assert_response(const aws::lambda_runtime::invocation_response &response,
                      const std::string &expected_status,
-                     const std::string &expected_body) {
-  ASSERT_EQ(pretty_json(response.get_payload()), expected_response(expected_status, expected_body));
+                     const std::string &expected_body,
+                     bool expect_cors) {
+  ASSERT_EQ(pretty_json(response.get_payload()), expected_response(expected_status, expected_body, expect_cors));
 }
 
-std::string expected_response(const std::string &status, const std::string &body) {
+std::string expected_response(const std::string &status, const std::string &body, bool expect_cors) {
+  auto headers = expect_cors ? R"(
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE,PATCH",
+    "Access-Control-Allow-Origin": "https://speza.it"
+  )" : "";
+
   return pretty_json(string::format(R"(
 {
   "body": "%s",
-  "headers": {},
+  "headers": {
+    %s
+  },
   "isBase64Encoded": false,
   "multiValueHeaders": {},
   "statusCode": %s
 }
-  )", make_body(body).c_str(), status.c_str()));
+  )", make_body(body).c_str(), headers, status.c_str()));
 }
 
 std::string make_body(const std::string &body) {

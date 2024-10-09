@@ -37,9 +37,14 @@ int main(int argc, char** argv) {
     auto function = [](auto req) {
       container<
           singleton<Aws::Client::ClientConfiguration>,
+
           singleton<repository::connection_settings>,
           singleton<s3_settings>,
+          singleton<cognito_settings>,
+
           singleton<Aws::S3::S3Client>,
+          singleton<Aws::CognitoIdentityProvider::CognitoIdentityProviderClient>,
+
           singleton<repository::t_client, repository::client<>>,
           transient<repository::t_category_repository, repository::category_repository<>>,
           transient<repository::t_receipt_repository, repository::receipt_repository<>>,

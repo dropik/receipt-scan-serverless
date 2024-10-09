@@ -54,6 +54,7 @@ Please note, that all endpoints except `POST /user` will return `400` if user wa
 ### User
 - `POST /user` - Init a new user. Only id is taken from `access_token`. No body required. Returns `200` if successful. Noop if user already exists.
 - `GET /user` - Get user id. Returns `200` with user id. Returns `404` if user was not initialized with `POST` endpoint.
+- `DELETE /user` - Delete user. By deleting user, all user's receipts, categories and budgets are deleted. Also all user's files are deleted from S3 bucket. And finally, user is deleted from Cognito User Pool. Returns `200` if successful. Endpoint is idempotent, so calling multiple times will return `200` every time.
 
 ### Budgets
 - `GET /budgets` - Get all budgets. Returns `200` with list of budgets.

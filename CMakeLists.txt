@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(receipt-scan-serverless VERSION 1.1.5 LANGUAGES CXX)
+project(receipt-scan-serverless VERSION 1.1.6 LANGUAGES CXX)
 
 option(WITH_TESTS "Whether to enable or disable building tests" ON)
 
@@ -17,7 +17,7 @@ message("Found aws-lambda-cpp-common: ${aws-lambda-cpp-common}")
 find_library(gssapi_krb5 gssapi_krb5)
 message("Found gssapi_krb5: ${gssapi_krb5}")
 find_package(aws-lambda-runtime REQUIRED)
-find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime ssm)
+find_package(AWSSDK COMPONENTS core s3 textract bedrock-runtime ssm cognito-idp)
 
 if(WITH_TESTS)
     add_subdirectory(dependencies/test/googletest-1.14.0)

@@ -13,6 +13,13 @@ api_response_t ok() {
   return response;
 }
 
+api_response_t no_content() {
+  api_response_t response;
+  response.status_code = 204;
+  response.set_body("", false);
+  return response;
+}
+
 api_response_t bad_request() {
   api_response_t response;
   response.status_code = 400;

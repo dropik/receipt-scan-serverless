@@ -374,6 +374,26 @@ TEST(api_root, patch_should_allow_only_patch) {
 
 // DELETE
 
+TEST(api_root, delete_should_be_available_by_path) {
+  api_root api;
+  api.del("/")([]() {});
+  api_request_t request;
+  request.path = "/";
+  request.http_method = "DELETE";
+  auto response = api(request);
+  EXPECT_EQ(response.status_code, 200);
+}
+
+TEST(api_root, delete_should_return_not_found) {
+  api_root api;
+  api.del("/123")([]() {});
+  api_request_t request;
+  request.path = "/456";
+  request.http_method = "DELETE";
+  auto response = api(request);
+  EXPECT_EQ(response.status_code, 404);
+}
+
 TEST(api_root, delete_should_capture_int_parameter) {
   api_root api;
   int id = 0;

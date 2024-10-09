@@ -8,9 +8,7 @@
 #include <aws/core/http/HttpTypes.h>
 #include <aws/s3/S3ServiceClientModel.h>
 
-namespace api {
-namespace integration_tests {
-namespace mocks {
+namespace api::integration_tests::mocks {
 
 class mock_s3_client {
  public:
@@ -25,8 +23,10 @@ class mock_s3_client {
                                    Aws::Http::HttpMethod http_method);
 
   Aws::S3::Model::DeleteObjectOutcome DeleteObject(const Aws::S3::Model::DeleteObjectRequest &request);
+
+  Aws::S3::Model::ListObjectsV2Outcome ListObjectsV2 (const Aws::S3::Model::ListObjectsV2Request &request) const;
+
+  Aws::S3::Model::DeleteObjectsOutcome DeleteObjects (const Aws::S3::Model::DeleteObjectsRequest &request) const;
 };
 
-}
-}
 }

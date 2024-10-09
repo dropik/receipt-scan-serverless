@@ -8,8 +8,8 @@
 #include "../model_types.hpp"
 #include "repository/models/user.hpp"
 
-namespace api {
-namespace responses {
+
+namespace api::responses {
 
 struct user {
   guid_t id;
@@ -21,5 +21,4 @@ struct user {
   static user from_repository(const repository::models::user &u);
 };
 
-}
 }
