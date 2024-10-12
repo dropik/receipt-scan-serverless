@@ -4,14 +4,13 @@
 
 #include "user.hpp"
 
-namespace api {
-namespace responses {
+namespace api::responses {
 
 user user::from_repository(const repository::models::user &u) {
   return {
       .id = u.id,
+      .has_subscription = u.has_subscription,
   };
 }
 
-}
 }

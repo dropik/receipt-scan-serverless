@@ -10,6 +10,7 @@ namespace repository::models {
 
 struct user {
   guid id;
+  bool has_subscription = false;
 };
 
 }

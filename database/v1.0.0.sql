@@ -296,3 +296,9 @@ do
 # 2024-09-22: add icon to category
 alter table categories
 add column icon int not null default 0;
+
+
+# v1.2.0
+# 2024-10-12: add has_subscription to users
+alter table users
+add column has_subscription boolean not null default false;

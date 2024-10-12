@@ -23,14 +23,18 @@ TEST_F(user_test, post_user) {
   auto users = repo->select<::models::user>("select * from users").all();
   ASSERT_EQ(users->size(), 1);
   ASSERT_EQ(users->at(0)->id, USER_ID);
+  ASSERT_EQ(users->at(0)->has_subscription, false);
 
-  // initializing same user once again is no-op
+  repo->execute("update users set has_subscription = 1").go();
+
+  // initializing same user once again is no-op, and should not change has_subscription
   response = (*api)(create_request("POST", ENDPOINT, ""));
   assert_response(response, "200", "");
 
   users = repo->select<::models::user>("select * from users").all();
   ASSERT_EQ(users->size(), 1);
   ASSERT_EQ(users->at(0)->id, USER_ID);
+  ASSERT_EQ(users->at(0)->has_subscription, true);
 }
 
 TEST_F(user_test, get_user) {
@@ -42,7 +46,7 @@ TEST_F(user_test, get_user) {
 
   // should return user
   response = (*api)(create_request("GET", ENDPOINT, ""));
-  assert_response(response, "200", R"({"id":")" USER_ID R"("})");
+  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"("})");
 }
 
 TEST_F(user_test, delete_user) {
