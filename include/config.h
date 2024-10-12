@@ -2,7 +2,7 @@
 
 #include <lambda/macros.h>
 
-#define APP_VERSION "1.1.6"
+#define APP_VERSION "1.2.0"
 
 #ifdef DEBUG
 #define AWS_REGION "eu-central-1"
