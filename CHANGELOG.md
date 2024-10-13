@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.2.0
+- Introduced user subscription. Protected receipt image upload endpoint to only allow users with subscription.
+
 ## v1.1.6
 - Extended rest API library to support `DELETE` method without capturing any parameters.
 - Added `DELETE` method to delete user. By deleting user, all user's receipts, categories and budgets are deleted. Also all user's files are deleted from S3 bucket. And finally, user is deleted from Cognito User Pool.
