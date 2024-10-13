@@ -48,6 +48,7 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
     if (users->size() == 0) {
       return rest::bad_request(rest::api_exception(user_not_initialized, "User is not initialized"));
     }
+    i->has_subscription = users->at(0)->has_subscription;
 
     return next(request);
   });
@@ -76,6 +77,8 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       lambda::log.info("API Exception: %d %s", e.error, e.message.c_str());
       if (e.error == not_found) {
         return rest::not_found();
+      } else if (e.error == forbidden) {
+        return rest::forbidden();
       }
       return bad_request(e);
     } catch (repository::entity_not_found_exception &e) {

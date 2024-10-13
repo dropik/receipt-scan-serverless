@@ -46,6 +46,9 @@ class receipt_service {
   }
 
   responses::file get_receipt_put_image_url(const guid_t &receipt_id) {
+    if (!m_identity->has_subscription) {
+      throw rest::api_exception(forbidden, "Subscription required");
+    }
     auto r = try_get_receipt(receipt_id);
     return m_file_service->get_upload_receipt_image_url(r.image_name);
   }

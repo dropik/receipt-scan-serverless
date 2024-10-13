@@ -41,6 +41,13 @@ api_response_t unauthorized() {
   return response;
 }
 
+api_response_t forbidden() {
+  api_response_t response;
+  response.status_code = 403;
+  response.set_body("", false);
+  return response;
+}
+
 api_response_t not_found() {
   api_response_t response;
   response.status_code = 404;

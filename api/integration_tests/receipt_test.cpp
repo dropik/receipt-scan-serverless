@@ -277,7 +277,7 @@ TEST_F(receipt_test, get_receipt_image_deleted) {
 }
 
 TEST_F(receipt_test, post_receipt_image) {
-  init_user();
+  init_user(true);
   create_receipt();
   create_receipt_item(0);
 
@@ -289,8 +289,17 @@ TEST_F(receipt_test, post_receipt_image) {
 )");
 }
 
-TEST_F(receipt_test, post_receipt_image_not_found) {
+TEST_F(receipt_test, post_receipt_image_forbidden_if_no_subscription) {
   init_user();
+  create_receipt();
+  create_receipt_item(0);
+
+  auto response = (*api)(create_request("POST", ENDPOINT "/" TEST_RECEIPT "/image", ""));
+  assert_response(response, "403", "");
+}
+
+TEST_F(receipt_test, post_receipt_image_not_found) {
+  init_user(true);
   create_receipt();
   create_receipt_item(0);
 

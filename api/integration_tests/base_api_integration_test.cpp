@@ -20,10 +20,11 @@ void base_api_integration_test::SetUp() {
   api = std::move(create_api(services));
 }
 
-void base_api_integration_test::init_user() {
+void base_api_integration_test::init_user(bool has_subscription) {
   auto repo = services.get<repository::t_client>();
   repo->create(repository::models::user {
-    .id = USER_ID
+    .id = USER_ID,
+    .has_subscription = has_subscription,
   });
 }
 

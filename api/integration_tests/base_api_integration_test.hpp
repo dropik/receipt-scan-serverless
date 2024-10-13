@@ -62,7 +62,7 @@ class base_api_integration_test : public repository_integration_test {
       di::transient<services::t_file_service, services::file_service<>>,
       di::transient<services::t_receipt_service, services::receipt_service<>>
   > services;
-  void init_user();
+  void init_user(bool has_subscription = false);
 
   repository::models::budget create_budget(const lambda::nullable<int>& version = lambda::nullable<int>());
   repository::models::category create_category(const lambda::nullable<int>& version = lambda::nullable<int>());
