@@ -53,6 +53,7 @@ add_executable(api_integration_tests
     ../src/parameters/rtdn.hpp
     ../src/parameters/gp_notification.hpp
     ../src/services/rtdn_service.hpp
+    ../src/services/http_client.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

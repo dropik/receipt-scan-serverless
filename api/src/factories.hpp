@@ -86,8 +86,7 @@ struct service_factory<api::services::google_api_auth_provider> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
     auto settings = container.template get<api::settings::google_api_settings>();
-    auto client_configuration = container.template get<Aws::Client::ClientConfiguration>();
-    return std::move(factory(settings, client_configuration));
+    return std::move(factory(settings));
   }
 };
 

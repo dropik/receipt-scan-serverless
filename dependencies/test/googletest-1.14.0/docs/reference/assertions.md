@@ -499,7 +499,7 @@ The following assertions test for `HRESULT` success or failure. For example:
 CComPtr<IShellDispatch2> shell;
 ASSERT_HRESULT_SUCCEEDED(shell.CoCreateInstance(L"Shell.Application"));
 CComVariant empty;
-ASSERT_HRESULT_SUCCEEDED(shell->ShellExecute(CComBSTR(url), empty, empty, empty, empty));
+ASSERT_HRESULT_SUCCEEDED(shell->ShellExecute(CComBSTR(auth_url), empty, empty, empty, empty));
 ```
 
 The generated output contains the human-readable error message associated with

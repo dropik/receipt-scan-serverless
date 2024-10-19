@@ -31,8 +31,8 @@
         <h2>{{ item.section }}</h2>
         <ul>
           {% for subitem in item.items %}
-          <m_a href="{{subitem.url | relative_url }}">
-            <li class="{% if subitem.url == page.url %}active{% endif %}">
+          <m_a href="{{subitem.auth_url | relative_url }}">
+            <li class="{% if subitem.auth_url == page.auth_url %}active{% endif %}">
               {{ subitem.title }}
             </li>
           </m_a>

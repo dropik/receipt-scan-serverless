@@ -7,9 +7,6 @@
 #include "lambda/log.hpp"
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/base64/Base64.h>
-#include <aws/core/http/standard/StandardHttpRequest.h>
-#include <aws/core/http/HttpResponse.h>
-#include <aws/core/http/curl/CurlHttpClient.h>
 
 using namespace api::services;
 using namespace Aws::Utils::Json;
@@ -169,8 +166,18 @@ std::string base64_encode(const std::string &input) {
   return base64.Encode(buf);
 }
 
-google_api_auth_provider::google_api_auth_provider(std::shared_ptr<api::settings::google_api_settings> settings, std::shared_ptr<Aws::Client::ClientConfiguration> client_configuration)
-    : m_settings(std::move(settings)), m_client_configuration(std::move(client_configuration)) {}
+struct google_api_auth_result {
+  std::string access_token;
+
+  JSON_BEGIN_SERIALIZER(google_api_auth_result)
+      JSON_PROPERTY("access_token", access_token)
+  JSON_END_SERIALIZER()
+};
+
+std::string auth_url = "https://oauth2.googleapis.com/token";
+
+google_api_auth_provider::google_api_auth_provider(std::shared_ptr<api::settings::google_api_settings> settings)
+    : m_settings(std::move(settings)) {}
 
 std::string google_api_auth_provider::get_access_token() {
   if (m_access_token.has_value()) {
@@ -181,34 +188,20 @@ std::string google_api_auth_provider::get_access_token() {
       .set_header_claim("kid", json_traits_facade(m_settings->private_key_id))
       .set_issuer(m_settings->client_email)
       .set_payload_claim("scope", json_traits_facade("https://www.googleapis.com/auth/androidpublisher"))
-      .set_audience("https://oauth2.googleapis.com/token")
+      .set_audience(auth_url)
       .set_issued_now()
       .set_expires_in(std::chrono::seconds{60})
       .sign(jwt::algorithm::rs256("", m_settings->private_key, "", ""), base64_encode);
 
-  CurlHttpClient client(*m_client_configuration);
-  auto request =
-      std::make_shared<Standard::StandardHttpRequest>(URI("https://oauth2.googleapis.com/token"),
-                                                      HttpMethod::HTTP_POST);
-  request->SetContentType("application/x-www-form-urlencoded");
   std::string body = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=" + token;
-  auto url_encoded_body = Aws::Utils::StringUtils::URLEncode(body.c_str());
-  auto body_stream = std::make_shared<std::stringstream>(url_encoded_body.c_str());
-  request->AddContentBody(body_stream);
-
-  auto response= client.MakeRequest(request);
-  auto &response_stream = response->GetResponseBody();
-  std::string response_body((std::istreambuf_iterator<char>(response_stream)), {});
-
-  if (response->GetResponseCode() == HttpResponseCode::OK) {
-    auto json_body = JsonValue(response_body);
-    auto access_token = json_body.View().GetString("access_token");
-    m_access_token = access_token;
-    return access_token;
+  auto outcome = m_client.post<google_api_auth_result>(auth_url, body, content_type::form);
+  if (outcome.is_success) {
+    m_access_token = outcome.result.access_token;
+    return m_access_token.value();
   } else {
-    lambda::log.error("Failed to get access token. Google API Auth responded with %d: %s",
-                      (int) response->GetResponseCode(),
-                      response_body.c_str());
-    throw std::runtime_error("Failed to get access token");
+    lambda::log.error("Failed to get access token. Google API responded with %d: %s.",
+                      outcome.status_code,
+                      outcome.error.value_or(""));
+    throw std::runtime_error("Failed to get access token.");
   }
 }

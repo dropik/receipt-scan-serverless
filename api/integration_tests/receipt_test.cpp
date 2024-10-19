@@ -246,7 +246,7 @@ TEST_F(receipt_test, get_receipt_image) {
   auto response = (*api)(create_request("GET", ENDPOINT "/" TEST_RECEIPT "/image", ""));
   assert_response(response, "200", R"(
 {
-  "url": "https://s3.amazonaws.com/test-bucket/users/)" USER_ID R"(/receipts/image"
+  "auth_url": "https://s3.amazonaws.com/test-bucket/users/)" USER_ID R"(/receipts/image"
 }
 )");
 }
@@ -284,7 +284,7 @@ TEST_F(receipt_test, post_receipt_image) {
   auto response = (*api)(create_request("POST", ENDPOINT "/" TEST_RECEIPT "/image", ""));
   assert_response(response, "200", R"(
 {
-    "url": "https://s3.amazonaws.com/test-bucket/users/)" USER_ID R"(/receipts/image"
+    "auth_url": "https://s3.amazonaws.com/test-bucket/users/)" USER_ID R"(/receipts/image"
 }
 )");
 }

@@ -11,7 +11,7 @@ class file {
   std::string url;
 
   JSON_BEGIN_SERIALIZER(file)
-      JSON_PROPERTY("url", url)
+      JSON_PROPERTY("auth_url", url)
   JSON_END_SERIALIZER()
 };
 
