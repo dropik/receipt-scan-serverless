@@ -16,7 +16,7 @@ add_executable(${FUNCTION_NAME}
     src/responses/category.hpp
     src/parameters/put_receipt.hpp
     src/factories.hpp
-    src/s3_settings.hpp
+    src/settings/s3_settings.hpp
     src/responses/user.hpp
     src/responses/user.cpp
     src/parameters/put_device.hpp
@@ -37,7 +37,9 @@ add_executable(${FUNCTION_NAME}
     src/responses/change.hpp
     src/services/changes_service.hpp
     src/http_request.hpp
-    src/cognito_settings.hpp
+    src/settings/cognito_settings.hpp
+    src/dependencies/jwt-cpp/jwt.h
+    src/settings/google_api_settings.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

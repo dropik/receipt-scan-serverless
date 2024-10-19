@@ -17,8 +17,9 @@
 #include <repository/factories.hpp>
 
 #include "identity.hpp"
-#include "s3_settings.hpp"
-#include "cognito_settings.hpp"
+#include "settings/s3_settings.hpp"
+#include "settings/cognito_settings.hpp"
+#include "settings/google_api_settings.hpp"
 
 #include "services/file_service.hpp"
 #include "services/user_service.hpp"
@@ -44,7 +45,7 @@ struct service_factory<Aws::S3::S3Client> {
 };
 
 template<>
-struct service_factory<api::s3_settings> {
+struct service_factory<api::settings::s3_settings> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
     return std::move(factory(getenv("IMAGES_BUCKET")));
@@ -60,10 +61,22 @@ struct service_factory<Aws::CognitoIdentityProvider::CognitoIdentityProviderClie
 };
 
 template<>
-struct service_factory<api::cognito_settings> {
+struct service_factory<api::settings::cognito_settings> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
     return std::move(factory(getenv("COGNITO_USER_POOL_ID")));
+  }
+};
+
+template<>
+struct service_factory<api::settings::google_api_settings> {
+  template<typename TContainer, typename TPointerFactory>
+  static auto create(TContainer &container, TPointerFactory &&factory) {
+    auto parameters = container.template get<parameter_manager>();
+    auto private_key_id = parameters->get("GoogleApiSettings/PrivateKeyId", "GOOGLE_API_PRIVATE_KEY_ID");
+    auto private_key = parameters->get("GoogleApiSettings/PrivateKey", "GOOGLE_API_PRIVATE_KEY");
+    auto client_email = parameters->get("GoogleApiSettings/ClientEmail", "GOOGLE_API_CLIENT_EMAIL");
+    return std::move(factory(private_key_id, private_key, client_email));
   }
 };
 

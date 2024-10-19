@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace api {
+namespace api::settings {
 
 struct s3_settings {
   s3_settings() = default;

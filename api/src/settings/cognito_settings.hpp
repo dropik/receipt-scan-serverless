@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace api {
+namespace api::settings {
 
 struct cognito_settings {
     cognito_settings() = default;

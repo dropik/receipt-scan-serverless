@@ -5,7 +5,7 @@ add_executable(api_integration_tests
     ../src/model_types.hpp
     ../src/responses/receipt.hpp
     ../src/parameters/put_receipt.hpp
-    ../src/s3_settings.hpp
+    ../src/settings/s3_settings.hpp
     ../src/services/category_service.hpp
     ../src/services/file_service.hpp
     ../src/services/receipt_service.hpp
@@ -42,11 +42,12 @@ add_executable(api_integration_tests
     ../src/responses/change.hpp
     ../src/services/changes_service.hpp
     ../src/http_request.hpp
-    ../src/cognito_settings.hpp
+    ../src/settings/cognito_settings.hpp
     mocks/mock_cognito_idp_client.cpp
     mocks/mock_cognito_idp_client.hpp
     cors_test.cpp
     ../src/dependencies/jwt-cpp/jwt.h
+    ../src/settings/google_api_settings.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

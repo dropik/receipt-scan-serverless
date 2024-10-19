@@ -14,8 +14,8 @@
 #include "repository/client.hpp"
 #include "rest/api_root.hpp"
 
-#include "../src/s3_settings.hpp"
-#include "../src/cognito_settings.hpp"
+#include "../src/settings/s3_settings.hpp"
+#include "../src/settings/cognito_settings.hpp"
 #include "../src/identity.hpp"
 #include "../src/services/user_service.hpp"
 #include "../src/services/file_service.hpp"
@@ -45,8 +45,8 @@ class base_api_integration_test : public repository_integration_test {
 
       di::singleton<di::parameter_manager>,
       di::singleton<repository::connection_settings>,
-      di::singleton<s3_settings>,
-      di::singleton<cognito_settings>,
+      di::singleton<settings::s3_settings>,
+      di::singleton<settings::cognito_settings>,
 
       di::singleton<Aws::S3::S3Client, mocks::mock_s3_client>,
       di::singleton<Aws::CognitoIdentityProvider::CognitoIdentityProviderClient, mocks::mock_cognito_idp_client>,

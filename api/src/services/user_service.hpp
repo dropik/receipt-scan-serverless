@@ -16,7 +16,7 @@
 #include "../identity.hpp"
 #include "../api_errors.hpp"
 #include "../responses/user.hpp"
-#include "../cognito_settings.hpp"
+#include "../settings/cognito_settings.hpp"
 
 namespace api::services {
 
@@ -27,7 +27,7 @@ template<
     typename TIdentity = const identity,
     typename TFileService = t_file_service,
     typename TCognitoIDP = Aws::CognitoIdentityProvider::CognitoIdentityProviderClient,
-    typename TCognitoSettings = cognito_settings>
+    typename TCognitoSettings = settings::cognito_settings>
 class user_service {
   using user = repository::models::user;
 

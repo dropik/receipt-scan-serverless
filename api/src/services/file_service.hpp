@@ -15,7 +15,7 @@
 
 #include "../responses/file.hpp"
 #include "../identity.hpp"
-#include "../s3_settings.hpp"
+#include "../settings/s3_settings.hpp"
 #include "../api_errors.hpp"
 
 namespace api::services {
@@ -24,7 +24,7 @@ class t_file_service {};
 
 template<
     typename TS3Client = Aws::S3::S3Client,
-    typename TS3Settings = const s3_settings,
+    typename TS3Settings = const settings::s3_settings,
     typename TIdentity = const identity>
 class file_service {
  public:

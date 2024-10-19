@@ -16,6 +16,7 @@ using namespace Aws;
 using namespace aws::lambda_runtime;
 using namespace Aws::Utils::Logging;
 using namespace api;
+using namespace api::settings;
 using namespace rest;
 using namespace di;
 using namespace services;
@@ -40,6 +41,7 @@ int main(int argc, char** argv) {
 
           singleton<parameter_manager>,
           singleton<repository::connection_settings>,
+          singleton<google_api_settings>,
           singleton<s3_settings>,
           singleton<cognito_settings>,
 
