@@ -41,9 +41,9 @@ int main(int argc, char** argv) {
 
           singleton<parameter_manager>,
           singleton<repository::connection_settings>,
-          singleton<google_api_settings>,
           singleton<s3_settings>,
           singleton<cognito_settings>,
+          singleton<google_api_settings>,
 
           singleton<Aws::S3::S3Client>,
           singleton<Aws::CognitoIdentityProvider::CognitoIdentityProviderClient>,
@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
 
           scoped<identity>,
           scoped<http_request>,
+          scoped<google_api_auth_provider>,
 
           transient<t_user_service, user_service<>>,
           transient<t_budget_service, budget_service<>>,
@@ -61,6 +62,8 @@ int main(int argc, char** argv) {
           transient<t_file_service, file_service<>>,
           transient<t_receipt_service, receipt_service<>>
       > services;
+
+      auto gaap = services.get<google_api_auth_provider>();
 
       auto api = create_api(services);
       return (*api)(req);

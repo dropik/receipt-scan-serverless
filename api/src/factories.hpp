@@ -25,6 +25,7 @@
 #include "services/user_service.hpp"
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
+#include "services/google_api_auth_provider.hpp"
 
 namespace di {
 
@@ -77,6 +78,16 @@ struct service_factory<api::settings::google_api_settings> {
     auto private_key = parameters->get("GoogleApiSettings/PrivateKey", "GOOGLE_API_PRIVATE_KEY");
     auto client_email = parameters->get("GoogleApiSettings/ClientEmail", "GOOGLE_API_CLIENT_EMAIL");
     return std::move(factory(private_key_id, private_key, client_email));
+  }
+};
+
+template<>
+struct service_factory<api::services::google_api_auth_provider> {
+  template<typename TContainer, typename TPointerFactory>
+  static auto create(TContainer &container, TPointerFactory &&factory) {
+    auto settings = container.template get<api::settings::google_api_settings>();
+    auto client_configuration = container.template get<Aws::Client::ClientConfiguration>();
+    return std::move(factory(settings, client_configuration));
   }
 };
 

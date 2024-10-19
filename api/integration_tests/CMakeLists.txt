@@ -48,6 +48,8 @@ add_executable(api_integration_tests
     cors_test.cpp
     ../src/dependencies/jwt-cpp/jwt.h
     ../src/settings/google_api_settings.hpp
+    ../src/services/google_api_auth_provider.hpp
+    ../src/services/google_api_auth_provider.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

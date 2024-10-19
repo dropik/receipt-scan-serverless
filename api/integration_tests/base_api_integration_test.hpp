@@ -16,11 +16,13 @@
 
 #include "../src/settings/s3_settings.hpp"
 #include "../src/settings/cognito_settings.hpp"
+#include "../src/settings/google_api_settings.hpp"
 #include "../src/identity.hpp"
 #include "../src/services/user_service.hpp"
 #include "../src/services/file_service.hpp"
 #include "../src/services/receipt_service.hpp"
 #include "../src/services/category_service.hpp"
+#include "../src/services/google_api_auth_provider.hpp"
 
 #include "mocks/mock_s3_client.hpp"
 #include "mocks/mock_cognito_idp_client.hpp"
@@ -47,6 +49,7 @@ class base_api_integration_test : public repository_integration_test {
       di::singleton<repository::connection_settings>,
       di::singleton<settings::s3_settings>,
       di::singleton<settings::cognito_settings>,
+      di::singleton<settings::google_api_settings>,
 
       di::singleton<Aws::S3::S3Client, mocks::mock_s3_client>,
       di::singleton<Aws::CognitoIdentityProvider::CognitoIdentityProviderClient, mocks::mock_cognito_idp_client>,
@@ -57,6 +60,7 @@ class base_api_integration_test : public repository_integration_test {
 
       di::scoped<identity>,
       di::scoped<http_request>,
+      di::scoped<services::google_api_auth_provider>,
 
       di::transient<services::t_user_service, services::user_service<>>,
       di::transient<services::t_budget_service, services::budget_service<>>,
