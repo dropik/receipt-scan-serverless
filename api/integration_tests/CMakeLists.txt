@@ -50,6 +50,9 @@ add_executable(api_integration_tests
     ../src/settings/google_api_settings.hpp
     ../src/services/google_api_auth_provider.hpp
     ../src/services/google_api_auth_provider.cpp
+    ../src/parameters/rtdn.hpp
+    ../src/parameters/gp_notification.hpp
+    ../src/services/rtdn_service.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

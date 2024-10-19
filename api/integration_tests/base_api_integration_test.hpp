@@ -23,6 +23,7 @@
 #include "../src/services/receipt_service.hpp"
 #include "../src/services/category_service.hpp"
 #include "../src/services/google_api_auth_provider.hpp"
+#include "../src/services/rtdn_service.hpp"
 
 #include "mocks/mock_s3_client.hpp"
 #include "mocks/mock_cognito_idp_client.hpp"
@@ -66,7 +67,8 @@ class base_api_integration_test : public repository_integration_test {
       di::transient<services::t_budget_service, services::budget_service<>>,
       di::transient<services::t_category_service, services::category_service<>>,
       di::transient<services::t_file_service, services::file_service<>>,
-      di::transient<services::t_receipt_service, services::receipt_service<>>
+      di::transient<services::t_receipt_service, services::receipt_service<>>,
+      di::transient<services::t_rtdn_service, services::rtdn_service<>>
   > services;
   void init_user(bool has_subscription = false);
 

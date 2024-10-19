@@ -17,6 +17,7 @@
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
 #include "services/budget_service.hpp"
+#include "services/rtdn_service.hpp"
 
 namespace api {
 
@@ -31,6 +32,8 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
 
   // Identity
   api->use([&c](const auto &request, const auto &next) {
+    if (request.path == "/v1/rtdn") return next(request);
+
     auto auth = request.request_context.authorizer;
     auto user_id = auth.claims["sub"];
     if (user_id.empty()) {
@@ -184,6 +187,10 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
         auto request = c.template get<http_request>()->current;
         return c.template get<services::t_receipt_service>()->get_changes(request.query_string_parameters["from"]);
       });
+    });
+
+    v1.post<parameters::rtdn<parameters::gp_notification>>("/rtdn")([&c](const auto &request) {
+      c.template get<services::t_rtdn_service>()->process_message(request);
     });
   });
 

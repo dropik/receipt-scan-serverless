@@ -60,7 +60,8 @@ int main(int argc, char** argv) {
           transient<t_budget_service, budget_service<>>,
           transient<t_category_service, category_service<>>,
           transient<t_file_service, file_service<>>,
-          transient<t_receipt_service, receipt_service<>>
+          transient<t_receipt_service, receipt_service<>>,
+          transient<t_rtdn_service, rtdn_service<>>
       > services;
 
       auto gaap = services.get<google_api_auth_provider>();

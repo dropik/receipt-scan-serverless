@@ -80,6 +80,15 @@ Resources:
               Ref: RESTApi
             Auth:
               Authorizer: NONE
+        RTDNApi:
+          Type: Api
+          Properties:
+            Path: /v1/rtdn
+            Method: ANY
+            RestApiId:
+              Ref: RESTApi
+            Auth:
+              Authorizer: NONE
       Policies:
         - Version: 2012-10-17
           Statement:
