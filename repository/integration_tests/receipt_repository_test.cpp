@@ -19,6 +19,7 @@ class receipt_repository_test : public base_repository_integration_test {
 
   container<
       singleton<Aws::Client::ClientConfiguration>,
+      singleton<di::parameter_manager>,
       singleton<repository::connection_settings>,
       scoped<repository::t_client, repository::client<>>,
       transient<repository::t_receipt_repository, repository::receipt_repository<>>

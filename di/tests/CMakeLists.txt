@@ -5,6 +5,7 @@ add_executable(di_tests
     ../include/di/singleton.hpp
     ../include/di/scoped.hpp
     ../include/di/container.hpp
+    ../include/di/parameter_manager.hpp
 )
 
 target_include_directories(di_tests PUBLIC
@@ -14,7 +15,9 @@ target_include_directories(di_tests PUBLIC
 
 target_link_libraries(di_tests
     gtest
-    gtest_main)
+    gtest_main
+    di
+)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(di_tests PRIVATE DEBUG)

@@ -74,3 +74,6 @@ Please note, that all endpoints except `POST /user` will return `400` if user wa
 - `GET /receipts/{id}/image` - Get a pre-signed url to obtain the receipt image. Returns `200` with url. Returns `404` if receipt was not found.
 - `POST /receipts/{id}/image` - Upload a receipt image. Only for subscribed users. This endpoint is used to start receipt image scan asynchronously. When scanning is done, the receipt state will pass to `done` and new version of receipt will be generated. Returns `200` if successful. Returns `404` if receipt was not found. Returns `403` if user is not subscribed.
 - `GET /receipts/changes?from=<changes-from>` - Get all receipt changes from given timestamp. Returns `200` with list of receipt changes.
+
+## Dependencies
+- [jwt-cpp](https://github.com/Thalhammer/jwt-cpp/) - JSON Web Token library for C++

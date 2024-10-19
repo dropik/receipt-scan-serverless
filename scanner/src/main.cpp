@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
       auto h = [](auto req) {
         container<
             singleton<Aws::Client::ClientConfiguration>,
+            singleton<parameter_manager>,
             singleton<repository::connection_settings>,
             singleton<TextractClient>,
             singleton<BedrockRuntimeClient>,

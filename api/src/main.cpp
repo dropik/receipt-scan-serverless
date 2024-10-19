@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
       container<
           singleton<Aws::Client::ClientConfiguration>,
 
+          singleton<parameter_manager>,
           singleton<repository::connection_settings>,
           singleton<s3_settings>,
           singleton<cognito_settings>,

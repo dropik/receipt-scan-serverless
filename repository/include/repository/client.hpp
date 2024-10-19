@@ -21,8 +21,6 @@
 
 namespace repository {
 
-std::string get_connection_string(const std::string &stage, const Aws::Client::ClientConfiguration &config);
-
 struct t_client {};
 
 template<

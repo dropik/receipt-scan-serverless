@@ -26,6 +26,7 @@
 #include "mocks/mock_cognito_idp_client.hpp"
 #include "../src/services/budget_service.hpp"
 #include "../src/http_request.hpp"
+#include "di/parameter_manager.hpp"
 
 #define USER_ID "d394a832-4011-7023-c519-afe3adaf0233"
 #define TEST_BUDGET "d394a832-4011-7023-c519-afe3adaf0233"
@@ -42,6 +43,7 @@ class base_api_integration_test : public repository_integration_test {
   di::container<
       di::singleton<Aws::Client::ClientConfiguration>,
 
+      di::singleton<di::parameter_manager>,
       di::singleton<repository::connection_settings>,
       di::singleton<s3_settings>,
       di::singleton<cognito_settings>,

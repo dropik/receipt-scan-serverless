@@ -46,6 +46,7 @@ add_executable(api_integration_tests
     mocks/mock_cognito_idp_client.cpp
     mocks/mock_cognito_idp_client.hpp
     cors_test.cpp
+    ../src/dependencies/jwt-cpp/jwt.h
 )
 
 target_include_directories(api_integration_tests PUBLIC

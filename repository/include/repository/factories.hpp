@@ -18,8 +18,8 @@ template<>
 struct service_factory<repository::connection_settings> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
-    auto stage = lambda::get_stage();
-    auto connection_string = repository::get_connection_string(stage, *container.template get<Aws::Client::ClientConfiguration>());
+    auto parameters = container.template get<parameter_manager>();
+    auto connection_string = parameters->get("db-connection-string", "DB_CONNECTION_STRING");
     return std::move(factory(connection_string));
   }
 };

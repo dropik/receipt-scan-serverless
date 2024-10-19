@@ -14,6 +14,10 @@ target_include_directories(lambda PUBLIC
     aws-sdk-cpp-core
 )
 
+target_link_libraries(lambda PUBLIC
+    di
+)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(lambda PRIVATE DEBUG)
 endif()

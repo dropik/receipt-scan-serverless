@@ -2,7 +2,6 @@ find_package(mariadb)
 
 add_library(repository STATIC
     include/repository/client.hpp
-    src/client.cpp
     include/repository/models/common.hpp
     include/repository/models/category.hpp
     include/repository/models/receipt.hpp

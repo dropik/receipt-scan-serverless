@@ -186,6 +186,7 @@ class scanner_test : public repository_integration_test {
       scoped<BedrockRuntimeClient, fake_bedrock_runtime_client>,
 
       singleton<Aws::Client::ClientConfiguration>,
+      singleton<parameter_manager>,
       singleton<repository::connection_settings>,
       singleton<t_client, client<>>,
       transient<t_receipt_repository, receipt_repository<>>,
