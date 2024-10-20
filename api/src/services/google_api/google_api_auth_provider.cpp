@@ -3,12 +3,12 @@
 //
 
 #include "google_api_auth_provider.hpp"
-#include "../dependencies/jwt-cpp/jwt.h"
+#include "../../dependencies/jwt-cpp/jwt.h"
 #include "lambda/log.hpp"
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/base64/Base64.h>
 
-using namespace api::services;
+using namespace api::services::google_api;
 using namespace Aws::Utils::Json;
 using namespace Aws::Utils::Base64;
 using namespace Aws::Http;

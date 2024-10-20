@@ -22,7 +22,7 @@
 #include "../src/services/file_service.hpp"
 #include "../src/services/receipt_service.hpp"
 #include "../src/services/category_service.hpp"
-#include "../src/services/google_api_auth_provider.hpp"
+#include "../src/services/google_api/google_api_auth_provider.hpp"
 #include "../src/services/rtdn_service.hpp"
 
 #include "mocks/mock_s3_client.hpp"
@@ -61,7 +61,7 @@ class base_api_integration_test : public repository_integration_test {
 
       di::scoped<identity>,
       di::scoped<http_request>,
-      di::scoped<services::google_api_auth_provider>,
+      di::scoped<services::google_api::google_api_auth_provider>,
 
       di::transient<services::t_user_service, services::user_service<>>,
       di::transient<services::t_budget_service, services::budget_service<>>,

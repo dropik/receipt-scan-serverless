@@ -8,10 +8,10 @@
 #include <optional>
 #include <aws/core/client/ClientConfiguration.h>
 
-#include "../settings/google_api_settings.hpp"
-#include "http_client.hpp"
+#include "../../settings/google_api_settings.hpp"
+#include "../http_client.hpp"
 
-namespace api::services {
+namespace api::services::google_api {
 
 class google_api_auth_provider {
  public:

@@ -40,12 +40,20 @@ add_executable(${FUNCTION_NAME}
     src/settings/cognito_settings.hpp
     src/dependencies/jwt-cpp/jwt.h
     src/settings/google_api_settings.hpp
-    src/services/google_api_auth_provider.hpp
-    src/services/google_api_auth_provider.cpp
+    src/services/google_api/google_api_auth_provider.hpp
+    src/services/google_api/google_api_auth_provider.cpp
     src/parameters/rtdn.hpp
     src/parameters/gp_notification.hpp
     src/services/rtdn_service.hpp
     src/services/http_client.hpp
+    src/services/google_api/purchases_subscriptions_v2/purchases_subscriptions_v2_client.hpp
+    src/services/google_api/types.hpp
+    src/services/google_api/purchases_subscriptions_v2/models/enums.hpp
+    src/services/google_api/purchases_subscriptions_v2/models/purchases_subscriptions_v2_revoke_request.hpp
+    src/services/google_api/purchases_subscriptions_v2/models/subscription_purchase_v2.hpp
+    src/services/google_api/purchases_subscriptions/models/purchases_subscriptions_acknowledge_request.hpp
+    src/services/google_api/purchases_subscriptions/purchases_subscriptions_client.hpp
+    src/services/google_api/base_google_api_client.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC

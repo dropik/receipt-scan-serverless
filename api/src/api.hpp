@@ -95,7 +95,7 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
   });
 
   // CORS
-  api->use([&c](const auto &request, const auto &next) {
+  api->use([](const auto &request, const auto &next) {
     auto response = request.http_method == "OPTIONS"
         ? rest::no_content()
         : next(request);

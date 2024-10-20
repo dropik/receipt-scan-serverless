@@ -25,7 +25,9 @@
 #include "services/user_service.hpp"
 #include "services/receipt_service.hpp"
 #include "services/category_service.hpp"
-#include "services/google_api_auth_provider.hpp"
+#include "services/google_api/google_api_auth_provider.hpp"
+#include "services/google_api/purchases_subscriptions/purchases_subscriptions_client.hpp"
+#include "services/google_api/purchases_subscriptions_v2/purchases_subscriptions_v2_client.hpp"
 
 namespace di {
 
@@ -82,7 +84,7 @@ struct service_factory<api::settings::google_api_settings> {
 };
 
 template<>
-struct service_factory<api::services::google_api_auth_provider> {
+struct service_factory<api::services::google_api::google_api_auth_provider> {
   template<typename TContainer, typename TPointerFactory>
   static auto create(TContainer &container, TPointerFactory &&factory) {
     auto settings = container.template get<api::settings::google_api_settings>();

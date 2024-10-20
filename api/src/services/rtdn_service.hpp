@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "google_api_auth_provider.hpp"
 #include "../parameters/rtdn.hpp"
 #include "../parameters/gp_notification.hpp"
 #include "../http_request.hpp"
@@ -14,11 +13,10 @@ namespace api::services {
 
 struct t_rtdn_service {};
 
-template<typename TAuthProvider = google_api_auth_provider, typename THttpRequest = http_request>
+template<typename THttpRequest = http_request>
 class rtdn_service {
  public:
-  explicit rtdn_service(TAuthProvider auth_provider, THttpRequest http_request)
-      : m_auth_provider(std::move(auth_provider)), m_http_request(std::move(http_request)) {}
+  explicit rtdn_service(THttpRequest http_request) : m_http_request(std::move(http_request)) {}
 
   void process_message(const parameters::rtdn<parameters::gp_notification> &message) {
     auto &req = get_http_request();
@@ -34,7 +32,6 @@ class rtdn_service {
   }
 
  private:
-  TAuthProvider m_auth_provider;
   THttpRequest m_http_request;
 
   [[nodiscard]] const http_request & get_http_request() const {

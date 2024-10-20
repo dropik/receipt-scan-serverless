@@ -17,9 +17,12 @@ using namespace aws::lambda_runtime;
 using namespace Aws::Utils::Logging;
 using namespace api;
 using namespace api::settings;
+using namespace api::services;
+using namespace api::services::google_api;
+using namespace api::services::google_api::purchases_subscriptions;
+using namespace api::services::google_api::purchases_subscriptions_v2;
 using namespace rest;
 using namespace di;
-using namespace services;
 
 int main(int argc, char** argv) {
   SDKOptions options;
@@ -61,10 +64,10 @@ int main(int argc, char** argv) {
           transient<t_category_service, category_service<>>,
           transient<t_file_service, file_service<>>,
           transient<t_receipt_service, receipt_service<>>,
+          transient<t_purchases_subscriptions_client, purchases_subscriptions_client<>>,
+          transient<t_purchases_subscriptions_v2_client, purchases_subscriptions_v2_client<>>,
           transient<t_rtdn_service, rtdn_service<>>
       > services;
-
-      auto gaap = services.get<google_api_auth_provider>();
 
       auto api = create_api(services);
       return (*api)(req);
