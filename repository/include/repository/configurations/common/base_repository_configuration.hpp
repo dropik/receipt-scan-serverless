@@ -34,6 +34,13 @@
       },                                                 \
       [](entity_t& entity, const std::string& s) { entity.field = s; })
 
+#define HAS_OPTIONAL_STRING(field) \
+  has_property<lambda::nullable<std::string>>(           \
+      [](const entity_t& entity) -> const lambda::nullable<std::string>& { \
+        return entity.field;                             \
+      },                                                 \
+      [](entity_t& entity, const lambda::nullable<std::string>& s) { entity.field = s; })
+
 #define HAS_INT(field) \
   has_property<int>(   \
       [](const entity_t& entity) -> int { return entity.field; }, \

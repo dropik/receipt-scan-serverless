@@ -1,12 +1,12 @@
 #pragma once
 
 #include <string>
+#include <lambda/nullable.hpp>
 
 #include "base_property_configuration.hpp"
+#include <mariadb/conncpp/Types.hpp>
 
-namespace repository {
-namespace configurations {
-namespace common {
+namespace repository::configurations::common {
 
 template <typename T, typename TProperty>
 class property_configuration : public base_property_configuration<T> {
@@ -160,6 +160,38 @@ class property_configuration<T, bool> : public base_property_configuration<T> {
   property_setter_t m_property_setter;
 };
 
-}  // namespace common
-}  // namespace configurations
-}  // namespace repository
+template<typename T>
+class property_configuration<T, lambda::nullable<std::string>>
+    : public base_property_configuration<T> {
+ public:
+  typedef const lambda::nullable<std::string>& (*property_selector_t)(const T&);
+  typedef void (*property_setter_t)(T&, const lambda::nullable<std::string>&);
+
+  property_configuration(const property_selector_t& property_selector,
+                         const property_setter_t& property_setter)
+      : m_property_selector(property_selector),
+        m_property_setter(property_setter) {}
+
+  void configure_statement(int p_number, const T& t,
+                           std::shared_ptr<sql::PreparedStatement>& stmt) {
+    if (m_property_selector(t).has_value()) {
+      stmt->setString(p_number, m_property_selector(t).get_value());
+    } else {
+      stmt->setNull(p_number, sql::DataType::VARCHAR);
+    }
+  }
+
+  void set_entity_property(T& t, sql::ResultSet* res) {
+    if (res->isNull(this->get_column_name())) {
+      m_property_setter(t, lambda::nullable<std::string>());
+    } else {
+      m_property_setter(t, lambda::nullable<std::string>(res->getString(this->get_column_name()).c_str()));
+    }
+  }
+
+ private:
+  property_selector_t m_property_selector;
+  property_setter_t m_property_setter;
+};
+
+} // namespace repository::configurations::common

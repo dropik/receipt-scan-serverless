@@ -302,3 +302,13 @@ add column icon int not null default 0;
 # 2024-10-12: add has_subscription to users
 alter table users
 add column has_subscription boolean not null default false;
+
+# 2024-10-21: add subscription_expiry_time, purchase_token and payment_account_email to users
+alter table users
+add column subscription_expiry_time timestamp null default null;
+
+alter table users
+add column purchase_token text null default null;
+
+alter table users
+add column payment_account_email varchar(100) null default null;
