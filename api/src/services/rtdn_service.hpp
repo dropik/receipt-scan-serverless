@@ -8,34 +8,33 @@
 #include "../parameters/gp_notification.hpp"
 #include "../http_request.hpp"
 #include "lambda/log.hpp"
+#include "google_api/purchases_subscriptions_v2/purchases_subscriptions_v2_client.hpp"
 
 namespace api::services {
 
 struct t_rtdn_service {};
 
-template<typename THttpRequest = http_request>
+template<typename TSubscriptionsV2Client = google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client>
 class rtdn_service {
  public:
-  explicit rtdn_service(THttpRequest http_request) : m_http_request(std::move(http_request)) {}
+  explicit rtdn_service(TSubscriptionsV2Client subscriptions_v2_client)
+      : m_subscriptions_v2_client(std::move(subscriptions_v2_client)) {}
 
   void process_message(const parameters::rtdn<parameters::gp_notification> &message) {
-    auto &req = get_http_request();
-    auto req_body = req.current.get_body();
-    lambda::log.info("Received RTDN message: %s", req_body.c_str());
-
-    auto data = message.message.data;
-    lambda::log.info("RTDN message data: %s", data.c_str());
-
     auto notification = message.get_message();
-    auto notification_json = lambda::json::serialize(notification);
-    lambda::log.info("RTDN notification: %s", notification_json.c_str());
+    if (notification.test_notification.has_value()) {
+      lambda::log.info("Received test notification");
+      return;
+    }
   }
 
  private:
-  THttpRequest m_http_request;
+  TSubscriptionsV2Client m_subscriptions_v2_client;
 
-  [[nodiscard]] const http_request & get_http_request() const {
-    return *m_http_request;
+  using subscription_purchase_v2 = google_api::purchases_subscriptions_v2::models::subscription_purchase_v2;
+
+  outcome<subscription_purchase_v2> get_subscription_state_outcome(const std::string &package_name, const std::string &token) {
+    return m_subscriptions_v2_client.get(package_name, token);
   }
 };
 

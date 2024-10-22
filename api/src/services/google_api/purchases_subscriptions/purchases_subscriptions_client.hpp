@@ -12,22 +12,17 @@
 
 namespace api::services::google_api::purchases_subscriptions {
 
-struct t_purchases_subscriptions_client {
-  virtual outcome<no_result> acknowledge(const std::string &package_name,
-                                         const std::string &subscription_id,
-                                         const std::string &token,
-                                         const models::purchases_subscriptions_acknowledge_request &request) = 0;
-};
+struct t_purchases_subscriptions_client {};
 
 template<typename TAuthProvider = google_api_auth_provider>
-class purchases_subscriptions_client : public t_purchases_subscriptions_client, protected base_google_api_client {
+class purchases_subscriptions_client : protected base_google_api_client {
  public:
   explicit purchases_subscriptions_client(TAuthProvider auth) : base_google_api_client(std::move(auth)) {}
 
   outcome<no_result> acknowledge(const std::string &package_name,
                                  const std::string &subscription_id,
                                  const std::string &token,
-                                 const models::purchases_subscriptions_acknowledge_request &request) override {
+                                 const models::purchases_subscriptions_acknowledge_request &request) {
     auto url = lambda::string::format(acknowledge_url_format, package_name, subscription_id, token);
     auto body = lambda::json::serialize(request);
     return post<no_result>(url, body);

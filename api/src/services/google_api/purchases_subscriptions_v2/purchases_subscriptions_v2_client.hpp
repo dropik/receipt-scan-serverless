@@ -12,26 +12,21 @@
 
 namespace api::services::google_api::purchases_subscriptions_v2 {
 
-struct t_purchases_subscriptions_v2_client {
-  virtual outcome<models::subscription_purchase_v2> get(const std::string &package_name, const std::string &token) = 0;
-  virtual outcome<no_result> revoke(const std::string &package_name,
-                                    const std::string &token,
-                                    const models::purchases_subscriptions_v2_revoke_request &request) = 0;
-};
+struct t_purchases_subscriptions_v2_client {};
 
 template<typename TAuthProvider = google_api_auth_provider>
-class purchases_subscriptions_v2_client : public t_purchases_subscriptions_v2_client, protected base_google_api_client {
+class purchases_subscriptions_v2_client : protected base_google_api_client {
  public:
   explicit purchases_subscriptions_v2_client(TAuthProvider auth) : base_google_api_client(auth) {}
 
-  outcome<models::subscription_purchase_v2> get(const std::string &package_name, const std::string &token) override {
+  outcome<models::subscription_purchase_v2> get(const std::string &package_name, const std::string &token) {
     auto url = lambda::string::format(get_url_format, package_name.c_str(), token.c_str());
     return base_google_api_client::get<models::subscription_purchase_v2>(url);
   }
 
   outcome<no_result> revoke(const std::string &package_name,
                             const std::string &token,
-                            const models::purchases_subscriptions_v2_revoke_request &request) override {
+                            const models::purchases_subscriptions_v2_revoke_request &request) {
     auto url = lambda::string::format(revoke_url_format, package_name.c_str(), token.c_str());
     auto body = lambda::json::serialize(request, true);
     return post<no_result>(url, body);

@@ -62,6 +62,8 @@ add_executable(api_integration_tests
     ../src/services/google_api/purchases_subscriptions/models/purchases_subscriptions_acknowledge_request.hpp
     ../src/services/google_api/purchases_subscriptions/purchases_subscriptions_client.hpp
     ../src/services/google_api/base_google_api_client.hpp
+    mocks/mock_purchases_subscriptions_v2_client.hpp
+    rtdn_test.cpp
 )
 
 target_include_directories(api_integration_tests PUBLIC
