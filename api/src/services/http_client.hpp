@@ -6,9 +6,9 @@
 
 #include <optional>
 
-#include <aws/core/http/curl/CurlHttpClient.h>
-#include <aws/core/http/standard/StandardHttpRequest.h>
+#include <aws/core/http/HttpClient.h>
 #include <aws/core/http/HttpResponse.h>
+#include <aws/core/http/HttpClientFactory.h>
 
 #include <lambda/json.hpp>
 
@@ -36,7 +36,9 @@ struct no_result {};
 
 class http_client {
  public:
-  http_client() : m_client(Aws::Client::ClientConfiguration{}) {}
+  http_client() {
+    m_client = Aws::Http::CreateHttpClient(Aws::Client::ClientConfiguration());
+  }
 
   template<typename TResult>
   outcome<TResult> get(const std::string &url) {
@@ -55,10 +57,8 @@ class http_client {
   }
 
  private:
-  Aws::Http::CurlHttpClient m_client;
+  std::shared_ptr<Aws::Http::HttpClient> m_client;
 
-  using http_request = Aws::Http::Standard::StandardHttpRequest;
-  using uri = Aws::Http::URI;
   using http_method = Aws::Http::HttpMethod;
   using http_status = Aws::Http::HttpResponseCode;
 
@@ -69,7 +69,7 @@ class http_client {
                                 const std::optional<std::string> &body,
                                 const std::optional<std::string> &content_type,
                                 const http_method &method) {
-    auto request = std::make_shared<http_request>(uri(url), method);
+    auto request = Aws::Http::CreateHttpRequest(url, method, Aws::Utils::Stream::DefaultResponseStreamFactoryMethod);
 
     if (content_type.has_value()) {
       request->SetContentType(content_type.value());
@@ -84,18 +84,23 @@ class http_client {
       request->SetAuthorization(m_authorization.value());
     }
 
-    auto response = m_client.MakeRequest(request);
-    auto &response_stream = response->GetResponseBody();
-    std::string response_body((std::istreambuf_iterator<char>(response_stream)), {});
+    try {
+      auto response = m_client->MakeRequest(request);
+      auto &response_stream = response->GetResponseBody();
+      std::string response_body((std::istreambuf_iterator<char>(response_stream)), {});
 
-    if (response->GetResponseCode() == http_status::OK) {
-      if constexpr (std::is_same_v<TResult, no_result>) {
-        return outcome<TResult>(no_result{});
+      if (response->GetResponseCode() == http_status::OK) {
+        if constexpr (std::is_same_v<TResult, no_result>) {
+          return outcome<TResult>(no_result{});
+        } else {
+          return outcome<TResult>(lambda::json::deserialize<TResult>(response_body));
+        }
       } else {
-        return outcome<TResult>(lambda::json::deserialize<TResult>(response_body));
+        return outcome<TResult>((int) response->GetResponseCode(), response_body);
       }
-    } else {
-      return outcome<TResult>((int) response->GetResponseCode(), response_body);
+    } catch (const std::exception &e) {
+      auto msg = e.what();
+      return outcome<TResult>(500, msg);
     }
   }
 };

@@ -10,6 +10,7 @@
 
 #include "integration_tests_common/repository_integration_test.hpp"
 #include "di/container.hpp"
+#include "di/parameter_manager.hpp"
 #include "repository/connection_settings.hpp"
 #include "repository/client.hpp"
 #include "rest/api_root.hpp"
@@ -18,6 +19,7 @@
 #include "../src/settings/cognito_settings.hpp"
 #include "../src/settings/google_api_settings.hpp"
 #include "../src/identity.hpp"
+#include "../src/http_request.hpp"
 #include "../src/services/user_service.hpp"
 #include "../src/services/file_service.hpp"
 #include "../src/services/receipt_service.hpp"
@@ -25,13 +27,9 @@
 #include "../src/services/google_api/google_api_auth_provider.hpp"
 #include "../src/services/rtdn_service.hpp"
 #include "../src/services/google_api/purchases_subscriptions_v2/purchases_subscriptions_v2_client.hpp"
-
-#include "mocks/mock_s3_client.hpp"
-#include "mocks/mock_cognito_idp_client.hpp"
-#include "mocks/mock_purchases_subscriptions_v2_client.hpp"
 #include "../src/services/budget_service.hpp"
-#include "../src/http_request.hpp"
-#include "di/parameter_manager.hpp"
+
+#include "mocks/factories.hpp"
 
 #define USER_ID "d394a832-4011-7023-c519-afe3adaf0233"
 #define TEST_BUDGET "d394a832-4011-7023-c519-afe3adaf0233"
@@ -70,7 +68,7 @@ class base_api_integration_test : public repository_integration_test {
       di::transient<services::t_category_service, services::category_service<>>,
       di::transient<services::t_file_service, services::file_service<>>,
       di::transient<services::t_receipt_service, services::receipt_service<>>,
-      di::transient<services::google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client, mocks::mock_purchases_subscriptions_v2_client<>>,
+      di::scoped<services::google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client, mocks::mock_purchases_subscriptions_v2_client<>>,
       di::transient<services::t_rtdn_service, services::rtdn_service<>>
   > services;
   void init_user(bool has_subscription = false);

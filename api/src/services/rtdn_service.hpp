@@ -26,6 +26,9 @@ class rtdn_service {
       lambda::log.info("Received test notification");
       return;
     }
+    if (!notification.subscription_notification.has_value()) return;
+    auto subscription_notification = notification.subscription_notification.get_value();
+    get_subscription_state_outcome(notification.package_name, subscription_notification.purchase_token);
   }
 
  private:
@@ -34,7 +37,7 @@ class rtdn_service {
   using subscription_purchase_v2 = google_api::purchases_subscriptions_v2::models::subscription_purchase_v2;
 
   outcome<subscription_purchase_v2> get_subscription_state_outcome(const std::string &package_name, const std::string &token) {
-    return m_subscriptions_v2_client.get(package_name, token);
+    return m_subscriptions_v2_client->get(package_name, token);
   }
 };
 

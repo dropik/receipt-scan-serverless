@@ -45,11 +45,11 @@ class json_traits_facade {
   }
 
   explicit json_traits_facade(const std::string &str) {
-    m_wrappee = JsonValue(str);
+    m_wrappee = JsonValue('"' + str + '"');
   }
 
   explicit json_traits_facade(const char *str) {
-    m_wrappee = JsonValue(std::string{str});
+    m_wrappee = JsonValue('"' + std::string{str} + '"');
   }
 
   explicit json_traits_facade(double num) {
@@ -163,7 +163,9 @@ struct traits {
 std::string base64_encode(const std::string &input) {
   Base64 base64;
   Aws::Utils::Array<unsigned char> buf((unsigned char*)input.c_str(), input.size());
-  return base64.Encode(buf);
+  auto result = base64.Encode(buf);
+  lambda::string::replace_all(result, "=", "");
+  return result;
 }
 
 struct google_api_auth_result {
@@ -184,16 +186,22 @@ std::string google_api_auth_provider::get_access_token() {
     return m_access_token.value();
   }
 
+  auto private_key = m_settings->private_key;
+  lambda::string::replace_all(private_key, "\\n", "\n");
+
   auto token = jwt::create<traits>()
+      .set_algorithm("RS256")
+      .set_header_claim("typ", json_traits_facade("JWT"))
       .set_header_claim("kid", json_traits_facade(m_settings->private_key_id))
       .set_issuer(m_settings->client_email)
       .set_payload_claim("scope", json_traits_facade("https://www.googleapis.com/auth/androidpublisher"))
       .set_audience(auth_url)
       .set_issued_now()
       .set_expires_in(std::chrono::seconds{60})
-      .sign(jwt::algorithm::rs256("", m_settings->private_key, "", ""), base64_encode);
+      .sign(jwt::algorithm::rs256("", private_key, "", ""), base64_encode);
 
-  std::string body = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=" + token;
+  auto encoded_token = Aws::Http::URI::URLEncodePath(token);
+  std::string body = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=" + encoded_token;
   auto outcome = m_client.post<google_api_auth_result>(auth_url, body, content_type::form);
   if (outcome.is_success) {
     m_access_token = outcome.result.access_token;
@@ -201,7 +209,7 @@ std::string google_api_auth_provider::get_access_token() {
   } else {
     lambda::log.error("Failed to get access token. Google API responded with %d: %s.",
                       outcome.status_code,
-                      outcome.error.value_or(""));
+                      outcome.error.value_or("").c_str());
     throw std::runtime_error("Failed to get access token.");
   }
 }

@@ -4,7 +4,6 @@
 
 #include "base_api_integration_test.hpp"
 #include "../src/api.hpp"
-#include "mocks/factories.hpp"
 #include "lambda/string_utils.hpp"
 
 using namespace lambda;
