@@ -68,14 +68,18 @@ class base_api_integration_test : public repository_integration_test {
       di::transient<services::t_category_service, services::category_service<>>,
       di::transient<services::t_file_service, services::file_service<>>,
       di::transient<services::t_receipt_service, services::receipt_service<>>,
-      di::scoped<services::google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client, mocks::mock_purchases_subscriptions_v2_client<>>,
-      di::scoped<services::google_api::purchases_subscriptions::t_purchases_subscriptions_client, mocks::mock_purchases_subscriptions_client<>>,
+      di::scoped<services::google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client,
+                 mocks::mock_purchases_subscriptions_v2_client<>>,
+      di::scoped<services::google_api::purchases_subscriptions::t_purchases_subscriptions_client,
+                 mocks::mock_purchases_subscriptions_client<>>,
       di::transient<services::t_rtdn_service, services::rtdn_service<>>
   > services;
-  void init_user(bool has_subscription = false, const std::optional<std::string> &purchase_token = {});
+  void init_user(bool has_subscription = false,
+                 const std::optional<std::string> &purchase_token = {},
+                 const std::optional<std::string> &payment_account_email = {});
 
-  repository::models::budget create_budget(const lambda::nullable<int>& version = lambda::nullable<int>());
-  repository::models::category create_category(const lambda::nullable<int>& version = lambda::nullable<int>());
+  repository::models::budget create_budget(const lambda::nullable<int> &version = lambda::nullable<int>());
+  repository::models::category create_category(const lambda::nullable<int> &version = lambda::nullable<int>());
   repository::models::receipt create_receipt(const lambda::nullable<int> &version = lambda::nullable<int>());
   repository::models::receipt_item create_receipt_item(int sort_order);
 };

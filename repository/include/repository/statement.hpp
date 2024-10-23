@@ -17,6 +17,7 @@ class statement : public repository::base_query {
   statement &with_param(long t);
   statement &with_param(const std::string &t);
   statement &with_param(long double t);
+  statement &with_param(std::optional<std::string> &t);
   void go();
 };
 

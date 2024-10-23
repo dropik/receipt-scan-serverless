@@ -200,8 +200,9 @@ std::string google_api_auth_provider::get_access_token() {
       .set_expires_in(std::chrono::seconds{60})
       .sign(jwt::algorithm::rs256("", private_key, "", ""), base64_encode);
 
-  auto encoded_token = Aws::Http::URI::URLEncodePath(token);
-  std::string body = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=" + encoded_token;
+  lambda::string::replace_all(token, "/", "%2F");
+  lambda::string::replace_all(token, "+", "%2B");
+  std::string body = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=" + token;
   auto outcome = m_client.post<google_api_auth_result>(auth_url, body, content_type::form);
   if (outcome.is_success) {
     m_access_token = outcome.result.access_token;

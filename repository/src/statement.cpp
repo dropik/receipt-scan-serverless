@@ -33,6 +33,11 @@ statement &statement::with_param(long double t) {
   return *this;
 }
 
+statement &statement::with_param(std::optional<std::string> &t) {
+  this->set_param(t);
+  return *this;
+}
+
 void statement::go() {
   get_stmt()->execute();
 }

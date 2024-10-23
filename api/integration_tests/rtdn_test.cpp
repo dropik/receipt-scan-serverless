@@ -6,6 +6,7 @@
 
 #define ENDPOINT "/v1/rtdn"
 #define PURCHASE_TOKEN "purchase_token"
+#define SUBSCRIPTION_EMAIL "email@gmail.com"
 
 using namespace api::integration_tests;
 using namespace api::parameters;
@@ -67,6 +68,9 @@ outcome<subscription_purchase_v2> create_subscription_outcome(bool is_test = fal
       .subscription_state = subscription_state::active,
       .test_purchase = is_test ? test_purchase{} : lambda::nullable<test_purchase>{},
       .acknowledgement_state = acknowledgement_state::pending,
+      .subscribe_with_google_info = subscribe_with_google_info{
+        .email_address = SUBSCRIPTION_EMAIL,
+      },
   });
 }
 
@@ -96,11 +100,62 @@ TEST_F(rtdn_test, should_handle_new_subscriptions) {
   // should grant access to service
   auto client = services.get<repository::t_client>();
   auto user = client->get<repository::models::user>(USER_ID);
-  ASSERT_EQ(user->has_subscription, true);
+  ASSERT_TRUE(user->has_subscription);
   ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
   ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
 
   // should acknowledge subscription
   auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
   ASSERT_TRUE(subscriptions_client->was_acknowledged);
+}
+
+TEST_F(rtdn_test, should_fail_if_subscription_v2_outcome_is_not_success) {
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = outcome<subscription_purchase_v2>(500, "");
+  auto response = send_request(notification);
+  assert_response(response, "500", "");
+}
+
+TEST_F(rtdn_test, should_find_user_by_email_if_not_found_by_token) {
+  init_user(false, "another_token", SUBSCRIPTION_EMAIL);
+
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service and set new purchase token
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+
+  // should acknowledge subscription
+  auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
+  ASSERT_TRUE(subscriptions_client->was_acknowledged);
+}
+
+TEST_F(rtdn_test, should_not_fail_if_user_not_found) {
+  init_user(false, "another_token", "another_email");
+
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), "another_token");
+
+  // should not acknowledge subscription
+  auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
+  ASSERT_FALSE(subscriptions_client->was_acknowledged);
 }

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include <mariadb/conncpp/PreparedStatement.hpp>
 
@@ -19,6 +20,7 @@ class base_query {
   void set_param(long t);
   void set_param(const std::string &t);
   void set_param(long double t);
+  void set_param(const std::optional<std::string> &t);
 
  protected:
   std::shared_ptr<sql::PreparedStatement> get_stmt();

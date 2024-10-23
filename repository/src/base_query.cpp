@@ -3,6 +3,7 @@
 //
 
 #include <repository/base_query.hpp>
+#include <mariadb/conncpp/Types.hpp>
 
 namespace repository {
 
@@ -30,6 +31,14 @@ void base_query::set_param(long double t) {
 
 std::shared_ptr<sql::PreparedStatement> base_query::get_stmt() {
   return m_stmt;
+}
+
+void base_query::set_param(const std::optional<std::string> &t) {
+  if (!t.has_value()) {
+    m_stmt->setNull(m_param_index++, sql::DataType::VARCHAR);
+  } else {
+    this->set_param(t.value());
+  }
 }
 
 }
