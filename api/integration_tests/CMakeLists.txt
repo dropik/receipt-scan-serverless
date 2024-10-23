@@ -64,6 +64,7 @@ add_executable(api_integration_tests
     ../src/services/google_api/base_google_api_client.hpp
     mocks/mock_purchases_subscriptions_v2_client.hpp
     rtdn_test.cpp
+    mocks/mock_purchases_subscriptions_client.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC

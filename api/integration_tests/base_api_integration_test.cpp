@@ -19,11 +19,12 @@ void base_api_integration_test::SetUp() {
   api = std::move(create_api(services));
 }
 
-void base_api_integration_test::init_user(bool has_subscription) {
+void base_api_integration_test::init_user(bool has_subscription, const std::optional<std::string> &purchase_token) {
   auto repo = services.get<repository::t_client>();
   repo->create(repository::models::user {
     .id = USER_ID,
     .has_subscription = has_subscription,
+    .purchase_token = purchase_token.has_value() ? purchase_token.value() : lambda::nullable<std::string>{},
   });
 }
 

@@ -69,9 +69,10 @@ class base_api_integration_test : public repository_integration_test {
       di::transient<services::t_file_service, services::file_service<>>,
       di::transient<services::t_receipt_service, services::receipt_service<>>,
       di::scoped<services::google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client, mocks::mock_purchases_subscriptions_v2_client<>>,
+      di::scoped<services::google_api::purchases_subscriptions::t_purchases_subscriptions_client, mocks::mock_purchases_subscriptions_client<>>,
       di::transient<services::t_rtdn_service, services::rtdn_service<>>
   > services;
-  void init_user(bool has_subscription = false);
+  void init_user(bool has_subscription = false, const std::optional<std::string> &purchase_token = {});
 
   repository::models::budget create_budget(const lambda::nullable<int>& version = lambda::nullable<int>());
   repository::models::category create_category(const lambda::nullable<int>& version = lambda::nullable<int>());

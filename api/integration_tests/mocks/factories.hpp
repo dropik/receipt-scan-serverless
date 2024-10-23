@@ -8,6 +8,7 @@
 #include "mock_s3_client.hpp"
 #include "mock_cognito_idp_client.hpp"
 #include "mock_purchases_subscriptions_v2_client.hpp"
+#include "mock_purchases_subscriptions_client.hpp"
 
 namespace di {
 
