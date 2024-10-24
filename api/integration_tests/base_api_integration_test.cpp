@@ -21,11 +21,13 @@ void base_api_integration_test::SetUp() {
 
 void base_api_integration_test::init_user(bool has_subscription,
                                           const std::optional<std::string> &purchase_token,
-                                          const std::optional<std::string> &payment_account_email) {
+                                          const std::optional<std::string> &payment_account_email,
+                                          const std::optional<std::string> &subscription_expiry_time) {
   auto repo = services.get<repository::t_client>();
   repo->create(repository::models::user {
     .id = USER_ID,
     .has_subscription = has_subscription,
+    .subscription_expiry_time = subscription_expiry_time.has_value() ? subscription_expiry_time.value() : lambda::nullable<std::string>{},
     .purchase_token = purchase_token.has_value() ? purchase_token.value() : lambda::nullable<std::string>{},
     .payment_account_email = payment_account_email.has_value() ? payment_account_email.value() : lambda::nullable<std::string>{},
   });

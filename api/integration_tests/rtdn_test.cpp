@@ -52,7 +52,9 @@ gp_notification create_notification(bool is_test = false) {
 }
 
 outcome<subscription_purchase_v2> create_subscription_outcome(bool is_test = false,
-                                                              const std::optional<std::string> &expiry_time = {}) {
+                                                              const std::optional<std::string> &expiry_time = {},
+                                                              bool acknowledged = false,
+                                                              const std::string &state = subscription_state::active) {
   return outcome<subscription_purchase_v2>(subscription_purchase_v2{
       .kind = "androidpublisher#subscriptionPurchase",
       .region_code = "IT",
@@ -65,9 +67,9 @@ outcome<subscription_purchase_v2> create_subscription_outcome(bool is_test = fal
               },
           }
       } : std::vector<subscription_purchase_line_item>{},
-      .subscription_state = subscription_state::active,
+      .subscription_state = state,
       .test_purchase = is_test ? test_purchase{} : lambda::nullable<test_purchase>{},
-      .acknowledgement_state = acknowledgement_state::pending,
+      .acknowledgement_state = acknowledged ? acknowledgement_state::acknowledged : acknowledgement_state::pending,
       .subscribe_with_google_info = subscribe_with_google_info{
         .email_address = SUBSCRIPTION_EMAIL,
       },
@@ -103,6 +105,8 @@ TEST_F(rtdn_test, should_handle_new_subscriptions) {
   ASSERT_TRUE(user->has_subscription);
   ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
   ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
 
   // should acknowledge subscription
   auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
@@ -158,4 +162,122 @@ TEST_F(rtdn_test, should_not_fail_if_user_not_found) {
   // should not acknowledge subscription
   auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
   ASSERT_FALSE(subscriptions_client->was_acknowledged);
+}
+
+TEST_F(rtdn_test, should_revoke_if_user_not_found_and_subscription_is_ack) {
+  init_user(false, "another_token", "another_email");
+
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), "another_token");
+
+  // should not acknowledge subscription
+  auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
+  ASSERT_FALSE(subscriptions_client->was_acknowledged);
+
+  ASSERT_TRUE(subscriptions_v2_client->was_revoked);
+}
+
+TEST_F(rtdn_test, should_handle_canceled_state) {
+  init_user(true, PURCHASE_TOKEN, SUBSCRIPTION_EMAIL, "2024-10-01 00:00:00");
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::canceled);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+}
+
+TEST_F(rtdn_test, should_handle_grace_period_state) {
+  init_user(true, PURCHASE_TOKEN, SUBSCRIPTION_EMAIL, "2024-10-01 00:00:00");
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::grace_period);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+}
+
+TEST_F(rtdn_test, should_handle_paused_state) {
+  init_user(true, PURCHASE_TOKEN, SUBSCRIPTION_EMAIL, "2024-10-01 00:00:00");
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::paused);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_FALSE(user->subscription_expiry_time.has_value());
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+}
+
+TEST_F(rtdn_test, should_handle_on_hold_state) {
+  init_user(true, PURCHASE_TOKEN, SUBSCRIPTION_EMAIL, "2024-10-01 00:00:00");
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::on_hold);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_FALSE(user->subscription_expiry_time.has_value());
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+}
+
+TEST_F(rtdn_test, should_handle_expired_state) {
+  init_user(true, PURCHASE_TOKEN, SUBSCRIPTION_EMAIL, "2024-10-01 00:00:00");
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::expired);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_FALSE(user->subscription_expiry_time.has_value());
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
 }

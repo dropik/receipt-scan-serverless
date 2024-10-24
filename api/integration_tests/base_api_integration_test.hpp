@@ -76,7 +76,8 @@ class base_api_integration_test : public repository_integration_test {
   > services;
   void init_user(bool has_subscription = false,
                  const std::optional<std::string> &purchase_token = {},
-                 const std::optional<std::string> &payment_account_email = {});
+                 const std::optional<std::string> &payment_account_email = {},
+                 const std::optional<std::string> &subscription_expiry_time = {});
 
   repository::models::budget create_budget(const lambda::nullable<int> &version = lambda::nullable<int>());
   repository::models::category create_category(const lambda::nullable<int> &version = lambda::nullable<int>());

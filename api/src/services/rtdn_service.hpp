@@ -37,7 +37,8 @@ class rtdn_service {
     auto subscription_notification = notification.subscription_notification.get_value();
     auto outcome = get_subscription_state_outcome(notification.package_name, subscription_notification.purchase_token);
     if (!outcome.is_success) {
-      lambda::log.error("Failed to get subscription state. Purchase token was %s", subscription_notification.purchase_token.c_str());
+      lambda::log.error("Failed to get subscription state. Purchase token was %s",
+                        subscription_notification.purchase_token.c_str());
       throw std::runtime_error("Failed to get subscription state");
       return;
     }
@@ -49,35 +50,17 @@ class rtdn_service {
       return;
     }
 
-    std::optional<std::string> payment_account_email = subscription.subscribe_with_google_info.has_value()
-        ? subscription.subscribe_with_google_info.get_value().email_address.has_value()
-            ? subscription.subscribe_with_google_info.get_value().email_address.get_value()
-            : std::optional<std::string>{}
-        : std::optional<std::string>{};
+    auto payment_account_email = get_payment_email(subscription);
+    auto user = get_user_of_subscription(subscription_notification.purchase_token, payment_account_email);
 
-    auto user = get_user_for_subscription(subscription_notification.purchase_token, payment_account_email);
-    if (!user) {
-      // silently fail here to let Google Play do whatever it decides with subscription to revoke it, refund, etc.
-      lambda::log.warning("User not found for purchase token %s", subscription_notification.purchase_token.c_str());
-      return;
-    }
-
-    if (subscription.subscription_state == google_api::purchases_subscriptions_v2::models::subscription_state::active) {
-      for (auto &line_item : subscription.line_items) {
-        if (line_item.product_id == "speza.subscription.base" && line_item.expiry_time.has_value()) {
-          user->has_subscription = true;
-          auto expiry_time = line_item.expiry_time.get_value();
-          lambda::string::replace_all(expiry_time, "T", " ");
-          lambda::string::replace_all(expiry_time, "Z", "");
-          user->subscription_expiry_time = expiry_time;
-          user->purchase_token = subscription_notification.purchase_token;
-          m_repository->update(*user);
-
-          if (subscription.acknowledgement_state == google_api::purchases_subscriptions_v2::models::acknowledgement_state::pending) {
-            m_subscriptions_client->acknowledge(notification.package_name, subscription_notification.subscription_id, subscription_notification.purchase_token, {});
-          }
-          return;
+    for (auto &line_item : subscription.line_items) {
+      if (line_item.product_id == "speza.subscription.base") {
+        if (!user) {
+          handle_user_not_found(notification, subscription_notification, subscription);
+        } else {
+          handle_subscription(notification, subscription_notification, subscription, user, line_item);
         }
+        return;
       }
     }
   }
@@ -88,12 +71,86 @@ class rtdn_service {
   TRepository m_repository;
 
   using subscription_purchase_v2 = google_api::purchases_subscriptions_v2::models::subscription_purchase_v2;
+  using subscription_state = google_api::purchases_subscriptions_v2::models::subscription_state;
+  using acknowledgement_state = google_api::purchases_subscriptions_v2::models::acknowledgement_state;
+
+  void handle_user_not_found(const parameters::gp_notification &notification,
+                             const parameters::subscription_notification &subscription_notification,
+                             const subscription_purchase_v2 &subscription) const {
+    if (subscription.subscription_state == subscription_state::active &&
+        subscription.acknowledgement_state == acknowledgement_state::acknowledged) {
+      auto request = google_api::purchases_subscriptions_v2::models::purchases_subscriptions_v2_revoke_request{
+          .revocation_context = {
+              .prorated_refund = google_api::purchases_subscriptions_v2::models::prorated_refund{},
+          },
+      };
+      m_subscriptions_v2_client->revoke(notification.package_name, subscription_notification.purchase_token, request);
+      lambda::log.warning("User was not found on attempt to renew the subscription. Revoked the subscription");
+    } else {
+      // silently fail here to let Google Play do whatever it decides with subscription to revoke it, refund, etc.
+      lambda::log.warning("User not found for purchase token %s", subscription_notification.purchase_token.c_str());
+    }
+  }
+
+  void handle_subscription(const parameters::gp_notification &notification,
+                           const parameters::subscription_notification &subscription_notification,
+                           const subscription_purchase_v2 &subscription,
+                           std::shared_ptr<repository::models::user> &user,
+                           const google_api::purchases_subscriptions_v2::models::subscription_purchase_line_item &line_item) const {
+    if (could_have_access(subscription)) {
+      grant_access(user, line_item.expiry_time);
+    } else {
+      revoke_access(user);
+    }
+
+    user->purchase_token = subscription_notification.purchase_token;
+    user->payment_account_email = get_payment_email(subscription);
+    m_repository->update(*user);
+
+    if (subscription.acknowledgement_state == acknowledgement_state::pending) {
+      m_subscriptions_client->acknowledge(notification.package_name,
+                                          subscription_notification.subscription_id,
+                                          subscription_notification.purchase_token,
+                                          {});
+    }
+  }
+
+  void revoke_access(std::shared_ptr<repository::models::user> &user) const {
+    user->has_subscription = false;
+    user->subscription_expiry_time = {};
+  }
+
+  void grant_access(std::shared_ptr<repository::models::user> &user,
+                    const lambda::nullable<std::string> &expiry_time) const {
+    user->has_subscription = true;
+
+    if (expiry_time.has_value()) {
+      auto expiry_time_value = expiry_time.get_value();
+      lambda::string::replace_all(expiry_time_value, "T", " ");
+      lambda::string::replace_all(expiry_time_value, "Z", "");
+      user->subscription_expiry_time = expiry_time_value;
+    } else {
+      user->subscription_expiry_time = {};
+    }
+  }
+
+  [[nodiscard]] bool could_have_access(const subscription_purchase_v2 &subscription) const {
+    return subscription.subscription_state == subscription_state::active ||
+        subscription.subscription_state == subscription_state::canceled ||
+        subscription.subscription_state == subscription_state::grace_period;
+  }
+
+  [[nodiscard]] lambda::nullable<std::string> get_payment_email(const subscription_purchase_v2 &subscription) const {
+    return subscription.subscribe_with_google_info.has_value()
+           ? subscription.subscribe_with_google_info.get_value().email_address
+           : lambda::nullable<std::string>{};
+  }
 
   outcome<subscription_purchase_v2> get_subscription_state_outcome(const std::string &package_name, const std::string &token) {
     return m_subscriptions_v2_client->get(package_name, token);
   }
 
-  std::shared_ptr<repository::models::user> get_user_for_subscription(const std::string &purchase_token, const std::optional<std::string> &payment_account_email = {}) {
+  std::shared_ptr<repository::models::user> get_user_of_subscription(const std::string &purchase_token, const lambda::nullable<std::string> &payment_account_email = {}) {
     if (!payment_account_email.has_value()) {
       return m_repository->template select<repository::models::user>("select * from users where purchase_token = ?")
           .with_param(purchase_token)
@@ -101,7 +158,7 @@ class rtdn_service {
     } else {
       return m_repository->template select<repository::models::user>("select * from users where purchase_token = ? or payment_account_email = ?")
           .with_param(purchase_token)
-          .with_param(payment_account_email.value())
+          .with_param(payment_account_email.get_value())
           .first_or_default();
     }
   }
