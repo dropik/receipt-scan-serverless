@@ -17,6 +17,7 @@
 #include "../api_errors.hpp"
 #include "../responses/user.hpp"
 #include "../settings/cognito_settings.hpp"
+#include "google_api/purchases_subscriptions_v2/purchases_subscriptions_v2_client.hpp"
 
 namespace api::services {
 
@@ -27,17 +28,19 @@ template<
     typename TIdentity = const identity,
     typename TFileService = t_file_service,
     typename TCognitoIDP = Aws::CognitoIdentityProvider::CognitoIdentityProviderClient,
-    typename TCognitoSettings = settings::cognito_settings>
+    typename TCognitoSettings = settings::cognito_settings,
+    typename TSubscriptionsClient = google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client>
 class user_service {
   using user = repository::models::user;
 
  public:
-  user_service(TRepository repository, TIdentity identity, TFileService file_service, TCognitoIDP cognito, TCognitoSettings cognito_settings)
+  user_service(TRepository repository, TIdentity identity, TFileService file_service, TCognitoIDP cognito, TCognitoSettings cognito_settings, TSubscriptionsClient subscriptions)
       : m_repository(std::move(repository)),
         m_identity(std::move(identity)),
         m_file_service(std::move(file_service)),
         m_cognito(std::move(cognito)),
-        m_user_pool_id(cognito_settings->user_pool_id) {}
+        m_user_pool_id(cognito_settings->user_pool_id),
+        m_subscriptions(std::move(subscriptions)) {}
 
   void init_user() {
     auto user_id = m_identity->user_id;
@@ -64,6 +67,7 @@ class user_service {
   }
 
   void delete_user() {
+    revoke_subscription();
     delete_data_from_database();
     m_file_service->delete_receipt_images(m_identity->user_id);
     delete_cognito_user();
@@ -75,14 +79,36 @@ class user_service {
   TFileService m_file_service;
   TCognitoIDP m_cognito;
   std::string m_user_pool_id;
+  TSubscriptionsClient m_subscriptions;
+
+  void revoke_subscription() {
+    auto user_id = m_identity->user_id;
+    auto user = m_repository->template select<repository::models::user>("select * from users where id = ?")
+        .with_param(user_id)
+        .first_or_default();
+    if (!user || !user->has_subscription || !user->purchase_token.has_value()) return;
+
+    auto revoke_request = google_api::purchases_subscriptions_v2::models::purchases_subscriptions_v2_revoke_request{
+      .revocation_context = {
+          .prorated_refund = google_api::purchases_subscriptions_v2::models::prorated_refund{},
+      },
+    };
+
+    auto revoke_outcome = m_subscriptions->revoke("speza.subscription.base", user->purchase_token.get_value(), revoke_request);
+    if (!revoke_outcome.is_success) {
+      lambda::log.error("Error revoking subscription: %s", revoke_outcome.error.value_or("").c_str());
+    }
+  }
 
   void delete_data_from_database() {
     auto user_id = m_identity->user_id;
     try {
+      m_repository->execute("start transaction").go();
       m_repository->execute("delete from receipts where user_id = ?").with_param(user_id).go();
       m_repository->execute("delete from categories where user_id = ?").with_param(user_id).go();
       m_repository->execute("delete from budgets where user_id = ?").with_param(user_id).go();
       m_repository->execute("delete from users where id = ?").with_param(user_id).go();
+      m_repository->execute("commit").go();
     } catch (const std::exception &e) {
       lambda::log.error("Failed to delete user data: %s", e.what());
       throw rest::api_exception(internal, "Failed to delete user data");

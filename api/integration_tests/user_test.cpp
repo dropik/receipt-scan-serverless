@@ -56,11 +56,18 @@ TEST_F(user_test, delete_user) {
   create_receipt();
   create_receipt_item(0);
 
+  auto repo = services.get<repository::t_client>();
+  auto user = repo->get<::models::user>(USER_ID);
+  user->has_subscription = true;
+  user->purchase_token = "token";
+  user->payment_account_email = "email";
+  user->subscription_expiry_time = "2024-08-03 00:00:00";
+  repo->update(*user);
+
   // should delete user
   auto response = (*api)(create_request("DELETE", ENDPOINT, ""));
   assert_response(response, "200", "");
 
-  auto repo = services.get<repository::t_client>();
   auto users = repo->select<::models::user>("select * from users").all();
   ASSERT_EQ(users->size(), 0);
 
@@ -75,6 +82,9 @@ TEST_F(user_test, delete_user) {
 
   auto receipt_items = repo->select<::models::receipt_item>("select * from receipt_items").all();
   ASSERT_EQ(receipt_items->size(), 0);
+
+  auto subscriptions_client = services.get<services::google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client>();
+  ASSERT_TRUE(subscriptions_client->was_revoked);
 
   // should be idempotent
   response = (*api)(create_request("DELETE", ENDPOINT, ""));
