@@ -312,3 +312,7 @@ add column purchase_token text null default null;
 
 alter table users
 add column payment_account_email varchar(100) null default null;
+
+# 2024-10-24: add unique constraints on payment_account_email
+alter table users
+add unique index ix_payment_account_email(payment_account_email);
