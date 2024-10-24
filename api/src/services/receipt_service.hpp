@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <iomanip>
+
 #include <aws/s3/S3Client.h>
 #include <lambda/string_utils.hpp>
 #include "repository/receipt_repository.hpp"
@@ -46,9 +48,7 @@ class receipt_service {
   }
 
   responses::file get_receipt_put_image_url(const guid_t &receipt_id) {
-    if (!m_identity->has_subscription) {
-      throw rest::api_exception(forbidden, "Subscription required");
-    }
+    verify_subscription();
     auto r = try_get_receipt(receipt_id);
     return m_file_service->get_upload_receipt_image_url(r.image_name);
   }
@@ -98,6 +98,22 @@ class receipt_service {
     }
     return result.get_value();
   }
+
+  void verify_subscription() const {
+    if (!m_identity->has_subscription) throw_subscription();
+    if (!m_identity->subscription_expiry_time.has_value()) throw_subscription();
+
+    auto expiry_timestamp = m_identity->subscription_expiry_time.get_value();
+    std::tm tm = {};
+    std::stringstream ss(expiry_timestamp.c_str());
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    auto now = std::time(nullptr);
+    if (std::difftime(timegm(&tm), now) < 0) {
+      throw_subscription();
+    }
+  }
+
+  void throw_subscription() const { throw rest::api_exception(forbidden, "Subscription required"); }
 };
 
 }

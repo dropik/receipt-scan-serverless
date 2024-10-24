@@ -2,6 +2,7 @@
 // Created by Daniil Ryzhkov on 04/08/2024.
 //
 
+#include <chrono>
 #include "base_api_integration_test.hpp"
 #include "repository/models/receipt.hpp"
 #include "lambda/utils.hpp"
@@ -276,8 +277,18 @@ TEST_F(receipt_test, get_receipt_image_deleted) {
   assert_response(response, "404", "");
 }
 
+std::string gen_timestamp(int shift) {
+  auto now = std::time(nullptr);
+  auto now_tm = std::gmtime(&now);
+  now_tm->tm_sec += shift;
+  std::mktime(now_tm);
+  std::stringstream ss;
+  ss << std::put_time(now_tm, "%Y-%m-%d %H:%M:%S");
+  return ss.str();
+}
+
 TEST_F(receipt_test, post_receipt_image) {
-  init_user(true);
+  init_user(true, {}, {}, gen_timestamp(60));
   create_receipt();
   create_receipt_item(0);
 
@@ -294,12 +305,29 @@ TEST_F(receipt_test, post_receipt_image_forbidden_if_no_subscription) {
   create_receipt();
   create_receipt_item(0);
 
+  // should not grant access if no subscription
   auto response = (*api)(create_request("POST", ENDPOINT "/" TEST_RECEIPT "/image", ""));
+  assert_response(response, "403", "");
+
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<::models::user>(USER_ID);
+  user->has_subscription = true;
+  client->update(*user);
+
+  // should not grant access since no expiry time
+  response = (*api)(create_request("POST", ENDPOINT "/" TEST_RECEIPT "/image", ""));
+  assert_response(response, "403", "");
+
+  user->subscription_expiry_time = gen_timestamp(-60);
+  client->update(*user);
+
+  //should not grant access since subscription expired
+  response = (*api)(create_request("POST", ENDPOINT "/" TEST_RECEIPT "/image", ""));
   assert_response(response, "403", "");
 }
 
 TEST_F(receipt_test, post_receipt_image_not_found) {
-  init_user(true);
+  init_user(true, {}, {}, gen_timestamp(60));
   create_receipt();
   create_receipt_item(0);
 
