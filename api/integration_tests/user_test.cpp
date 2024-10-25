@@ -114,4 +114,21 @@ TEST_F(user_test, delete_user) {
   assert_response(response, "200", "");
 }
 
+TEST_F(user_test, set_purchase_token) {
+  // should return 400 if user is not initialized
+  auto response = (*api)(create_request("PATCH", ENDPOINT "/purchase-token", R"({"purchaseToken": "token"})"));
+  assert_response(response, "400", R"({"error":4,"message":"User is not initialized"})");
+
+  (*api)(create_request("POST", ENDPOINT, ""));
+
+  // should set purchase token
+  response = (*api)(create_request("PATCH", ENDPOINT "/purchase-token", R"({"purchaseToken": "token"})"));
+  assert_response(response, "200", "");
+
+  auto repo = services.get<repository::t_client>();
+  auto user = repo->get<::models::user>(USER_ID);
+  ASSERT_TRUE(user->purchase_token.has_value());
+  ASSERT_EQ(user->purchase_token.get_value(), "token");
+}
+
 }

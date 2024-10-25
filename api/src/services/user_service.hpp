@@ -18,6 +18,7 @@
 #include "../responses/user.hpp"
 #include "../settings/cognito_settings.hpp"
 #include "google_api/purchases_subscriptions_v2/purchases_subscriptions_v2_client.hpp"
+#include "../parameters/set_user_purchase_token.hpp"
 
 namespace api::services {
 
@@ -71,6 +72,14 @@ class user_service {
     delete_data_from_database();
     m_file_service->delete_receipt_images(m_identity->user_id);
     delete_cognito_user();
+  }
+
+  void set_purchase_token(const parameters::set_user_purchase_token &param) {
+    auto user_id = m_identity->user_id;
+    m_repository->execute("update users set purchase_token = ? where id = ?")
+        .with_param(param.purchase_token)
+        .with_param(user_id)
+        .go();
   }
 
  private:

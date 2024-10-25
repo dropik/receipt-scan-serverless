@@ -54,6 +54,7 @@ add_executable(${FUNCTION_NAME}
     src/services/google_api/purchases_subscriptions/models/purchases_subscriptions_acknowledge_request.hpp
     src/services/google_api/purchases_subscriptions/purchases_subscriptions_client.hpp
     src/services/google_api/base_google_api_client.hpp
+    src/parameters/set_user_purchase_token.hpp
 )
 
 target_include_directories(${FUNCTION_NAME} PUBLIC
