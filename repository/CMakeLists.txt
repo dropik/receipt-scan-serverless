@@ -30,6 +30,7 @@ add_library(repository STATIC
     include/repository/models/budget.hpp
     include/repository/configurations/budget_configuration.hpp
     include/repository/exceptions.hpp
+    src/models/user.cpp
 )
 
 target_include_directories(repository PUBLIC

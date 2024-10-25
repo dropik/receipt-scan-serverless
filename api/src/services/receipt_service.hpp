@@ -100,20 +100,8 @@ class receipt_service {
   }
 
   void verify_subscription() const {
-    if (!m_identity->has_subscription) throw_subscription();
-    if (!m_identity->subscription_expiry_time.has_value()) throw_subscription();
-
-    auto expiry_timestamp = m_identity->subscription_expiry_time.get_value();
-    std::tm tm = {};
-    std::stringstream ss(expiry_timestamp.c_str());
-    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-    auto now = std::time(nullptr);
-    if (std::difftime(timegm(&tm), now) < 0) {
-      throw_subscription();
-    }
+    if (!m_identity->has_subscription) throw rest::api_exception(forbidden, "Subscription required");
   }
-
-  void throw_subscription() const { throw rest::api_exception(forbidden, "Subscription required"); }
 };
 
 }

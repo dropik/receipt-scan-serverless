@@ -223,5 +223,14 @@ std::string compact_json(const std::string &json) {
   return Aws::Utils::Json::JsonView(json).WriteCompact(false);
 }
 
+std::string gen_timestamp(int shift) {
+  auto now = std::time(nullptr);
+  auto now_tm = std::gmtime(&now);
+  now_tm->tm_sec += shift;
+  std::mktime(now_tm);
+  std::stringstream ss;
+  ss << std::put_time(now_tm, "%Y-%m-%d %H:%M:%S");
+  return ss.str();
 }
 
+}

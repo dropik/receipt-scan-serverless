@@ -52,8 +52,7 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       return rest::bad_request(rest::api_exception(user_not_initialized, "User is not initialized"));
     }
     auto user = users->at(0);
-    i->has_subscription = user->has_subscription;
-    i->subscription_expiry_time = user->subscription_expiry_time;
+    i->has_subscription = user->verify_subscription();
 
     return next(request);
   });

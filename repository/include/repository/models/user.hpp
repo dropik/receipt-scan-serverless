@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <lambda/nullable.hpp>
 #include "common.hpp"
 
 namespace repository::models {
@@ -36,6 +37,8 @@ struct user {
    * we have to way to know for which Speza user the subscription is for.
    */
   lambda::nullable<std::string> payment_account_email;
+
+  [[nodiscard]] bool verify_subscription() const;
 };
 
 }

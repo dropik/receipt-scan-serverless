@@ -47,6 +47,29 @@ TEST_F(user_test, get_user) {
   // should return user
   response = (*api)(create_request("GET", ENDPOINT, ""));
   assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"("})");
+
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<::models::user>(USER_ID);
+  user->has_subscription = true;
+  client->update(*user);
+
+  // should not give subscription flag since expiry time is not set
+  response = (*api)(create_request("GET", ENDPOINT, ""));
+  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"("})");
+
+  user->subscription_expiry_time = gen_timestamp(-100);
+  client->update(*user);
+
+  // should not give subscription flag since subscription expired
+  response = (*api)(create_request("GET", ENDPOINT, ""));
+  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"("})");
+
+  user->subscription_expiry_time = gen_timestamp(100);
+  client->update(*user);
+
+  // should give subscription flag
+  response = (*api)(create_request("GET", ENDPOINT, ""));
+  assert_response(response, "200", R"({"hasSubscription": true, "id":")" USER_ID R"("})");
 }
 
 TEST_F(user_test, delete_user) {

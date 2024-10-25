@@ -11,7 +11,6 @@ namespace api {
 struct identity {
   std::string user_id;
   bool has_subscription = false;
-  lambda::nullable<std::string> subscription_expiry_time;
 };
 
 }

@@ -2,7 +2,6 @@
 // Created by Daniil Ryzhkov on 04/08/2024.
 //
 
-#include <chrono>
 #include "base_api_integration_test.hpp"
 #include "repository/models/receipt.hpp"
 #include "lambda/utils.hpp"
@@ -275,16 +274,6 @@ TEST_F(receipt_test, get_receipt_image_deleted) {
 
   auto response = (*api)(create_request("GET", ENDPOINT "/" TEST_RECEIPT "/image", ""));
   assert_response(response, "404", "");
-}
-
-std::string gen_timestamp(int shift) {
-  auto now = std::time(nullptr);
-  auto now_tm = std::gmtime(&now);
-  now_tm->tm_sec += shift;
-  std::mktime(now_tm);
-  std::stringstream ss;
-  ss << std::put_time(now_tm, "%Y-%m-%d %H:%M:%S");
-  return ss.str();
 }
 
 TEST_F(receipt_test, post_receipt_image) {

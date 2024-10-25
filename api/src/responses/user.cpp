@@ -9,7 +9,7 @@ namespace api::responses {
 user user::from_repository(const repository::models::user &u) {
   return {
       .id = u.id,
-      .has_subscription = u.has_subscription,
+      .has_subscription = u.verify_subscription(),
   };
 }
 

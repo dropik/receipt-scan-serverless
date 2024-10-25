@@ -97,5 +97,6 @@ std::string expected_response(const std::string &status, const std::string &body
 std::string make_body(const std::string &body);
 std::string pretty_json(const std::string &json);
 std::string compact_json(const std::string &json);
+std::string gen_timestamp(int shift);
 
 }
