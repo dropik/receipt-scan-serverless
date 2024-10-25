@@ -122,7 +122,7 @@ class user_service {
     auto user = m_repository->template select<repository::models::user>("select * from users where id = ?")
         .with_param(user_id)
         .first_or_default();
-    if (!user || !user->has_subscription || !user->purchase_token.has_value()) return;
+    if (!user || !user->verify_subscription() || !user->purchase_token.has_value()) return;
 
     auto revoke_request = google_api::purchases_subscriptions_v2::models::purchases_subscriptions_v2_revoke_request{
         .revocation_context = {

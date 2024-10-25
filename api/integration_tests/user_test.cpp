@@ -84,7 +84,7 @@ TEST_F(user_test, delete_user) {
   user->has_subscription = true;
   user->purchase_token = "token";
   user->payment_account_email = "email";
-  user->subscription_expiry_time = "2024-08-03 00:00:00";
+  user->subscription_expiry_time = gen_timestamp(100);
   repo->update(*user);
 
   // should delete user
