@@ -68,10 +68,13 @@ api_response_t internal_server_error() {
   response.set_body("", false);
   return response;
 }
-api_response_t conflict() {
+
+api_response_t conflict(const std::optional<std::string> &message) {
   api_response_t response;
   response.status_code = 409;
-  response.set_body(R"("Optimistic concurrency error")", false);
+  if (message.has_value()) {
+    response.set_body('"' + message.value() + '"', false);
+  }
   return response;
 }
 

@@ -131,6 +131,22 @@ TEST_F(user_test, set_purchase_token) {
   ASSERT_EQ(user->purchase_token.get_value(), "token");
 }
 
+TEST_F(user_test, should_check_purchase_token_duplication) {
+  auto repo = services.get<repository::t_client>();
+  repo->create(repository::models::user{
+    .id = "another-user",
+    .has_subscription = true,
+    .subscription_expiry_time = gen_timestamp(1000),
+    .purchase_token = "token",
+  });
+
+  (*api)(create_request("POST", ENDPOINT, ""));
+
+  // should give conflict when trying to set purchase token
+  auto response = (*api)(create_request("PATCH", ENDPOINT "/purchase-token", R"({"purchaseToken": "token"})"));
+  assert_response(response, "409", "");
+}
+
 TEST_F(user_test, cancel_subscription) {
   auto response = (*api)(create_request("DELETE", ENDPOINT "/subscription", ""));
   assert_response(response, "400", R"({"error":4,"message":"User is not initialized"})");

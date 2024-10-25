@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include "api_exception.hpp"
 #include "types.hpp"
 
@@ -18,7 +20,7 @@ api_response_t forbidden();
 api_response_t not_found();
 api_response_t method_not_allowed();
 api_response_t internal_server_error();
-api_response_t conflict();
+api_response_t conflict(const std::optional<std::string> &message = {});
 
 template<typename T>
 inline api_response_t ok(const T &payload) {

@@ -83,12 +83,14 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
         return rest::not_found();
       } else if (e.error == forbidden) {
         return rest::forbidden();
+      } else if (e.error == purchase_token_reuse) {
+        return rest::conflict();
       }
       return bad_request(e);
     } catch (repository::entity_not_found_exception &e) {
       return rest::not_found();
     } catch (repository::concurrency_exception &e) {
-      return rest::conflict();
+      return rest::conflict("Optimistic concurrency error");
     } catch (std::exception &e) {
       lambda::log.error("Internal error: %s", e.what());
       return rest::internal_server_error();
