@@ -14,6 +14,7 @@ class mock_purchases_subscriptions_client {
   explicit mock_purchases_subscriptions_client(TAuthProvider auth) : m_auth(std::move(auth)) {}
 
   bool was_acknowledged = false;
+  bool was_canceled = false;
 
   services::outcome<services::no_result> acknowledge(const std::string &package_name,
                                                      const std::string &subscription_id,
@@ -21,6 +22,14 @@ class mock_purchases_subscriptions_client {
                                                      const services::google_api::purchases_subscriptions::models::purchases_subscriptions_acknowledge_request &request) {
     m_auth->get_access_token();
     was_acknowledged = true;
+    return services::outcome<services::no_result>(services::no_result{});
+  }
+
+  services::outcome<services::no_result> cancel(const std::string &package_name,
+                                                const std::string &subscription_id,
+                                                const std::string &token) {
+    m_auth->get_access_token();
+    was_canceled = true;
     return services::outcome<services::no_result>(services::no_result{});
   }
 

@@ -23,13 +23,21 @@ class purchases_subscriptions_client : protected base_google_api_client {
                                  const std::string &subscription_id,
                                  const std::string &token,
                                  const models::purchases_subscriptions_acknowledge_request &request) {
-    auto url = lambda::string::format(acknowledge_url_format, package_name, subscription_id, token);
+    auto url = lambda::string::format(acknowledge_url_format, package_name.c_str(), subscription_id.c_str(), token.c_str());
     auto body = lambda::json::serialize(request);
     return post<no_result>(url, body);
   }
 
+  outcome<no_result> cancel(const std::string &package_name,
+                            const std::string &subscription_id,
+                            const std::string &token) {
+    auto url = lambda::string::format(cancel_url_format, package_name, subscription_id, token);
+    return post<no_result>(url, "");
+  }
+
  private:
   static inline const std::string acknowledge_url_format = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/%s/purchases/subscriptions/%s/tokens/%s:acknowledge";
+  static inline const std::string cancel_url_format = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/%s/purchases/subscriptions/%s/tokens/%s:cancel";
 };
 
 }

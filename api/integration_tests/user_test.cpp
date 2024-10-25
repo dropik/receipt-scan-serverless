@@ -131,4 +131,36 @@ TEST_F(user_test, set_purchase_token) {
   ASSERT_EQ(user->purchase_token.get_value(), "token");
 }
 
+TEST_F(user_test, cancel_subscription) {
+  auto response = (*api)(create_request("DELETE", ENDPOINT "/subscription", ""));
+  assert_response(response, "400", R"({"error":4,"message":"User is not initialized"})");
+
+  (*api)(create_request("POST", ENDPOINT, ""));
+
+  // should return 404 if user did not have an active subscription
+  response = (*api)(create_request("DELETE", ENDPOINT "/subscription", ""));
+  assert_response(response, "404", "");
+
+  auto repo = services.get<repository::t_client>();
+  auto user = repo->get<::models::user>(USER_ID);
+  user->has_subscription = true;
+  user->purchase_token = "token";
+  user->subscription_expiry_time = gen_timestamp(100);
+  repo->update(*user);
+
+  // should revoke subscription
+  response = (*api)(create_request("DELETE", ENDPOINT "/subscription", ""));
+  assert_response(response, "200", "");
+
+  // should keep subscription until expired
+  user = repo->get<::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_TRUE(user->purchase_token.has_value());
+  ASSERT_EQ(user->purchase_token.get_value(), "token");
+  ASSERT_TRUE(user->subscription_expiry_time.has_value());
+
+  auto client = services.get<services::google_api::purchases_subscriptions::t_purchases_subscriptions_client>();
+  ASSERT_TRUE(client->was_canceled);
+}
+
 }

@@ -18,6 +18,7 @@
 #include "../responses/user.hpp"
 #include "../settings/cognito_settings.hpp"
 #include "google_api/purchases_subscriptions_v2/purchases_subscriptions_v2_client.hpp"
+#include "google_api/purchases_subscriptions/purchases_subscriptions_client.hpp"
 #include "../parameters/set_user_purchase_token.hpp"
 
 namespace api::services {
@@ -30,17 +31,25 @@ template<
     typename TFileService = t_file_service,
     typename TCognitoIDP = Aws::CognitoIdentityProvider::CognitoIdentityProviderClient,
     typename TCognitoSettings = settings::cognito_settings,
-    typename TSubscriptionsClient = google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client>
+    typename TSubscriptionsV2Client = google_api::purchases_subscriptions_v2::t_purchases_subscriptions_v2_client,
+    typename TSubscriptionsClient = google_api::purchases_subscriptions::t_purchases_subscriptions_client>
 class user_service {
   using user = repository::models::user;
 
  public:
-  user_service(TRepository repository, TIdentity identity, TFileService file_service, TCognitoIDP cognito, TCognitoSettings cognito_settings, TSubscriptionsClient subscriptions)
+  user_service(TRepository repository,
+               TIdentity identity,
+               TFileService file_service,
+               TCognitoIDP cognito,
+               TCognitoSettings cognito_settings,
+               TSubscriptionsV2Client subscriptions_v2,
+               TSubscriptionsClient subscriptions)
       : m_repository(std::move(repository)),
         m_identity(std::move(identity)),
         m_file_service(std::move(file_service)),
         m_cognito(std::move(cognito)),
         m_user_pool_id(cognito_settings->user_pool_id),
+        m_subscriptions_v2(std::move(subscriptions_v2)),
         m_subscriptions(std::move(subscriptions)) {}
 
   void init_user() {
@@ -82,12 +91,30 @@ class user_service {
         .go();
   }
 
+  void cancel_subscription() {
+    auto user_id = m_identity->user_id;
+    auto user = m_repository->template select<repository::models::user>("select * from users where id = ?")
+        .with_param(user_id)
+        .first_or_default();
+    if (!user || !user->verify_subscription()) {
+      throw rest::api_exception(not_found, "User did not have an active subscription");
+    }
+
+    auto cancel_outcome = m_subscriptions->cancel("com.daniilryzhkovapps.speza",
+                                                  "speza.subscription.base",
+                                                  user->purchase_token.get_value());
+    if (!cancel_outcome.is_success) {
+      throw rest::api_exception(internal, "Failed to cancel subscription");
+    }
+  }
+
  private:
   TRepository m_repository;
   TIdentity m_identity;
   TFileService m_file_service;
   TCognitoIDP m_cognito;
   std::string m_user_pool_id;
+  TSubscriptionsV2Client m_subscriptions_v2;
   TSubscriptionsClient m_subscriptions;
 
   void revoke_subscription() {
@@ -98,12 +125,13 @@ class user_service {
     if (!user || !user->has_subscription || !user->purchase_token.has_value()) return;
 
     auto revoke_request = google_api::purchases_subscriptions_v2::models::purchases_subscriptions_v2_revoke_request{
-      .revocation_context = {
-          .prorated_refund = google_api::purchases_subscriptions_v2::models::prorated_refund{},
-      },
+        .revocation_context = {
+            .prorated_refund = google_api::purchases_subscriptions_v2::models::prorated_refund{},
+        },
     };
 
-    auto revoke_outcome = m_subscriptions->revoke("speza.subscription.base", user->purchase_token.get_value(), revoke_request);
+    auto revoke_outcome =
+        m_subscriptions_v2->revoke("speza.subscription.base", user->purchase_token.get_value(), revoke_request);
     if (!revoke_outcome.is_success) {
       lambda::log.error("Error revoking subscription: %s", revoke_outcome.error.value_or("").c_str());
     }
@@ -149,7 +177,8 @@ class user_service {
       }
     } else {
       // User doesn't exist, consider it idempotently successful
-      if (get_user_outcome.GetError().GetErrorType() == Aws::CognitoIdentityProvider::CognitoIdentityProviderErrors::USER_NOT_FOUND) {
+      if (get_user_outcome.GetError().GetErrorType()
+          == Aws::CognitoIdentityProvider::CognitoIdentityProviderErrors::USER_NOT_FOUND) {
         lambda::log.info("User doesn't exist in cognito, skipping delete");
       } else {
         lambda::log.error("Failed to check user existence: %s", get_user_outcome.GetError().GetMessage().c_str());

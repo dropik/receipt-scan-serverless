@@ -132,6 +132,9 @@ std::unique_ptr<api_root> create_api(TServiceContainer &c) {
       user.patch<parameters::set_user_purchase_token>("/purchase-token")([&c](const auto &request) {
         return c.template get<services::t_user_service>()->set_purchase_token(request);
       });
+      user.del("/subscription")([&c]() {
+        return c.template get<services::t_user_service>()->cancel_subscription();
+      });
     });
 
     v1.any("/budgets")([&c](api_resource &budgets) {
