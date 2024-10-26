@@ -51,14 +51,14 @@ gp_notification create_notification(bool is_test = false) {
   };
 }
 
-outcome<subscription_purchase_v2> create_subscription_outcome(bool is_test = false,
-                                                              const std::optional<std::string> &expiry_time = {},
+outcome<subscription_purchase_v2> create_subscription_outcome(const std::optional<std::string> &expiry_time = {},
                                                               bool acknowledged = false,
-                                                              const std::string &state = subscription_state::active) {
+                                                              const std::string &state = subscription_state::active,
+                                                              bool add_external_account_id = true) {
   return outcome<subscription_purchase_v2>(subscription_purchase_v2{
       .kind = "androidpublisher#subscriptionPurchase",
       .region_code = "IT",
-      .line_items = !is_test ? std::vector<subscription_purchase_line_item>{
+      .line_items = std::vector<subscription_purchase_line_item>{
           subscription_purchase_line_item{
               .product_id = "speza.subscription.base",
               .expiry_time = expiry_time.value_or("2024-11-01T00:00:00Z"),
@@ -66,10 +66,13 @@ outcome<subscription_purchase_v2> create_subscription_outcome(bool is_test = fal
                   .auto_renew_enabled = true,
               },
           }
-      } : std::vector<subscription_purchase_line_item>{},
+      },
       .subscription_state = state,
-      .test_purchase = is_test ? test_purchase{} : lambda::nullable<test_purchase>{},
+      .test_purchase = test_purchase{},
       .acknowledgement_state = acknowledged ? acknowledgement_state::acknowledged : acknowledgement_state::pending,
+      .external_account_identifiers = add_external_account_id ? external_account_identifiers{
+        .obfuscated_external_account_id = USER_ID,
+      } : lambda::nullable<external_account_identifiers>{},
       .subscribe_with_google_info = subscribe_with_google_info{
         .email_address = SUBSCRIPTION_EMAIL,
       },
@@ -82,20 +85,12 @@ TEST_F(rtdn_test, should_handle_test_event) {
   assert_response(response, "200", "");
 }
 
-TEST_F(rtdn_test, should_handle_test_subscription) {
-  auto notification = create_notification();
-  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(true);
-  auto response = send_request(notification);
-  assert_response(response, "200", "");
-}
-
 TEST_F(rtdn_test, should_handle_new_subscriptions) {
-  init_user(false, PURCHASE_TOKEN);
+  init_user(false);
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -103,6 +98,7 @@ TEST_F(rtdn_test, should_handle_new_subscriptions) {
   auto client = services.get<repository::t_client>();
   auto user = client->get<repository::models::user>(USER_ID);
   ASSERT_TRUE(user->has_subscription);
+  ASSERT_TRUE(user->purchase_token.has_value());
   ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
   ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
   ASSERT_TRUE(user->payment_account_email.has_value());
@@ -121,13 +117,37 @@ TEST_F(rtdn_test, should_fail_if_subscription_v2_outcome_is_not_success) {
   assert_response(response, "500", "");
 }
 
+TEST_F(rtdn_test, should_find_user_by_token_if_not_found_by_account_id) {
+  init_user(false, PURCHASE_TOKEN);
+
+  std::string expiry_time = "2024-11-01T00:00:00Z";
+  auto notification = create_notification();
+  auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, false, subscription_state::active, false);
+  auto response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service and set new purchase token
+  auto client = services.get<repository::t_client>();
+  auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+
+  // should acknowledge subscription
+  auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
+  ASSERT_TRUE(subscriptions_client->was_acknowledged);
+}
+
 TEST_F(rtdn_test, should_find_user_by_email_if_not_found_by_token) {
   init_user(false, "another_token", SUBSCRIPTION_EMAIL);
 
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, false, subscription_state::active, false);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -149,7 +169,7 @@ TEST_F(rtdn_test, should_not_fail_if_user_not_found) {
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, false, subscription_state::active, false);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -170,7 +190,7 @@ TEST_F(rtdn_test, should_revoke_if_user_not_found_and_subscription_is_ack) {
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, true, subscription_state::active, false);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -192,7 +212,7 @@ TEST_F(rtdn_test, should_handle_canceled_state) {
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::canceled);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, true, subscription_state::canceled);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -211,7 +231,7 @@ TEST_F(rtdn_test, should_handle_grace_period_state) {
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::grace_period);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, true, subscription_state::grace_period);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -230,7 +250,7 @@ TEST_F(rtdn_test, should_handle_paused_state) {
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::paused);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, true, subscription_state::paused);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -249,7 +269,7 @@ TEST_F(rtdn_test, should_handle_on_hold_state) {
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::on_hold);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, true, subscription_state::on_hold);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 
@@ -268,7 +288,7 @@ TEST_F(rtdn_test, should_handle_expired_state) {
   std::string expiry_time = "2024-11-01T00:00:00Z";
   auto notification = create_notification();
   auto subscriptions_v2_client = services.get<t_purchases_subscriptions_v2_client>();
-  subscriptions_v2_client->response = create_subscription_outcome(false, expiry_time, true, subscription_state::expired);
+  subscriptions_v2_client->response = create_subscription_outcome(expiry_time, true, subscription_state::expired);
   auto response = send_request(notification);
   assert_response(response, "200", "");
 

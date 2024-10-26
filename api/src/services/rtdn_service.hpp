@@ -47,11 +47,11 @@ class rtdn_service {
 
     if (subscription.test_purchase.has_value()) {
       lambda::log.info("Received test subscription");
-      return;
     }
 
+    auto account_id = get_account_id(subscription);
     auto payment_account_email = get_payment_email(subscription);
-    auto user = get_user_of_subscription(subscription_notification.purchase_token, payment_account_email);
+    auto user = get_user_of_subscription(account_id, subscription_notification.purchase_token, payment_account_email);
 
     for (auto &line_item : subscription.line_items) {
       if (line_item.product_id == "speza.subscription.base") {
@@ -63,6 +63,8 @@ class rtdn_service {
         return;
       }
     }
+
+    lambda::log.warning("No known subscription was found in subscription object.");
   }
 
  private:
@@ -85,10 +87,10 @@ class rtdn_service {
           },
       };
       m_subscriptions_v2_client->revoke(notification.package_name, subscription_notification.purchase_token, request);
-      lambda::log.warning("User was not found on attempt to renew the subscription. Revoked the subscription");
+      lambda::log.warning("User was not found on attempt to renew the subscription. Revoked the subscription.");
     } else {
       // silently fail here to let Google Play do whatever it decides with subscription to revoke it, refund, etc.
-      lambda::log.warning("User not found for purchase token %s", subscription_notification.purchase_token.c_str());
+      lambda::log.warning("User not found for purchase token %s.", subscription_notification.purchase_token.c_str());
     }
   }
 
@@ -112,12 +114,14 @@ class rtdn_service {
                                           subscription_notification.subscription_id,
                                           subscription_notification.purchase_token,
                                           {});
+      lambda::log.info("Acknowledged subscription of user %s.", user->id.c_str());
     }
   }
 
   void revoke_access(std::shared_ptr<repository::models::user> &user) const {
     user->has_subscription = false;
     user->subscription_expiry_time = {};
+    lambda::log.info("Revoking access to user %s.", user->id.c_str());
   }
 
   void grant_access(std::shared_ptr<repository::models::user> &user,
@@ -132,12 +136,20 @@ class rtdn_service {
     } else {
       user->subscription_expiry_time = {};
     }
+
+    lambda::log.info("Granting access to user %s.", user->id.c_str());
   }
 
   [[nodiscard]] bool could_have_access(const subscription_purchase_v2 &subscription) const {
     return subscription.subscription_state == subscription_state::active ||
         subscription.subscription_state == subscription_state::canceled ||
         subscription.subscription_state == subscription_state::grace_period;
+  }
+
+  [[nodiscard]] lambda::nullable<std::string> get_account_id(const subscription_purchase_v2 &subscription) const {
+    return subscription.external_account_identifiers.has_value()
+           ? subscription.external_account_identifiers.get_value().obfuscated_external_account_id
+           : lambda::nullable<std::string>{};
   }
 
   [[nodiscard]] lambda::nullable<std::string> get_payment_email(const subscription_purchase_v2 &subscription) const {
@@ -150,17 +162,27 @@ class rtdn_service {
     return m_subscriptions_v2_client->get(package_name, token);
   }
 
-  std::shared_ptr<repository::models::user> get_user_of_subscription(const std::string &purchase_token, const lambda::nullable<std::string> &payment_account_email = {}) {
-    if (!payment_account_email.has_value()) {
-      return m_repository->template select<repository::models::user>("select * from users where purchase_token = ?")
-          .with_param(purchase_token)
+  std::shared_ptr<repository::models::user> get_user_of_subscription(const lambda::nullable<std::string> &account_id,
+                                                                     const std::string &purchase_token,
+                                                                     const lambda::nullable<std::string> &payment_account_email = {}) {
+    if (account_id.has_value()) {
+      return m_repository->template select<repository::models::user>("select * from users where id = ?")
+          .with_param(account_id.get_value())
           .first_or_default();
-    } else {
-      return m_repository->template select<repository::models::user>("select * from users where purchase_token = ? or payment_account_email = ?")
-          .with_param(purchase_token)
+    }
+
+    auto user = m_repository->template select<repository::models::user>("select * from users where purchase_token = ?")
+        .with_param(purchase_token)
+        .first_or_default();
+    if (user) return user;
+
+    if (payment_account_email.has_value()) {
+      return m_repository->template select<repository::models::user>("select * from users where payment_account_email = ?")
           .with_param(payment_account_email.get_value())
           .first_or_default();
     }
+
+    return nullptr;
   }
 };
 
