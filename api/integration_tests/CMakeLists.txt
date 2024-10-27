@@ -65,7 +65,6 @@ add_executable(api_integration_tests
     mocks/mock_purchases_subscriptions_v2_client.hpp
     rtdn_test.cpp
     mocks/mock_purchases_subscriptions_client.hpp
-    ../src/parameters/set_user_purchase_token.hpp
 )
 
 target_include_directories(api_integration_tests PUBLIC
