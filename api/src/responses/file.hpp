@@ -3,17 +3,14 @@
 #include <string>
 #include <lambda/json.hpp>
 
-namespace api {
-namespace responses {
+namespace api::responses {
 
-class file {
- public:
+struct file {
   std::string url;
 
   JSON_BEGIN_SERIALIZER(file)
-      JSON_PROPERTY("auth_url", url)
+      JSON_PROPERTY("url", url)
   JSON_END_SERIALIZER()
 };
 
-}
 }

@@ -6,7 +6,7 @@ This is a serverless application that uses AWS Lambda, S3, and Textract to scan 
 
 - Application exposes an API Gateway endpoint to manipulate receipts and categories.
 - Authentication to the API is done using AWS Cognito User Pool.
-- Eventually user can request a auth_url for uploading a receipt image. The image is uploaded to S3 bucket.
+- Eventually user can request a url for uploading a receipt image. The image is uploaded to S3 bucket.
 - S3 bucket triggers a Lambda function to extract text from the image using Textract.
 - Further receipt is categorized by AI model from Bedrock.
 - Extracted text and category are stored in MySQL database.
