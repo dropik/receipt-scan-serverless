@@ -95,7 +95,7 @@ class client {
         throw std::runtime_error("Unable to create prepared statement!");
       }
       auto result = stmt->executeUpdate();
-      if (result == 0) {
+      if (configuration.is_versioned() && result == 0) {
         throw concurrency_exception();
       }
     } catch (std::exception &e) {
@@ -116,7 +116,7 @@ class client {
       }
 
       auto result = stmt->executeUpdate();
-      if (result == 0) {
+      if (configuration.is_versioned() && result == 0) {
         throw concurrency_exception();
       }
     } catch (std::exception &e) {

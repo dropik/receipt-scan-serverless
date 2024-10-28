@@ -107,6 +107,19 @@ TEST_F(rtdn_test, should_handle_new_subscriptions) {
   // should acknowledge subscription
   auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
   ASSERT_TRUE(subscriptions_client->was_acknowledged);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service
+  user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_TRUE(user->purchase_token.has_value());
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
 }
 
 TEST_F(rtdn_test, should_fail_if_subscription_v2_outcome_is_not_success) {
@@ -139,6 +152,18 @@ TEST_F(rtdn_test, should_find_user_by_token_if_not_found_by_account_id) {
   // should acknowledge subscription
   auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
   ASSERT_TRUE(subscriptions_client->was_acknowledged);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service and set new purchase token
+  user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
 }
 
 TEST_F(rtdn_test, should_find_user_by_email_if_not_found_by_token) {
@@ -161,6 +186,16 @@ TEST_F(rtdn_test, should_find_user_by_email_if_not_found_by_token) {
   // should acknowledge subscription
   auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
   ASSERT_TRUE(subscriptions_client->was_acknowledged);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service and set new purchase token
+  user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
 }
 
 TEST_F(rtdn_test, should_not_fail_if_user_not_found) {
@@ -181,6 +216,18 @@ TEST_F(rtdn_test, should_not_fail_if_user_not_found) {
 
   // should not acknowledge subscription
   auto subscriptions_client = services.get<t_purchases_subscriptions_client>();
+  ASSERT_FALSE(subscriptions_client->was_acknowledged);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), "another_token");
+
+  // should not acknowledge subscription
   ASSERT_FALSE(subscriptions_client->was_acknowledged);
 }
 
@@ -224,6 +271,18 @@ TEST_F(rtdn_test, should_handle_canceled_state) {
   ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
   ASSERT_TRUE(user->payment_account_email.has_value());
   ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service
+  user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
 }
 
 TEST_F(rtdn_test, should_handle_grace_period_state) {
@@ -238,6 +297,18 @@ TEST_F(rtdn_test, should_handle_grace_period_state) {
   // should grant access to service
   auto client = services.get<repository::t_client>();
   auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_TRUE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should grant access to service
+  user = client->get<repository::models::user>(USER_ID);
   ASSERT_TRUE(user->has_subscription);
   ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
   ASSERT_EQ(user->subscription_expiry_time.get_value(), "2024-11-01 00:00:00");
@@ -262,6 +333,18 @@ TEST_F(rtdn_test, should_handle_paused_state) {
   ASSERT_FALSE(user->subscription_expiry_time.has_value());
   ASSERT_TRUE(user->payment_account_email.has_value());
   ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_FALSE(user->subscription_expiry_time.has_value());
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
 }
 
 TEST_F(rtdn_test, should_handle_on_hold_state) {
@@ -281,6 +364,18 @@ TEST_F(rtdn_test, should_handle_on_hold_state) {
   ASSERT_FALSE(user->subscription_expiry_time.has_value());
   ASSERT_TRUE(user->payment_account_email.has_value());
   ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_FALSE(user->subscription_expiry_time.has_value());
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
 }
 
 TEST_F(rtdn_test, should_handle_expired_state) {
@@ -295,6 +390,18 @@ TEST_F(rtdn_test, should_handle_expired_state) {
   // should not grant access to service
   auto client = services.get<repository::t_client>();
   auto user = client->get<repository::models::user>(USER_ID);
+  ASSERT_FALSE(user->has_subscription);
+  ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
+  ASSERT_FALSE(user->subscription_expiry_time.has_value());
+  ASSERT_TRUE(user->payment_account_email.has_value());
+  ASSERT_EQ(user->payment_account_email.get_value(), SUBSCRIPTION_EMAIL);
+
+  // should be idempotent
+  response = send_request(notification);
+  assert_response(response, "200", "");
+
+  // should not grant access to service
+  user = client->get<repository::models::user>(USER_ID);
   ASSERT_FALSE(user->has_subscription);
   ASSERT_EQ(user->purchase_token.get_value(), PURCHASE_TOKEN);
   ASSERT_FALSE(user->subscription_expiry_time.has_value());

@@ -259,6 +259,10 @@ class base_repository_configuration {
     return m_table->get_name();
   }
 
+  bool is_versioned() const {
+    return m_version != nullptr;
+  }
+
  protected:
   typedef T entity_t;
 
