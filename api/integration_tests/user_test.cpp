@@ -2,6 +2,8 @@
 // Created by Daniil Ryzhkov on 03/08/2024.
 //
 
+#include <lambda/string_utils.hpp>
+
 #include "base_api_integration_test.hpp"
 #include "repository/models/user.hpp"
 
@@ -46,7 +48,7 @@ TEST_F(user_test, get_user) {
 
   // should return user
   response = (*api)(create_request("GET", ENDPOINT, ""));
-  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"("})");
+  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"(", "subscriptionExpirationTime": null})");
 
   auto client = services.get<repository::t_client>();
   auto user = client->get<::models::user>(USER_ID);
@@ -55,21 +57,21 @@ TEST_F(user_test, get_user) {
 
   // should not give subscription flag since expiry time is not set
   response = (*api)(create_request("GET", ENDPOINT, ""));
-  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"("})");
+  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"(", "subscriptionExpirationTime": null})");
 
   user->subscription_expiry_time = gen_timestamp(-100);
   client->update(*user);
 
   // should not give subscription flag since subscription expired
   response = (*api)(create_request("GET", ENDPOINT, ""));
-  assert_response(response, "200", R"({"hasSubscription": false, "id":")" USER_ID R"("})");
+  assert_response(response, "200", lambda::string::format(R"({"hasSubscription": false, "id":")" USER_ID R"(", "subscriptionExpirationTime": "%s"})", user->subscription_expiry_time.get_value().c_str()));
 
   user->subscription_expiry_time = gen_timestamp(100);
   client->update(*user);
 
   // should give subscription flag
   response = (*api)(create_request("GET", ENDPOINT, ""));
-  assert_response(response, "200", R"({"hasSubscription": true, "id":")" USER_ID R"("})");
+  assert_response(response, "200", lambda::string::format(R"({"hasSubscription": true, "id":")" USER_ID R"(", "subscriptionExpirationTime": "%s"})", user->subscription_expiry_time.get_value().c_str()));
 }
 
 TEST_F(user_test, delete_user) {
