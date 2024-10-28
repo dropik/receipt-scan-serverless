@@ -123,6 +123,7 @@ Resources:
     Metadata:
       BuildMethod: makefile
     Properties:
+      Timeout: 300
       CodeUri: scanner/
       FunctionName: !Sub "receipt-scan-scanner-${Stage}"
       Events:
