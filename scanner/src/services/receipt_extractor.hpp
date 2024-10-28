@@ -11,8 +11,7 @@
 #include "repository/models/receipt.hpp"
 #include "lambda/utils.hpp"
 
-namespace scanner {
-namespace services {
+namespace scanner::services {
 
 struct t_receipt_extractor {};
 
@@ -21,7 +20,7 @@ class receipt_extractor : t_receipt_extractor {
  public:
   explicit receipt_extractor(TTextractClient textract_client) : m_textract_client(std::move(textract_client)) {}
 
-  lambda::nullable<repository::models::receipt> extract(const std::string &bucket, const std::string &key) const {
+  [[nodiscard]] lambda::nullable<repository::models::receipt> extract(const std::string &bucket, const std::string &key) const {
 
     std::regex file_regex("users/" GUID_REGEX "/receipts/.*",
                           std::regex_constants::extended);
@@ -47,7 +46,7 @@ class receipt_extractor : t_receipt_extractor {
     Aws::Textract::Model::AnalyzeExpenseRequest expense_request;
     expense_request.WithDocument(s3_document);
 
-    auto outcome = m_textract_client->AnalyzeExpense(expense_request);
+    auto outcome = analyze_expense(expense_request);
     if (!outcome.IsSuccess()) {
       lambda::log.error("Error occurred while analyzing expense: %s",
                         outcome.GetError().GetMessage().c_str());
@@ -127,6 +126,15 @@ class receipt_extractor : t_receipt_extractor {
       "%m %d %Y",
       "%m %d %y"
   };
+
+  [[nodiscard]] Aws::Textract::Model::AnalyzeExpenseOutcome analyze_expense(const Aws::Textract::Model::AnalyzeExpenseRequest &request) const {
+    try {
+      return m_textract_client->AnalyzeExpense(request);
+    } catch (const std::exception &e) {
+      lambda::log.error("Error occurred while analyzing expense: %s", e.what());
+      return {};
+    }
+  }
 
   void parse_document(const Aws::Textract::Model::ExpenseDocument &document, receipt &receipt) const {
     auto &summary_fields = document.GetSummaryFields();
@@ -236,7 +244,7 @@ class receipt_extractor : t_receipt_extractor {
     return true;
   }
 
-  std::string try_get_currency(const Aws::Textract::Model::ExpenseField &field) const {
+  [[nodiscard]] std::string try_get_currency(const Aws::Textract::Model::ExpenseField &field) const {
     const auto &currency = field.GetCurrency().GetCode();
     if (!currency.empty()) {
       return currency;
@@ -406,5 +414,4 @@ class receipt_extractor : t_receipt_extractor {
   }
 };
 
-}
 }

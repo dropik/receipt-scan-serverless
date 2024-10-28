@@ -49,7 +49,7 @@ class handler {
         auto extracted = m_extractor->extract(record.s3.bucket.name, record.s3.object.key);
         if (!extracted.has_value()) {
           lambda::log.info("Skipping not supported file.");
-          return aws::lambda_runtime::invocation_response::success("All files processed!", "application/json");
+          continue;
         }
         auto receipt = extracted.get_value();
         if (receipt.state != repository::models::receipt::failed) {

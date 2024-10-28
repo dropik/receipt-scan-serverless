@@ -50,6 +50,7 @@ static aws::lambda_runtime::invocation_request create_request(
 
 struct fake_textract_client {
   bool should_fail = false;
+  bool should_throw = false;
   bool set_quantity = true;
   bool add_items = true;
   std::string invoice_date = DATE;
@@ -59,6 +60,10 @@ struct fake_textract_client {
   std::string quantity = "1";
 
   [[nodiscard]] AnalyzeExpenseOutcome AnalyzeExpense(const AnalyzeExpenseRequest &request) const {
+    if (should_throw) {
+      throw std::runtime_error("Error");
+    }
+
     if (should_fail) {
       return {
           TextractError(
@@ -131,9 +136,14 @@ struct fake_textract_client {
 
 struct fake_bedrock_runtime_client {
   bool should_fail = false;
+  bool should_throw = false;
   std::string completion_body = R"({"completion": "Altro\n"})";
 
   [[nodiscard]] InvokeModelOutcome InvokeModel(const InvokeModelRequest &request) const {
+    if (should_throw) {
+      throw std::runtime_error("Error");
+    }
+
     if (should_fail) {
       return {
           BedrockRuntimeError(
@@ -252,6 +262,21 @@ TEST_F(scanner_test, should_continue_if_textract_fails) {
   auto receipts = repo->select<receipt>("select * from receipts").all();
   ASSERT_EQ(receipts->size(), 1);
   auto receipt = receipts->at(0);
+  ASSERT_EQ(receipt->version, 0);
+  ASSERT_EQ(receipt->state, receipt::failed);
+  ASSERT_EQ(receipt->date, lambda::utils::today());
+  ASSERT_EQ(receipt->store_name, "-");
+
+  repo->execute("delete from receipts").go();
+  textract->should_throw = true;
+
+  res = handler->operator()(request);
+
+  ASSERT_TRUE(res.is_success());
+
+  receipts = repo->select<::receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+  receipt = receipts->at(0);
   ASSERT_EQ(receipt->version, 0);
   ASSERT_EQ(receipt->state, receipt::failed);
   ASSERT_EQ(receipt->date, lambda::utils::today());
@@ -465,6 +490,21 @@ TEST_F(scanner_test, should_ignore_category_if_failed) {
 
   auto receipt = receipts->at(0);
   auto items = repo->select<receipt_item>("select * from receipt_items").all();
+  ASSERT_EQ(items->size(), 1);
+  ASSERT_EQ(receipt->category, "");
+
+  repo->execute("delete from receipts").go();
+
+  bedrock->should_throw = true;
+  res = handler->operator()(request);
+
+  ASSERT_TRUE(res.is_success());
+
+  receipts = repo->select<::receipt>("select * from receipts").all();
+  ASSERT_EQ(receipts->size(), 1);
+
+  receipt = receipts->at(0);
+  items = repo->select<receipt_item>("select * from receipt_items").all();
   ASSERT_EQ(items->size(), 1);
   ASSERT_EQ(receipt->category, "");
 }

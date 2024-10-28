@@ -11,8 +11,7 @@
 #include "../models/bedrock_payload.hpp"
 #include "../models/bedrock_response.hpp"
 
-namespace scanner {
-namespace services {
+namespace scanner::services {
 
 struct t_categorizer {};
 
@@ -74,7 +73,7 @@ class categorizer {
     auto ss = std::make_shared<std::stringstream>();
     *ss << payload_str;
     invoke_request.SetBody(ss);
-    const auto outcome = m_bedrock_runtime_client->InvokeModel(invoke_request);
+    const auto outcome = invoke_model(invoke_request);
     if (!outcome.IsSuccess()) {
       lambda::log.error("Error occurred while invoking bedrock model: %s",
                         outcome.GetError().GetMessage().c_str());
@@ -119,7 +118,15 @@ class categorizer {
   TCategoryRepository m_category_repository;
 
   using receipt = repository::models::receipt;
+
+  [[nodiscard]] Aws::BedrockRuntime::Model::InvokeModelOutcome invoke_model(const Aws::BedrockRuntime::Model::InvokeModelRequest &request) const {
+    try {
+      return m_bedrock_runtime_client->InvokeModel(request);
+    } catch (const std::exception &e) {
+      lambda::log.error("Error occurred while invoking bedrock model: %s", e.what());
+      return {};
+    }
+  }
 };
 
-}
 }
