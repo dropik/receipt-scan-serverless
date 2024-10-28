@@ -26,13 +26,12 @@ class categorizer {
 
   void categorize(repository::models::receipt &receipt) const {
     const auto categories = m_category_repository->get_all(receipt.user_id);
+    std::vector<std::string> category_names;
 
-    std::ostringstream categories_ss;
     for (auto &category : categories) {
-      categories_ss << category.name << ", ";
+      category_names.push_back(category.name);
     }
-    categories_ss << "Altro";  // hard coding special 'other' category
-    const auto categories_str = categories_ss.str();
+    const auto categories_str = lambda::string::join(", ", category_names);
 
     // Preparing prompt
     Aws::BedrockRuntime::Model::InvokeModelRequest invoke_request;
