@@ -153,6 +153,10 @@ class receipt_repository {
         if (item->receipt_id != receipt->id) continue;
         output.back().items.push_back(*item);
       }
+      std::sort(output.back().items.begin(), output.back().items.end(),
+                [](const auto &a, const auto &b) {
+                  return a.sort_order < b.sort_order;
+                });
     }
 
     return output;
