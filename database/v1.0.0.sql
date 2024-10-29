@@ -316,3 +316,22 @@ add column payment_account_email varchar(100) null default null;
 # 2024-10-24: add unique constraints on payment_account_email
 alter table users
 add unique index ix_payment_account_email(payment_account_email);
+
+# 2024-10-29: change some collations to utf-8
+alter table categories
+modify column name text character set utf8mb4 collate utf8mb4_unicode_ci not null;
+
+alter table receipt_items
+modify column description text character set utf8mb4 collate utf8mb4_unicode_ci not null;
+
+alter table receipt_items
+modify column category text character set utf8mb4 collate utf8mb4_unicode_ci;
+
+alter table receipts
+modify column store_name text character set utf8mb4 collate utf8mb4_unicode_ci not null;
+
+alter table receipts
+modify column category text character set utf8mb4 collate utf8mb4_unicode_ci not null;
+
+alter table users
+modify column payment_account_email varchar(100) character set utf8mb4 collate utf8mb4_unicode_ci null default null;
