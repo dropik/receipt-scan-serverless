@@ -55,6 +55,7 @@ Please note, that all endpoints except `POST /user` will return `400` if user wa
 - `POST /user` - Init a new user. Only id is taken from `access_token`. No body required. Returns `200` if successful. Noop if user already exists.
 - `GET /user` - Get user id. Returns `200` with user id. Returns `404` if user was not initialized with `POST` endpoint.
 - `DELETE /user` - Delete user. By deleting user, all user's receipts, categories and budgets are deleted. Also all user's files are deleted from S3 bucket. And finally, user is deleted from Cognito User Pool. Returns `200` if successful. Endpoint is idempotent, so calling multiple times will return `200` every time.
+- `DELETE /user/subscription` - Cancel user's subscription. Returns `200` if successful. Returns `404` if user was not found or no active subscription on user.
 
 ### Budgets
 - `GET /budgets` - Get all budgets. Returns `200` with list of budgets.
@@ -74,6 +75,9 @@ Please note, that all endpoints except `POST /user` will return `400` if user wa
 - `GET /receipts/{id}/image` - Get a pre-signed auth_url to obtain the receipt image. Returns `200` with auth_url. Returns `404` if receipt was not found.
 - `POST /receipts/{id}/image` - Upload a receipt image. Only for subscribed users. This endpoint is used to start receipt image scan asynchronously. When scanning is done, the receipt state will pass to `done` and new version of receipt will be generated. Returns `200` if successful. Returns `404` if receipt was not found. Returns `403` if user is not subscribed.
 - `GET /receipts/changes?from=<changes-from>` - Get all receipt changes from given timestamp. Returns `200` with list of receipt changes.
+
+### RTDN
+- `POST /rtdn` - Handles RTDN Google Play Billing API webhook. Returns `200` if successful. During the call, user's subscription is synchronized with latest available information on Google Play.
 
 ## Dependencies
 - [jwt-cpp](https://github.com/Thalhammer/jwt-cpp/) - JSON Web Token library for C++

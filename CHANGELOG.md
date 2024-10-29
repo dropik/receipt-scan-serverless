@@ -2,6 +2,11 @@
 
 ## v1.2.0
 - Introduced user subscription. Protected receipt image upload endpoint to only allow users with subscription.
+- Handling subscription events via subscribing to RTDN topic from Google Play Billing API. Implemented endpoint `/rtdn` to handle RTDN events.
+- Implemented endpoint `/user/subscription` to cancel user's subscription.
+- Not managing a special system category when scanning receipts. All categories are managed by the user.
+- Fixed issues with scanner error handling.
+- Fixed collation on certain columns in MySQL.
 
 ## v1.1.6
 - Extended rest API library to support `DELETE` method without capturing any parameters.
