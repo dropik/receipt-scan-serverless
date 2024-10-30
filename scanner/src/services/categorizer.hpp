@@ -41,7 +41,7 @@ class categorizer {
 
     if (!receipt.items.empty()) {
       std::string prompt_start_format =
-          "\n\nHuman: For each receipt item guess and print a category (only) "
+          "\n\nHuman: For each receipt item guess and print a category (only) or a \"-\" if not possible to determine, "
           "using following categories: %s.\nReceipt: %s %.2Lf %s.\nItems:";
 
       payload.prompt = lambda::string::format(
@@ -57,7 +57,7 @@ class categorizer {
       }
     } else {
       std::string prompt_format =
-          "\n\nHuman: Guess and print category (only) of receipt using following "
+          "\n\nHuman: Guess and print category (only) of receipt or a \"-\" if not possible to determine, using following "
           "categories: %s.\nReceipt: %s %.2Lf %s.";
 
       payload.prompt = lambda::string::format(
